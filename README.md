@@ -1,11 +1,13 @@
 <div align="center">
 
-# EvilGPT
+# MP2I Bot & TheEvilGPT
 
-### *The sophisticated, AI-powered Discord agent with an attitude.*
+### _The sophisticated, AI-powered Discord agent with an attitude._
 
+<div align="center">
+<img src="assets/images/MPI2-server-icon.png" alt="MP2I Icon" width="160" style="border-radius:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin: 20px 0;" />
 <img src="assets/images/evilgpt.png" alt="EvilGPT Icon" width="160" style="border-radius:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin: 20px 0;" />
-
+</div>
 ---
 
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -51,15 +53,16 @@ You can invite the official hosted version of **EvilGPT** to your server:
 ## Commands
 
 <!-- COMMANDS-START -->
-| Command | Description |
-| :--- | :--- |
-| `/health` | Show runtime health for bot subsystems |
-| `/list-tools` | List all tools available to the model |
-| `/memory-clear` | Clear the conversation history for a user |
+
+| Command          | Description                                      |
+| :--------------- | :----------------------------------------------- |
+| `/health`        | Show runtime health for bot subsystems           |
+| `/list-tools`    | List all tools available to the model            |
+| `/memory-clear`  | Clear the conversation history for a user        |
 | `/memory-delete` | Delete a specific turn from conversation history |
-| `/memory-list` | List the most recent turns in memory |
-| `/ping` | Check bot latency and responsiveness |
-| `/set-mood` | Change the mood/personality of the EvilGPT |
+| `/memory-list`   | List the most recent turns in memory             |
+| `/ping`          | Check bot latency and responsiveness             |
+| `/set-mood`      | Change the mood/personality of the EvilGPT       |
 
 <!-- COMMANDS-END -->
 
@@ -87,24 +90,26 @@ You can invite the official hosted version of **EvilGPT** to your server:
 
 1. **Clone and Setup**
 
-   ```bash
-   git clone https://github.com/YoannDev90/EvilGPT.git
-   cd EvilGPT
-   python -m venv .venv
-   source .venv/bin/activate
-   ```
+    ```bash
+    git clone https://github.com/YoannDev90/EvilGPT.git
+    cd EvilGPT
+    python -m venv .venv
+    source .venv/bin/activate
+    ```
 
 2. **Install Dependencies** (Using `uv` is recommended for speed)
 
-   ```bash
-   pip install uv
-   uv pip install -r requirements.txt
-   ```
+    ```bash
+    pip install uv
+    uv pip install -r requirements.txt
+    ```
 
 ### Configuration
 
 1. **Create a `.env` file** in the root directory:
+
 <!--ENV-START-->
+
 ```env
 BOT_TOKEN=
 WEBHOOK_URL=
@@ -130,16 +135,17 @@ DEPLOY_REMOTE_HOST=
 DEPLOY_REMOTE_DIR=
 DEPLOY_SERVICE_NAME=
 ```
+
 <!--ENV-END-->
 
 1. **Configure providers** (optional)
-   - Edit [`config/providers.json`](config/providers.json) to add or modify API providers
-   - Edit [`config/models.json`](config/models.json) to configure available AI models
+    - Edit [`config/providers.json`](config/providers.json) to add or modify API providers
+    - Edit [`config/models.json`](config/models.json) to configure available AI models
 
 2. **Set up your Discord bot**
-   - Create a bot on [Discord Developer Portal](https://discord.com/developers/applications)
-   - Enable the "Message Content Intent" for the bot to read messages
-   - Copy the bot token to your `.env` file
+    - Create a bot on [Discord Developer Portal](https://discord.com/developers/applications)
+    - Enable the "Message Content Intent" for the bot to read messages
+    - Copy the bot token to your `.env` file
 
 ### Running the Bot
 
@@ -159,10 +165,10 @@ A powerful [`deploy.sh`](deploy.sh) script is provided to automate the entire pr
 2. **Setup**: Configure your server details in the `.env` file (see [Configuration](#configuration)).
 3. **Execute**:
 
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
+    ```bash
+    chmod +x deploy.sh
+    ./deploy.sh
+    ```
 
 ### 2. Systemd Service
 
@@ -174,6 +180,7 @@ The deployment script automatically installs this for you in `/etc/systemd/syste
 Below is current snapshot of repository. This section is auto-updated by `./lint.sh` on demand.
 
 <!-- TREE-START -->
+
 ```
 .
 ├── assets
@@ -285,6 +292,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 
 16 directories, 91 files
 ```
+
 <!-- TREE-END -->
 
 Run `./lint.sh` to format code and regenerate this project tree snapshot. CI runs the same script on every push/PR.
@@ -319,6 +327,7 @@ The bot automatically selects the most appropriate model based on:
 ## Dependencies
 
 <!--DEPS-START-->
+
 ```markdown
 - `discord.py==2.7.1` - A Python wrapper for the Discord API (latest: 2.7.1)
 - `python-dotenv==1.2.2` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.2)
@@ -336,6 +345,7 @@ The bot automatically selects the most appropriate model based on:
 - `pytesseract==0.3.13` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
 - `pint==0.25.3` - Physical quantities module (latest: 0.25.3)
 ```
+
 <!--DEPS-END-->
 
 ## Development
