@@ -2,7 +2,11 @@
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
+import sqlite3
 from typing import Any
+
+from colorama.ansi import Cursor
 
 try:
     import tomllib as _toml
@@ -284,6 +288,8 @@ class Config:
         Repository base directory.
     CONFIG_PATH : str
         Path to the active config file.
+    DB_PATH : str
+        Path of the colloscope DB
     """
 
     BOT_TOKEN: str | None = None
@@ -292,6 +298,9 @@ class Config:
 
     BASE_DIR: str = BASE_DIR
     CONFIG_PATH: str = DEFAULT_CONFIG_PATH
+    DB_PATH: Path | None = None
+    CUR: sqlite3.Cursor | None = None
+    CONN: sqlite3.Connection | None = None
 
 
 def _first_table(items: Any) -> dict[str, Any]:
@@ -361,6 +370,9 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
     file_raw = _first_table(raw.get("file"))
     discord_raw = _first_table(raw.get("discord"))
 
+    constants = raw.get("constants", {}) if isinstance(raw, dict) else {}
+    path_raw = constants.get("db_path")
+
     # Backward compatibility with previous flat schema if present under [logging]
     console_conf = ConsoleLoggingConfig(
         enable=console_raw.get("enable", raw_logging.get("enable", True)),
@@ -407,6 +419,11 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
     cfg = Config()
     cfg.BOT_TOKEN = os.getenv("BOT_TOKEN")
     cfg.WEBHOOK_POSTURL = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
+
+    if isinstance(path_raw, str) and Path(path_raw).exists():
+        cfg.DB_PATH = Path(path_raw)
+    else:
+        raise FileNotFoundError(f"{path_raw} does not exists or is not well formatted, please provide a correct database file")
 
     env_webhook_url = _normalize_webhook_url(os.getenv("WEBHOOK_URL"))
 

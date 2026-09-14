@@ -6,7 +6,8 @@ Sets up logging and starts the bot when executed as a script.
 import logging
 import sys
 
-from core.config import logging_cfg
+from core.config import cfg, logging_cfg
+from db.sql_requests import get_db_connection
 from utils.logger import get_logger, setup_logging
 
 setup_logging(
@@ -21,7 +22,16 @@ if __name__ == "__main__":
         import bot
 
         logger.info("Démarrage du bot MP2I...")
-        bot.run_bot()
+
+
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+
+            cfg.CUR = cur
+            cfg.CONN = conn
+            
+            bot.run_bot()
+
     except KeyboardInterrupt:
         print("\n")  # New line for cleaner exit
         logger.info("Arrêt demandé par l'utilisateur (Ctrl+C).")

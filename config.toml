@@ -11,3 +11,5 @@ file_format = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message
 enable_discord_logging = true
 discord_webhook = "https://discord.com/api/webhooks/<URL>"
 discord_format = "%(asctime)s - %(filename)s:%(lineno)d\n%(message)s"
+[constants]
+db_path = "data/colloscope.db"
