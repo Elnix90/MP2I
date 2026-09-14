@@ -1,2 +1,7 @@
 [tools]
 ruff = "latest"
+pre-commit = "latest"
+
+[tasks.run]
+run = "python3 -m main"
+description = "Run bot from main.py"
