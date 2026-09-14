@@ -1,0 +1,11 @@
+[project]
+name = "MP2I"
+version = "0.1.0"
+description = "Discord bot for our MP2I class"
+readme = "README.md"
+authors = [
+    { name = "YoannDev90", email = "yoanndev@outlook.fr" },
+    { name = "Elnix90", email = "elnix9@proton.me" }
+]
+requires-python = ">=3.13"
+dependencies = []

@@ -7,8 +7,7 @@ performs runtime checks for subsystems and reports status.
 import discord
 from discord import app_commands
 
-from cmds._shared import (defer_interaction, log_command_error,
-                          log_command_start)
+from cmds._shared import defer_interaction, log_command_error, log_command_start
 from utils.logger import get_logger
 
 logger = get_logger()

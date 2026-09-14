@@ -1,7 +1,16 @@
 [tools]
+uv = "latest"
 ruff = "latest"
 pre-commit = "latest"
 
 [tasks.run]
 run = "python3 -m main"
 description = "Run bot from main.py"
+
+[tasks.venv]
+run = "uv venv"
+description = "Create virtual environment"
+
+[tasks.lint]
+run = "ruff check"
+description = "Run linter"

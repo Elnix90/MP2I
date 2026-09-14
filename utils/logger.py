@@ -1,4 +1,4 @@
-"""Logging helpers and Discord webhook handlers for EvilGPT."""
+"""Logging helpers and Discord webhook handlers for the MP2I bot."""
 
 import logging
 import time
@@ -9,14 +9,14 @@ from colorama import Fore, Style
 
 colorama.init(autoreset=True)
 
-LOGGER_NAME = "MP2IGPT"
+LOGGER_NAME = "MP2I"
 
 
-class EvilGPTFilter(logging.Filter):
-    """Filter log records to only keep EvilGPT logger output."""
+class BotFilter(logging.Filter):
+    """Filter log records to only keep the bot's logger output."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        """Return True for log records emitted by the EvilGPT logger.
+        """Return True for log records emitted by the bot logger.
 
         Parameters
         ----------
@@ -26,7 +26,7 @@ class EvilGPTFilter(logging.Filter):
         Returns
         -------
         bool
-            True when the record belongs to the EvilGPT logger.
+            True when the record belongs to the MP2I logger.
         """
         return record.name == LOGGER_NAME
 
@@ -145,7 +145,7 @@ class DiscordWebhookHandler(Handler):
         """
         message = self.format(record)
         payload = {
-            "username": "EvilGPT",
+            "username": "MP2I Bot",
             "allowed_mentions": {"parse": []},
         }
 
@@ -286,15 +286,15 @@ def setup_logging(level: int = logging.INFO, config=None):
     ):
         handler = logging.StreamHandler()
         handler.setFormatter(ColoredFormatter(console_format))
-        handler.addFilter(EvilGPTFilter())
+        handler.addFilter(BotFilter())
         handlers.append(handler)
 
     # optional file handler
     if config is not None and getattr(config, "enable_file_logging", False):
         try:
-            fh = logging.FileHandler(getattr(config, "log_file", "logs/evilgpt.log"))
+            fh = logging.FileHandler(getattr(config, "log_file", "logs/mp2i.log"))
             fh.setFormatter(logging.Formatter(file_format))
-            fh.addFilter(EvilGPTFilter())
+            fh.addFilter(BotFilter())
             handlers.append(fh)
         except Exception:
             pass
@@ -328,11 +328,11 @@ def setup_logging(level: int = logging.INFO, config=None):
 
 
 def get_logger() -> logging.Logger:
-    """Return the EvilGPT logger instance.
+    """Return the bot's logger instance.
 
     Returns
     -------
     logging.Logger
-        Logger configured for EvilGPT output.
+        Logger configured for bot output.
     """
     return logging.getLogger(LOGGER_NAME)

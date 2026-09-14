@@ -1,4 +1,4 @@
-"""Command registry for EvilGPT.
+"""Command registry.
 
 This module provides a centralized place to track all application commands,
 making it easier to generate documentation and manage command loading.

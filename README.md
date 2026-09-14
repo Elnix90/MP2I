@@ -79,23 +79,6 @@ GUILD_ID=
 python main.py
 ```
 
-## Deployment
-
-EvilGPT is designed for simple and reliable deployment on Linux servers.
-
-### 1. Automated SSH Deployment
-
-A powerful [`deploy.sh`](deploy.sh) script is provided to automate the entire process (transfer, dependencies, service restart).
-
-1. **Prerequisites**: Install `sshpass` locally: `sudo apt install sshpass`.
-2. **Setup**: Configure your server details in the `.env` file (see [Configuration](#configuration)).
-3. **Execute**:
-
-    ```bash
-    chmod +x deploy.sh
-    ./deploy.sh
-    ```
-
 ## Project Structure
 
 Below is current snapshot of repository. This section is auto-updated by `./lint.sh` on demand.
@@ -105,8 +88,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 .
 ├── assets
 │   └── images
-│       ├── evilgpt.png
-│       ├── evilgpt.svg
 │       └── MPI2-server-icon.png
 ├── bot.py
 ├── cmds
@@ -127,6 +108,8 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── lint.sh
 ├── main.py
 ├── mise.toml
+├── .pre-commit-config.yaml
+├── pyproject.toml
 ├── README.md
 ├── requirements.txt
 ├── scripts
