@@ -3,7 +3,7 @@ uv = "latest"
 ruff = "latest"
 pre-commit = "latest"
 
-[tasks.run]
+[tasks.bot]
 run = "python3 -m main"
 description = "Run bot from main.py"
 

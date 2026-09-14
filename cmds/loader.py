@@ -5,7 +5,7 @@ their `setup(tree, bot)` function if present to register application
 commands.
 """
 
-import importlib
+import importlib.util
 import inspect
 import pkgutil
 import time
