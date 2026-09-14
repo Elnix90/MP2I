@@ -11,7 +11,7 @@ from discord import Role, app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from data.roles_ids import ROLES_IDS
-from db.sql_requests import get_colle
+from db.sql_requests import get_colles
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -53,10 +53,10 @@ async def setup(tree: app_commands.CommandTree, bot):
 
             if user_group is not None and user_group_role_id is not None:
 
-                colle = get_colle(user_group)
+                colles = get_colles(user_group)
                 
                 
-                msg = f"Hello <@{user}>, tu fais parti du Groupe {user_group}! (<@&{user_group_role_id}>)\nta colle est: {colle}"
+                msg = f"Hello <@{user}>, tu fais parti du Groupe {user_group}! (<@&{user_group_role_id}>)\ntes colles sont:\n- {colles[0]}\n- {colles[1]}"
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRU**, **BANNISEMMENT EN COURS**!!!"
 

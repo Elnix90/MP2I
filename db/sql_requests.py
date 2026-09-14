@@ -4,6 +4,7 @@ contains function to interract esaely with the database
 """
 
 import sqlite3
+from datetime import datetime
 
 from core.colle import Colle
 from core.config import cfg
@@ -23,7 +24,7 @@ def get_db_connection() -> sqlite3.Connection:
     return conn
 
 
-def get_colle(groupe_id: int) -> Colle:
+def get_colles(groupe_id: int) -> list[Colle]:
     """
     Fetch the DB and return a Colle class with the extracted data from the database
     """
@@ -31,28 +32,47 @@ def get_colle(groupe_id: int) -> Colle:
     if not isinstance(cfg.CUR, sqlite3.Cursor):
         raise Exception("LALALALLA")
 
+    dt = datetime.now()  # Fuck timezone we're french
+    week = int(dt.strftime("%W"))
+    print(week)
+
+    # That's the number of weeks of the year formatted to match a starting point the 14/09/2026
+    magic_week = week - 36
+
+    print(magic_week)
+
     _ = cfg.CUR.execute(
-    """
+        """
         SELECT * FROM colleurs
         JOIN planning ON colleurs.id = planning.colleur_id
         WHERE planning.groupe = ?
+        AND planning.semaine = ?
     """,
-    (groupe_id,)
+        (groupe_id, magic_week),
     )
 
-    rows = cfg.CUR.fetchone()
+    rows = cfg.CUR.fetchall()
 
-    colleur_name: str | None = rows["nom"]  # pyright: ignore[reportArgumentType, reportCallIssue]
-    matiere: str | None = rows["matiere"] # pyright: ignore[reportArgumentType, reportCallIssue]
-    jour: str | None = rows["jour"] # pyright: ignore[reportArgumentType, reportCallIssue]
-    creneau: str | None = rows["creneau"] # pyright: ignore[reportArgumentType, reportCallIssue]
-    salle: str | None = rows["salle"] # pyright: ignore[reportArgumentType, reportCallIssue]
+    if rows is None:
+        logger.error("Failed to get colles: db returned None")
+        raise Exception("Failed to get colles: db returned None")
 
-    colle = Colle(
-        colleur_name = colleur_name,  # pyright: ignore[reportArgumentType]
-        matiere = matiere,  # pyright: ignore[reportArgumentType]
-        jour = jour,  # pyright: ignore[reportArgumentType]
-        creneau = creneau,  # pyright: ignore[reportArgumentType]
-        salle = salle  # pyright: ignore[reportArgumentType]
-    )
-    return colle
+    colles = []
+
+    for row in rows:
+        colleur_name: str | None = row["nom"]  # pyright: ignore[reportArgumentType, reportCallIssue]
+        matiere: str | None = row["matiere"]  # pyright: ignore[reportArgumentType, reportCallIssue]
+        jour: str | None = row["jour"]  # pyright: ignore[reportArgumentType, reportCallIssue]
+        creneau: str | None = row["creneau"]  # pyright: ignore[reportArgumentType, reportCallIssue]
+        salle: str | None = row["salle"]  # pyright: ignore[reportArgumentType, reportCallIssue]
+
+        colles.append(
+            Colle(
+                colleur_name=colleur_name,  # pyright: ignore[reportArgumentType]
+                matiere=matiere,  # pyright: ignore[reportArgumentType]
+                jour=jour,  # pyright: ignore[reportArgumentType]
+                creneau=creneau,  # pyright: ignore[reportArgumentType]
+                salle=salle,  #  pyright: ignore[reportArgumentType]
+            )
+        )
+    return colles
