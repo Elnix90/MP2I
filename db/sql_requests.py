@@ -34,12 +34,9 @@ def get_colles(groupe_id: int) -> list[Colle]:
 
     dt = datetime.now()  # Fuck timezone we're french
     week = int(dt.strftime("%W"))
-    print(week)
 
     # That's the number of weeks of the year formatted to match a starting point the 14/09/2026
     magic_week = week - 36
-
-    print(magic_week)
 
     _ = cfg.CUR.execute(
         """
