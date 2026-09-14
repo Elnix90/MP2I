@@ -3,7 +3,7 @@
 import asyncio
 import json
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import microsandbox
 
@@ -15,7 +15,7 @@ logger = get_logger()
 DEFAULT_PYTHON_IMAGE = "python:3.12-slim"
 
 
-async def run_python(code: str, timeout: int = 10, image: Optional[str] = None) -> str:
+async def run_python(code: str, timeout: int = 10, image: str | None = None) -> str:
     """Execute Python code in an ephemeral sandbox.
 
     Parameters
@@ -44,7 +44,7 @@ async def run_python(code: str, timeout: int = 10, image: Optional[str] = None) 
     name = f"run-python-{int(time.time() * 1000)}"
     sandbox = None
     try:
-        kwargs: Dict[str, Any] = {"memory_mib": 256, "cpus": 1}
+        kwargs: dict[str, Any] = {"memory_mib": 256, "cpus": 1}
         # Ensure an image or snapshot is provided for microsandbox
         kwargs["image"] = image or DEFAULT_PYTHON_IMAGE
 
@@ -65,7 +65,7 @@ async def run_python(code: str, timeout: int = 10, image: Optional[str] = None) 
             sandbox = await sandbox
 
         # Try multiple SDK variants: prefer sandbox.run, then sandbox.exec, then shell fallback
-        def _extract_exec_result(result: Any) -> Dict[str, Any]:
+        def _extract_exec_result(result: Any) -> dict[str, Any]:
             """Normalize a sandbox execution result into a JSON-friendly dict.
 
             Parameters
@@ -97,7 +97,7 @@ async def run_python(code: str, timeout: int = 10, image: Optional[str] = None) 
                     codev = getattr(result, attr)
                     break
             if hasattr(result, "success"):
-                success = getattr(result, "success")
+                success = result.success
 
             if callable(stdout):
                 stdout = stdout()
@@ -186,7 +186,7 @@ async def run_python(code: str, timeout: int = 10, image: Optional[str] = None) 
         return f"Error: Execution timeout after {timeout} seconds"
     except Exception as e:
         logger.error("Python execution error: %s", e, exc_info=True)
-        return f"Error: {str(e)}"
+        return f"Error: {e!s}"
     finally:
         if sandbox is not None:
             try:

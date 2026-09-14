@@ -3,7 +3,7 @@
 import asyncio
 import json
 import shlex
-from typing import Any, Dict
+from typing import Any
 
 import microsandbox
 
@@ -12,7 +12,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-def _extract_exec_result(result: Any) -> Dict[str, Any]:
+def _extract_exec_result(result: Any) -> dict[str, Any]:
     """Extract a normalized result payload from a sandbox execution result.
 
     Parameters
@@ -82,4 +82,4 @@ async def sandbox_fs_write(name: str, path: str, content: str) -> str:
         return json.dumps({"path": path, "written": True}, ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_fs_write failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

@@ -1,6 +1,5 @@
 """Helpers for sending Discord code blocks."""
 
-import discord
 
 
 async def send_code_block_with_return(

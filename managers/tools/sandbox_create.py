@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import microsandbox
 
@@ -16,14 +16,14 @@ async def sandbox_create(
     image: str,
     cpus: int = 1,
     memoryMib: int = 512,
-    workdir: Optional[str] = None,
-    env: Optional[Dict[str, str]] = None,
-    volumes: Optional[List[Dict[str, Any]]] = None,
-    patches: Optional[List[Dict[str, Any]]] = None,
-    entrypoint: Optional[List[str]] = None,
-    hostname: Optional[str] = None,
-    maxDuration: Optional[int] = None,
-    idleTimeout: Optional[int] = None,
+    workdir: str | None = None,
+    env: dict[str, str] | None = None,
+    volumes: list[dict[str, Any]] | None = None,
+    patches: list[dict[str, Any]] | None = None,
+    entrypoint: list[str] | None = None,
+    hostname: str | None = None,
+    maxDuration: int | None = None,
+    idleTimeout: int | None = None,
 ) -> str:
     """Create a new sandbox and return a status payload.
 
@@ -60,7 +60,7 @@ async def sandbox_create(
         JSON string describing the created sandbox.
     """
     try:
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "image": image,
             "cpus": cpus,
             "memory_mib": memoryMib,
@@ -109,4 +109,4 @@ async def sandbox_create(
         )
     except Exception as exc:
         logger.error("sandbox_create failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

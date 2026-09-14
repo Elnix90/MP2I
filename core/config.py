@@ -2,7 +2,7 @@
 
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 try:
     import tomllib as _toml
@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_CONFIG_PATH = os.path.join(BASE_DIR, "config.toml")
 
 
-def _load_toml(path: str = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
+def _load_toml(path: str = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
     """Load and parse a TOML configuration file.
 
     Parameters
@@ -66,8 +66,8 @@ def _load_toml(path: str = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
 
 
 def read_from_toml_config(
-    param: str, config: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    param: str, config: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Read a nested config table from TOML data.
 
     Parameters
@@ -141,7 +141,7 @@ class DiscordLoggingConfig:
     """
 
     enable_discord_logging: bool = False
-    discord_webhook: Optional[str] = None
+    discord_webhook: str | None = None
     discord_format: str = "%(asctime)s - %(filename)s\n%(message)s"
 
 
@@ -224,7 +224,7 @@ class LoggingConfig:
         return self.discord.enable_discord_logging
 
     @property
-    def discord_webhook(self) -> Optional[str]:
+    def discord_webhook(self) -> str | None:
         """Return the configured Discord webhook URL.
 
         Returns
@@ -294,9 +294,9 @@ class Config:
         Path to the active config file.
     """
 
-    BOT_TOKEN: Optional[str] = None
-    WEBHOOK_POSTURL: Optional[str] = None
-    WEBHOOK_URL: Optional[str] = None
+    BOT_TOKEN: str | None = None
+    WEBHOOK_POSTURL: str | None = None
+    WEBHOOK_URL: str | None = None
 
     # Path to system prompt and data
     BASE_DIR: str = BASE_DIR
@@ -307,7 +307,7 @@ class Config:
     CONFIG_PATH: str = DEFAULT_CONFIG_PATH
 
 
-def _first_table(items: Any) -> Dict[str, Any]:
+def _first_table(items: Any) -> dict[str, Any]:
     """Return the first dict from a TOML table-or-list value.
 
     Parameters
@@ -327,7 +327,7 @@ def _first_table(items: Any) -> Dict[str, Any]:
     return {}
 
 
-def _normalize_webhook_url(url: Optional[str]) -> Optional[str]:
+def _normalize_webhook_url(url: str | None) -> str | None:
     """Normalize a Discord webhook URL or webhook id/path.
 
     Parameters
@@ -353,7 +353,7 @@ def _normalize_webhook_url(url: Optional[str]) -> Optional[str]:
     return f"https://discord.com/api/webhooks/{url.lstrip('/')}"
 
 
-def load_config(config_path: Optional[str] = None) -> Tuple[Config, LoggingConfig]:
+def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
     """Load application and logging configuration.
 
     Parameters
@@ -457,7 +457,7 @@ def load_config(config_path: Optional[str] = None) -> Tuple[Config, LoggingConfi
 cfg, logging_cfg = load_config()
 
 
-def read_system_prompt() -> Optional[str]:
+def read_system_prompt() -> str | None:
     """Read the global system prompt from disk.
 
     Returns
@@ -471,7 +471,7 @@ def read_system_prompt() -> Optional[str]:
     return None
 
 
-def read_mood_prompt(mood: str | None) -> Optional[str]:
+def read_mood_prompt(mood: str | None) -> str | None:
     """Read a mood-specific system prompt from `data/moods/<mood>.txt`.
 
     If `mood` is None or the file does not exist, fallback to `neutral.txt`.

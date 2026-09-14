@@ -9,8 +9,12 @@ import time
 import discord
 from discord import app_commands
 
-from cmds._shared import (defer_interaction, log_command_end,
-                          log_command_error, log_command_start)
+from cmds._shared import (
+    defer_interaction,
+    log_command_end,
+    log_command_error,
+    log_command_start,
+)
 from core.tools import get_combined_tools, tools_loader
 from managers.mcp import mcp_manager
 from utils.logger import get_logger

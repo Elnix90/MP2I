@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Any, Dict
+from typing import Any
 
 import microsandbox
 
@@ -11,7 +11,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-def _extract_exec_result(result: Any) -> Dict[str, Any]:
+def _extract_exec_result(result: Any) -> dict[str, Any]:
     """Extract a normalized result payload from a sandbox execution result.
 
     Parameters
@@ -81,4 +81,4 @@ async def sandbox_fs_list(name: str, path: str) -> str:
         return str(out.get("stdout") or "[]").strip()
     except Exception as exc:
         logger.error("sandbox_fs_list failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

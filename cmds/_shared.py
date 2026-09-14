@@ -6,7 +6,7 @@ sending interaction responses.
 """
 
 import time
-from typing import Any, Optional
+from typing import Any
 
 
 def interaction_context(interaction: Any) -> str:
@@ -118,7 +118,7 @@ async def defer_interaction(interaction: Any, *, ephemeral: bool = True) -> bool
 async def send_interaction(
     interaction: Any,
     *,
-    content: Optional[str] = None,
+    content: str | None = None,
     embed: Any = None,
     embeds: Any = None,
     ephemeral: bool = True,

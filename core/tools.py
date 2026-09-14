@@ -1,6 +1,5 @@
 """Tool registry helpers for combining native and MCP tools."""
 
-import json
 import os
 
 from managers.mcp import mcp_manager
@@ -75,4 +74,4 @@ async def handle_tool_call(tool_name: str, args: dict) -> str:
 
     except Exception as e:
         logger.error(f"Error in tool {tool_name}: {e}")
-        return f"Error during tool {tool_name} execution: {str(e)}"
+        return f"Error during tool {tool_name} execution: {e!s}"

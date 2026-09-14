@@ -7,7 +7,6 @@ commands.
 
 import importlib
 import inspect
-import logging
 import pkgutil
 import time
 from pathlib import Path

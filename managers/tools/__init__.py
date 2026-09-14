@@ -36,8 +36,8 @@ class ToolsLoader:
             Path to the directory containing tool JSON files.
         """
         self.tools_dir = tools_dir
-        self.tools_metadata: List[Dict[str, Any]] = []
-        self.tools_handlers: Dict[str, Any] = {}
+        self.tools_metadata: list[dict[str, Any]] = []
+        self.tools_handlers: dict[str, Any] = {}
         self._load_tools()
 
     def _load_tools(self):
@@ -142,4 +142,4 @@ class ToolsLoader:
             return result
         except Exception as e:
             logger.error(f"Error calling tool {tool_name}: {e}")
-            return f"Error: {str(e)}"
+            return f"Error: {e!s}"

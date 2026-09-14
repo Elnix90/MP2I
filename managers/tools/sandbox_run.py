@@ -3,7 +3,7 @@
 import asyncio
 import json
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import microsandbox
 
@@ -12,7 +12,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-def _extract_exec_result(result: Any) -> Dict[str, Any]:
+def _extract_exec_result(result: Any) -> dict[str, Any]:
     """Normalize a sandbox execution result into a JSON-friendly dict.
 
     Parameters
@@ -50,7 +50,7 @@ async def sandbox_run(
     command: str,
     memoryMib: int = 512,
     cpus: int = 1,
-    env: Optional[Dict[str, str]] = None,
+    env: dict[str, str] | None = None,
 ) -> str:
     """Create a sandbox, run a command and return the result payload.
 
@@ -75,7 +75,7 @@ async def sandbox_run(
     name = f"native-run-{int(time.time() * 1000)}"
     sandbox = None
     try:
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "image": image,
             "memory_mib": memoryMib,
             "cpus": cpus,
@@ -101,7 +101,7 @@ async def sandbox_run(
         return json.dumps(_extract_exec_result(output), ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_run failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"
     finally:
         if sandbox is not None:
             try:

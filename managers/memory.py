@@ -10,9 +10,10 @@ import asyncio
 import json
 import time
 import uuid
+from collections.abc import AsyncIterator, Iterable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, AsyncIterator, Iterable
+from typing import Any
 
 import cocoindex as coco
 from cocoindex.connectors import sqlite as coco_sqlite
@@ -27,7 +28,7 @@ COCOINDEX_DB_PATH = BASE_DIR / "data" / "cocoindex_memory.db"
 MEMORY_STORE_KEY = coco.ContextKey["MemoryManager"]("evilgpt_memory_store")
 MEMORY_DB_KEY = coco.ContextKey[coco_sqlite.ManagedConnection]("evilgpt_memory_db")
 
-_ACTIVE_MEMORY_MANAGER: "MemoryManager | None" = None
+_ACTIVE_MEMORY_MANAGER: MemoryManager | None = None
 
 
 @dataclass(slots=True)

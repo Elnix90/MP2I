@@ -2,8 +2,6 @@
 
 import json
 import os
-import time
-from typing import Dict, List, Optional
 
 from core.config import cfg
 from utils.logger import get_logger
@@ -83,7 +81,7 @@ class Model:
         self.api_key = provider.api_key
 
 
-def get_model_catalog() -> List[Dict[str, str]]:
+def get_model_catalog() -> list[dict[str, str]]:
     """Return the model catalog with provider metadata.
 
     Returns
@@ -125,7 +123,7 @@ def get_model_catalog() -> List[Dict[str, str]]:
     return catalog
 
 
-def _load_providers() -> Dict[str, Provider]:
+def _load_providers() -> dict[str, Provider]:
     """Load provider configurations from the providers JSON file.
 
     Returns
@@ -150,7 +148,7 @@ def _load_providers() -> Dict[str, Provider]:
     return providers
 
 
-def get_models() -> List[Model]:
+def get_models() -> list[Model]:
     """Return the list of models with available API keys.
 
     Returns

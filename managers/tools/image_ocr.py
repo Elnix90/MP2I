@@ -2,7 +2,6 @@
 
 import base64
 import io
-from typing import Optional
 
 import pytesseract
 import requests
@@ -13,7 +12,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-def _build_tesseract_config(psm: Optional[int], oem: Optional[int]) -> str:
+def _build_tesseract_config(psm: int | None, oem: int | None) -> str:
     """Build a Tesseract command-line config string.
 
     Parameters
@@ -37,7 +36,7 @@ def _build_tesseract_config(psm: Optional[int], oem: Optional[int]) -> str:
 
 
 def _load_image_bytes(
-    image_path: Optional[str], image_url: Optional[str], image_base64: Optional[str]
+    image_path: str | None, image_url: str | None, image_base64: str | None
 ) -> bytes:
     """Load raw image bytes from a path, URL or base64 payload.
 
@@ -80,8 +79,8 @@ async def image_ocr(
     image_url: str = "",
     image_base64: str = "",
     lang: str = "eng",
-    psm: Optional[int] = None,
-    oem: Optional[int] = None,
+    psm: int | None = None,
+    oem: int | None = None,
 ) -> str:
     """Extract text from image with Tesseract OCR.
 
@@ -125,4 +124,4 @@ async def image_ocr(
         )
     except Exception as e:
         logger.error(f"image_ocr failed: {e}")
-        return f"Error: {str(e)}"
+        return f"Error: {e!s}"

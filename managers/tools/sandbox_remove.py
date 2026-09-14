@@ -36,4 +36,4 @@ async def sandbox_remove(name: str, force: bool = False) -> str:
         return json.dumps({"name": name, "removed": True}, ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_remove failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

@@ -36,4 +36,4 @@ async def sandbox_stop(name: str, force: bool = False) -> str:
         )
     except Exception as exc:
         logger.error("sandbox_stop failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

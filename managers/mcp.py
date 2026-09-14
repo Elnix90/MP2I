@@ -10,7 +10,7 @@ import os
 import shlex
 import subprocess
 import traceback
-from typing import Any, Dict, List
+from typing import Any
 
 from fastmcp import Client
 
@@ -37,14 +37,14 @@ class MCPManager:
             Path to the JSON file containing MCP server configurations.
         """
         self.config_path = config_path
-        self.clients: Dict[str, Client] = {}
-        self.client_configs: Dict[str, Dict[str, Any]] = {}
-        self.server_raw_configs: Dict[str, Dict[str, Any]] = {}
-        self.tools_metadata: List[Dict[str, Any]] = []
+        self.clients: dict[str, Client] = {}
+        self.client_configs: dict[str, dict[str, Any]] = {}
+        self.server_raw_configs: dict[str, dict[str, Any]] = {}
+        self.tools_metadata: list[dict[str, Any]] = []
 
     def _debug_run_command(
-        self, command: str, args: List[str], env: Dict[str, str]
-    ) -> Dict[str, str]:
+        self, command: str, args: list[str], env: dict[str, str]
+    ) -> dict[str, str]:
         """Run a command locally and capture stdout/stderr for debugging.
 
         Parameters
@@ -85,7 +85,7 @@ class MCPManager:
                 "cmdline": " ".join(shlex.quote(x) for x in cmd),
             }
 
-    def _prepare_runtime_env(self, base_env: Dict[str, str]) -> Dict[str, str]:
+    def _prepare_runtime_env(self, base_env: dict[str, str]) -> dict[str, str]:
         """Prepare a runtime environment for launching MCP subprocesses.
 
         Ensures `~/.microsandbox/bin` is on `PATH` and sets `MSB_PATH` when
@@ -143,7 +143,7 @@ class MCPManager:
         if tasks:
             await asyncio.gather(*tasks)
 
-    async def _initialize_server(self, name: str, srv_config: Dict[str, Any]):
+    async def _initialize_server(self, name: str, srv_config: dict[str, Any]):
         """Initialize a single MCP server and collect its tools.
 
         Parameters
@@ -194,7 +194,7 @@ class MCPManager:
                 )
             except Exception:
                 logger.debug(
-                    f"MCP client_config for {name}: (unserializable) {repr(client_config)}"
+                    f"MCP client_config for {name}: (unserializable) {client_config!r}"
                 )
 
             client = Client(client_config)
@@ -249,7 +249,7 @@ class MCPManager:
                 logger.error(traceback.format_exc())
 
     async def call_tool(
-        self, server_name: str, tool_name: str, arguments: Dict[str, Any]
+        self, server_name: str, tool_name: str, arguments: dict[str, Any]
     ) -> str:
         """Call a tool on a remote MCP server and return its result.
 
@@ -317,11 +317,11 @@ class MCPManager:
                     except Exception:
                         logger.error("Failed to run local command debug in call_tool")
                         logger.error(traceback.format_exc())
-                    return f"Error: {str(inner)}"
+                    return f"Error: {inner!s}"
         except Exception as e:
             logger.error(f"Error calling MCP tool {tool_name} on {server_name}: {e}")
             logger.error(traceback.format_exc())
-            return f"Error: {str(e)}"
+            return f"Error: {e!s}"
 
 
 # Singleton instance

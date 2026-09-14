@@ -47,4 +47,4 @@ async def sandbox_metrics(name: str) -> str:
         return json.dumps(payload, ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_metrics failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

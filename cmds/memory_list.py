@@ -1,12 +1,15 @@
 import time
-from typing import Optional
 
 import discord
 from discord import app_commands
 
-from cmds._shared import (defer_interaction, log_command_end,
-                          log_command_error, log_command_start,
-                          send_interaction)
+from cmds._shared import (
+    defer_interaction,
+    log_command_end,
+    log_command_error,
+    log_command_start,
+    send_interaction,
+)
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -22,7 +25,7 @@ async def setup(tree: app_commands.CommandTree, bot):
     async def memory_list(
         interaction: discord.Interaction,
         limit: int = 10,
-        user: Optional[discord.User] = None,
+        user: discord.User | None = None,
     ):
         start_time = time.perf_counter()
         log_command_start(logger, "memory_list", interaction, limit=limit)

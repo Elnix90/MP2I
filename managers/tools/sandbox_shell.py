@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Any, Dict, Optional
+from typing import Any
 
 import microsandbox
 
@@ -11,7 +11,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-def _extract_exec_result(result: Any) -> Dict[str, Any]:
+def _extract_exec_result(result: Any) -> dict[str, Any]:
     """Normalize a sandbox execution result into a JSON-friendly dict.
 
     Parameters
@@ -45,7 +45,7 @@ def _extract_exec_result(result: Any) -> Dict[str, Any]:
 
 
 async def sandbox_shell(
-    name: str, command: str, timeout: Optional[float] = None
+    name: str, command: str, timeout: float | None = None
 ) -> str:
     """Execute a shell command in an existing sandbox.
 
@@ -76,4 +76,4 @@ async def sandbox_shell(
         return json.dumps(_extract_exec_result(result), ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_shell failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

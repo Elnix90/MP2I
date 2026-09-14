@@ -1,10 +1,7 @@
 """Render markdown tables as images for Discord messages."""
 
 import io
-import logging
 import re
-import textwrap
-from typing import Any, List, Optional, Tuple
 from urllib.parse import urlparse
 
 from PIL import Image, ImageDraw, ImageFont
@@ -29,8 +26,8 @@ COLUMN_MAX_WIDTH = 1200
 
 
 def _extract_links_and_sanitize(
-    text: str, current_links: List[str]
-) -> Tuple[str, List[str]]:
+    text: str, current_links: list[str]
+) -> tuple[str, list[str]]:
     """Replace raw links with numbered references and collect URLs.
 
     Parameters
@@ -68,8 +65,7 @@ def _extract_links_and_sanitize(
             idx = len(current_links)
 
         domain = urlparse(url).netloc
-        if domain.startswith("www."):
-            domain = domain[4:]
+        domain = domain.removeprefix("www.")
         return f"[{idx}] ({domain})"
 
     sanitized_text = re.sub(URL_REGEX, replacer, text)
@@ -108,11 +104,11 @@ def _get_font(size: int, bold: bool = False, italic: bool = False):
 
 
 def _calc_col_widths(
-    headers: List[str],
-    rows: List[List[str]],
+    headers: list[str],
+    rows: list[list[str]],
     font: ImageFont.FreeTypeFont,
     padding: int,
-) -> List[int]:
+) -> list[int]:
     """Calculate column widths for a rendered table image.
 
     Parameters
@@ -148,7 +144,7 @@ def _calc_col_widths(
     return widths
 
 
-def _wrap_text(text: str, max_width: int, font: ImageFont.FreeTypeFont) -> List[str]:
+def _wrap_text(text: str, max_width: int, font: ImageFont.FreeTypeFont) -> list[str]:
     """Wrap text to fit within a pixel width.
 
     Parameters
@@ -184,8 +180,8 @@ def _wrap_text(text: str, max_width: int, font: ImageFont.FreeTypeFont) -> List[
 
 
 def _render_table_image(
-    headers: List[str], rows: List[List[str]], alignments: List[str]
-) -> Tuple[io.BytesIO, List[str]]:
+    headers: list[str], rows: list[list[str]], alignments: list[str]
+) -> tuple[io.BytesIO, list[str]]:
     """Render a markdown table into an image buffer.
 
     Parameters
@@ -297,7 +293,7 @@ def _render_table_image(
     return buf, all_links
 
 
-def detect_and_convert_tables(text: str) -> Tuple[str, List[io.BytesIO], List[dict]]:
+def detect_and_convert_tables(text: str) -> tuple[str, list[io.BytesIO], list[dict]]:
     """Detect markdown tables in text and convert them to image buffers.
 
     Parameters
@@ -351,10 +347,8 @@ def detect_and_convert_tables(text: str) -> Tuple[str, List[io.BytesIO], List[di
         rows = []
         for i in range(start_row, len(lines)):
             row_raw = lines[i].strip()
-            if row_raw.startswith("|"):
-                row_raw = row_raw[1:]
-            if row_raw.endswith("|"):
-                row_raw = row_raw[:-1]
+            row_raw = row_raw.removeprefix("|")
+            row_raw = row_raw.removesuffix("|")
             cells = [c.strip() for c in row_raw.split("|")]
             rows.append(cells[: len(headers)] + [""] * (len(headers) - len(cells)))
 

@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import microsandbox
 
@@ -11,7 +11,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-def _extract_exec_result(result: Any) -> Dict[str, Any]:
+def _extract_exec_result(result: Any) -> dict[str, Any]:
     """Normalize a sandbox execution result into a JSON-friendly dict.
 
     Parameters
@@ -47,10 +47,10 @@ def _extract_exec_result(result: Any) -> Dict[str, Any]:
 async def sandbox_exec(
     name: str,
     command: str,
-    args: Optional[List[str]] = None,
-    cwd: Optional[str] = None,
-    env: Optional[Dict[str, str]] = None,
-    timeout: Optional[float] = None,
+    args: list[str] | None = None,
+    cwd: str | None = None,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None,
 ) -> str:
     """Execute a command in an existing sandbox.
 
@@ -77,7 +77,7 @@ async def sandbox_exec(
     try:
         sandbox = await asyncio.to_thread(microsandbox.Sandbox.get, name)
 
-        options: Dict[str, Any] = {}
+        options: dict[str, Any] = {}
         if args:
             options["args"] = args
         if cwd:
@@ -97,4 +97,4 @@ async def sandbox_exec(
         return json.dumps(_extract_exec_result(result), ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_exec failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

@@ -1,7 +1,6 @@
 """Helpers for detecting and rendering LaTeX content."""
 
 import io
-import logging
 import re
 import urllib.parse
 

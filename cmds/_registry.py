@@ -7,7 +7,6 @@ making it easier to generate documentation and manage command loading.
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
 
 
 @dataclass
@@ -20,7 +19,7 @@ class CommandInfo:
     file_path: Path
 
 
-def get_all_commands() -> List[CommandInfo]:
+def get_all_commands() -> list[CommandInfo]:
     """Discover all commands in the cmds/ directory using static analysis.
 
     Returns
@@ -50,9 +49,7 @@ def get_all_commands() -> List[CommandInfo]:
                             if (
                                 isinstance(func, ast.Attribute)
                                 and func.attr == "command"
-                            ):
-                                is_command = True
-                            elif isinstance(func, ast.Name) and func.id == "command":
+                            ) or isinstance(func, ast.Name) and func.id == "command":
                                 is_command = True
 
                             if is_command:

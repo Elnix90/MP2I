@@ -3,7 +3,6 @@
 import logging
 import time
 from logging import Handler
-from typing import Optional
 
 import colorama
 from colorama import Fore, Style
@@ -247,7 +246,7 @@ class DiscordWebhookHandler(Handler):
                 print(f"Failed to send log to Discord webhook (discord-webhook): {exc}")
 
 
-def _is_real_webhook_url(url: Optional[str]) -> bool:
+def _is_real_webhook_url(url: str | None) -> bool:
     """Return True when the webhook URL looks like a real value.
 
     Parameters
@@ -273,9 +272,9 @@ def setup_logging(level: int = logging.INFO, config=None):
     config : Any
         Optional configuration object with logging settings. Default is None.
     """
-    console_format = getattr(config, "console_format")
-    file_format = getattr(config, "file_format")
-    discord_format = getattr(config, "discord_format")
+    console_format = config.console_format
+    file_format = config.file_format
+    discord_format = config.discord_format
 
     handlers = []
 
@@ -307,7 +306,7 @@ def setup_logging(level: int = logging.INFO, config=None):
         and _is_real_webhook_url(getattr(config, "discord_webhook", None))
     ):
         try:
-            dh = DiscordWebhookHandler(getattr(config, "discord_webhook"))
+            dh = DiscordWebhookHandler(config.discord_webhook)
             dh.setFormatter(DiscordAnsiFormatter(discord_format))
             handlers.append(dh)
         except Exception:

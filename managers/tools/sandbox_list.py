@@ -33,4 +33,4 @@ async def sandbox_list() -> str:
         return json.dumps(results, ensure_ascii=True, indent=2)
     except Exception as exc:
         logger.error("sandbox_list failed: %s", exc, exc_info=True)
-        return f"Error: {str(exc)}"
+        return f"Error: {exc!s}"

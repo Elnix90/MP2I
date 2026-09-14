@@ -2,7 +2,7 @@
 
 import ast
 import math
-from typing import Any, Dict
+from typing import Any
 
 from pint import UnitRegistry
 
@@ -12,7 +12,7 @@ logger = get_logger()
 
 UREG = UnitRegistry()
 
-ALLOWED_FUNCS: Dict[str, Any] = {
+ALLOWED_FUNCS: dict[str, Any] = {
     "abs": abs,
     "round": round,
     "sqrt": math.sqrt,
@@ -30,7 +30,7 @@ ALLOWED_FUNCS: Dict[str, Any] = {
     "ceil": math.ceil,
 }
 
-ALLOWED_CONSTS: Dict[str, Any] = {
+ALLOWED_CONSTS: dict[str, Any] = {
     "pi": math.pi,
     "e": math.e,
     "tau": math.tau,
@@ -192,4 +192,4 @@ async def safe_eval_math(expression: str, precision: int = 10) -> str:
         return f"{result:.{precision}g}"
     except Exception as e:
         logger.error(f"safe_eval_math failed: {e}")
-        return f"Error: {str(e)}"
+        return f"Error: {e!s}"

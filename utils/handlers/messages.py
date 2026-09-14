@@ -1,17 +1,14 @@
 """Helpers for sending long or formatted Discord messages."""
 
-import logging
 import re
-from typing import Any, List, Optional, Tuple
 
 import discord
 
-from core.config import cfg
 from utils.logger import get_logger
 
 logger = get_logger()
 
-from utils.handlers.codeblock import send_code_block, send_code_block_with_return
+from utils.handlers.codeblock import send_code_block_with_return
 from utils.handlers.latex import LATEX_TO_EMOJI, detect_latex
 from utils.handlers.table import TABLE_IMAGE_PLACEHOLDER, detect_and_convert_tables
 
@@ -32,7 +29,7 @@ class MessageSender:
     def __init__(
         self,
         channel: discord.abc.Messageable,
-        bot: Optional[discord.Client] = None,
+        bot: discord.Client | None = None,
         max_length: int = 2000,
     ):
         """Initialize a message sender.
@@ -62,7 +59,7 @@ class MessageSender:
             return self.bot.get_channel(self.channel.id) or self.channel
         return self.channel
 
-    async def send_text_chunks(self, text: str) -> Optional[discord.Message]:
+    async def send_text_chunks(self, text: str) -> discord.Message | None:
         """Send plain text as one or more Discord messages.
 
         Parameters
@@ -99,7 +96,7 @@ class MessageSender:
             last_message = await target.send(current_message.rstrip())
         return last_message
 
-    async def send_latex_image(self, latex_match: str) -> Optional[discord.Message]:
+    async def send_latex_image(self, latex_match: str) -> discord.Message | None:
         """Render and send a LaTeX expression as an image when possible.
 
         Parameters
@@ -149,7 +146,7 @@ class MessageSender:
             latex = latex[2:-2]
         return latex
 
-    async def send_text_with_latex(self, text: str) -> Optional[discord.Message]:
+    async def send_text_with_latex(self, text: str) -> discord.Message | None:
         """Send text while converting LaTeX fragments to emoji or images.
 
         Parameters
@@ -189,7 +186,7 @@ class MessageSender:
 
     async def process_and_send(
         self, response: str
-    ) -> Tuple[Optional[discord.Message], List[dict]]:
+    ) -> tuple[discord.Message | None, list[dict]]:
         """Process a response and send text, tables and code blocks.
 
         Parameters

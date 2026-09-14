@@ -2,7 +2,6 @@
 
 import logging
 import time
-from typing import List, Optional
 
 import litellm
 
@@ -16,7 +15,7 @@ try:
         litellm._turn_off_debug()
     else:
         # Fallback: set verbose flag if present
-        setattr(litellm, "set_verbose", False)
+        litellm.set_verbose = False
 except Exception:
     pass
 
@@ -24,7 +23,6 @@ except Exception:
 for _n in ("LiteLLM", "litellm"):
     logging.getLogger(_n).setLevel(logging.WARNING)
 
-from core.config import cfg
 from core.models_loader import Model, get_models
 from core.tools import get_combined_tools, handle_tool_call
 from utils.logger import get_logger
@@ -191,7 +189,7 @@ class Answer:
         self.response_time = None
 
 
-def _select_model(models: List[Model]) -> Optional[Model]:
+def _select_model(models: list[Model]) -> Model | None:
     """Select the primary model from the available list.
 
     Parameters

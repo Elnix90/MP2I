@@ -3,7 +3,7 @@
 import asyncio
 import json
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import microsandbox
 
@@ -15,7 +15,7 @@ logger = get_logger()
 DEFAULT_SHELL_IMAGE = "ubuntu:22.04"
 
 
-async def run_bash(code: str, timeout: int = 10, image: Optional[str] = None) -> str:
+async def run_bash(code: str, timeout: int = 10, image: str | None = None) -> str:
     """Execute Bash code in an ephemeral sandbox.
 
     Parameters
@@ -44,7 +44,7 @@ async def run_bash(code: str, timeout: int = 10, image: Optional[str] = None) ->
     name = f"run-bash-{int(time.time() * 1000)}"
     sandbox = None
     try:
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "memory_mib": 256,
             "cpus": 1,
             "image": image or DEFAULT_SHELL_IMAGE,
@@ -66,7 +66,7 @@ async def run_bash(code: str, timeout: int = 10, image: Optional[str] = None) ->
         if asyncio.iscoroutine(sandbox) or isinstance(sandbox, asyncio.Future):
             sandbox = await sandbox
 
-        def _extract_exec_result(result: Any) -> Dict[str, Any]:
+        def _extract_exec_result(result: Any) -> dict[str, Any]:
             """Normalize a sandbox execution result into a JSON-friendly dict.
 
             Parameters
@@ -98,7 +98,7 @@ async def run_bash(code: str, timeout: int = 10, image: Optional[str] = None) ->
                     codev = getattr(result, attr)
                     break
             if hasattr(result, "success"):
-                success = getattr(result, "success")
+                success = result.success
 
             if callable(stdout):
                 stdout = stdout()
@@ -165,7 +165,7 @@ async def run_bash(code: str, timeout: int = 10, image: Optional[str] = None) ->
         return f"Error: Execution timeout after {timeout} seconds"
     except Exception as e:
         logger.error("Bash execution error: %s", e, exc_info=True)
-        return f"Error: {str(e)}"
+        return f"Error: {e!s}"
     finally:
         if sandbox is not None:
             try:
