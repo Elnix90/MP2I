@@ -22,8 +22,10 @@ async def setup(tree: app_commands.CommandTree, bot):
     Returns the colles of the week for the user issuing the command
     """
 
-    @tree.command(name="colle", description="Renvoie les colles de la semaine pour l'utilisateur")
-    async def colle(interaction: discord.Interaction):
+    @tree.command(
+        name="colle", description="Renvoie les colles de la semaine pour l'utilisateur"
+    )
+    async def colle(interaction: discord.Interaction, user: discord.User | None = None):
         """Respond with gateway latency.
 
         Parameters
@@ -36,14 +38,17 @@ async def setup(tree: app_commands.CommandTree, bot):
         log_command_start(logger, "colle", interaction)
 
         try:
-            user = interaction.user.id
+            if user is not None:
+                user_requested = user
+            else:
+                user_requested = interaction.user
 
-            roles: list[Role] = interaction.user.roles  # pyright: ignore[reportAttributeAccessIssue]
+            roles: list[Role] = user_requested.roles  # pyright: ignore[reportAttributeAccessIssue]
             roles_list: list[int] = [role.id for role in roles]
 
             user_group: int | None = None
             user_group_role_id: int | None = None
-            
+
             group_roles_number: int = 0
 
             for group, role_id in ROLES_IDS.items():
@@ -52,24 +57,25 @@ async def setup(tree: app_commands.CommandTree, bot):
                     group_roles_number += 1
 
             if user_group is not None and user_group_role_id is not None:
-
                 colles = get_colles(user_group)
-                
-                
-                msg = f"Hello <@{user}>, tu fais parti du Groupe {user_group}! (<@&{user_group_role_id}>)\ntes colles sont:\n- {colles[0]}\n- {colles[1]}"
+
+                colles_str = f"\n- {colles[0]}\n- {colles[1]}"
+
+                if user is not None:
+                    msg = f"<@{user_requested.id}> aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                else:
+                    msg = f"Hello <@{user_requested.id}>, tu fais parti du Groupe {user_group}! (<@&{user_group_role_id}>)\ntes colles sont:{colles_str}"
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRU**, **BANNISEMMENT EN COURS**!!!"
 
-            await interaction.response.send_message(content = msg)
+            await interaction.response.send_message(content=msg)
 
             log_command_end(logger, "colle", start_time)
         except Exception as exc:
             log_command_error(logger, "colle", exc)
             if not interaction.response.is_done():
                 await interaction.response.send_message(
-                    "Error while checking your colles.", ephemeral=True
+                    "Error while checking your colles."
                 )
             else:
-                await interaction.followup.send(
-                    "Error while checking colles.", ephemeral=True
-                )
+                await interaction.followup.send("Error while checking colles.")
