@@ -10,7 +10,7 @@ import discord
 from discord import Role, app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
-from data.roles_ids import ROLES_IDS
+from core.roles_ids import ROLES_IDS
 from db.sql_requests import get_colles
 from utils.logger import get_logger
 
