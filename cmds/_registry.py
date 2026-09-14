@@ -47,9 +47,13 @@ def get_all_commands() -> list[CommandInfo]:
 
                             # Matches @tree.command or @app_commands.command
                             if (
-                                isinstance(func, ast.Attribute)
-                                and func.attr == "command"
-                            ) or isinstance(func, ast.Name) and func.id == "command":
+                                (
+                                    isinstance(func, ast.Attribute)
+                                    and func.attr == "command"
+                                )
+                                or isinstance(func, ast.Name)
+                                and func.id == "command"
+                            ):
                                 is_command = True
 
                             if is_command:

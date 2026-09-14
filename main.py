@@ -1,4 +1,4 @@
-"""Entrypoint for EvilGPT application.
+"""Entrypoint for the MP2I Discord bot.
 
 Sets up logging and starts the bot when executed as a script.
 """
@@ -20,7 +20,7 @@ if __name__ == "__main__":
         # Import bot after logging setup to capture startup logs during module import.
         import bot
 
-        logger.info("Démarrage de l'application EvilGPT...")
+        logger.info("Démarrage du bot MP2I...")
         bot.run_bot()
     except KeyboardInterrupt:
         print("\n")  # New line for cleaner exit

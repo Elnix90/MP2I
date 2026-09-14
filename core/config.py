@@ -1,4 +1,4 @@
-"""Configuration loading and prompt helpers for EvilGPT."""
+"""Configuration loading helpers."""
 
 import os
 from dataclasses import dataclass
@@ -120,7 +120,7 @@ class FileLoggingConfig:
     """
 
     enable_file_logging: bool = True
-    log_file: str = "logs/evilgpt.log"
+    log_file: str = "logs/bot.log"
 
     # file logs can keep more context; filename is more useful than logger name
     file_format: str = "%(asctime)s - %(filename)s - %(message)s"
@@ -282,14 +282,6 @@ class Config:
         Resolved webhook URL.
     BASE_DIR : str
         Repository base directory.
-    SYSTEM_PROMPT_PATH : str
-        Path to the system prompt file.
-    PROVIDERS_PATH : str
-        Path to the provider definitions.
-    MODELS_PATH : str
-        Path to the model definitions.
-    MOODS_DIR : str
-        Path to the mood prompt directory.
     CONFIG_PATH : str
         Path to the active config file.
     """
@@ -298,12 +290,7 @@ class Config:
     WEBHOOK_POSTURL: str | None = None
     WEBHOOK_URL: str | None = None
 
-    # Path to system prompt and data
     BASE_DIR: str = BASE_DIR
-    SYSTEM_PROMPT_PATH: str = os.path.join(BASE_DIR, "config", "system_prompt.txt")
-    PROVIDERS_PATH: str = os.path.join(BASE_DIR, "config", "providers.json")
-    MODELS_PATH: str = os.path.join(BASE_DIR, "config", "models.json")
-    MOODS_DIR: str = os.path.join(BASE_DIR, "config", "moods")
     CONFIG_PATH: str = DEFAULT_CONFIG_PATH
 
 
@@ -387,9 +374,7 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
         enable_file_logging=file_raw.get(
             "enable_file_logging", raw_logging.get("enable_file_logging", True)
         ),
-        log_file=file_raw.get(
-            "log_file", raw_logging.get("log_file", "logs/evilgpt.log")
-        ),
+        log_file=file_raw.get("log_file", raw_logging.get("log_file", "logs/bot.log")),
         file_format=file_raw.get(
             "file_format",
             raw_logging.get("file_format", "%(asctime)s - %(filename)s - %(message)s"),
@@ -455,47 +440,3 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
 
 # load default config at import time
 cfg, logging_cfg = load_config()
-
-
-def read_system_prompt() -> str | None:
-    """Read the global system prompt from disk.
-
-    Returns
-    -------
-    Optional[str]
-        Prompt text or None when the file is missing.
-    """
-    if os.path.exists(cfg.SYSTEM_PROMPT_PATH):
-        with open(cfg.SYSTEM_PROMPT_PATH, "r", encoding="utf-8") as f:
-            return f.read().strip()
-    return None
-
-
-def read_mood_prompt(mood: str | None) -> str | None:
-    """Read a mood-specific system prompt from `data/moods/<mood>.txt`.
-
-    If `mood` is None or the file does not exist, fallback to `neutral.txt`.
-
-    Parameters
-    ----------
-    mood : str | None
-        Mood name to read.
-
-    Returns
-    -------
-    Optional[str]
-        Mood prompt text or None when unavailable.
-    """
-    moods_dir = os.path.join(BASE_DIR, "data", "moods")
-    if mood:
-        path = os.path.join(moods_dir, f"{mood}.txt")
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read().strip()
-
-    # fallback to neutral
-    fallback = os.path.join(moods_dir, "neutral.txt")
-    if os.path.exists(fallback):
-        with open(fallback, "r", encoding="utf-8") as f:
-            return f.read().strip()
-    return None

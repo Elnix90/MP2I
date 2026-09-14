@@ -9,7 +9,7 @@ from colorama import Fore, Style
 
 colorama.init(autoreset=True)
 
-LOGGER_NAME = "EvilGPT"
+LOGGER_NAME = "MP2IGPT"
 
 
 class EvilGPTFilter(logging.Filter):
