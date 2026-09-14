@@ -66,7 +66,7 @@ async def setup(tree: app_commands.CommandTree, bot):
                 else:
                     msg = f"Hello <@{user_requested.id}>, tu fais parti du Groupe {user_group}! (<@&{user_group_role_id}>)\ntes colles sont:{colles_str}"
             else:
-                msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRU**, **BANNISEMMENT EN COURS**!!!"
+                msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
 
             await interaction.response.send_message(content=msg)
 
