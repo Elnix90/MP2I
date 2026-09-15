@@ -14,3 +14,7 @@ description = "Create virtual environment"
 [tasks.lint]
 run = "ruff check"
 description = "Run linter"
+
+[tasks.setup-hooks]
+run = "pre-commit install && pre-commit install --hook-type commit-msg"
+description = "Install git hooks (pre-commit + commit-msg)"
