@@ -7,14 +7,11 @@ returns the bot's gateway latency.
 import time
 
 import discord
-from discord import Role, app_commands
-from discord.member import Member
-from discord.user import User
+from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.get_first_group_role import get_first_group_role
 from core.motiver_colle import motiver_colle_msg
-from core.roles_ids import ROLES_IDS
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -62,9 +59,9 @@ async def setup(tree: app_commands.CommandTree, bot):
                         logger.error(
                             f"Could not send DM to {mate.display_name} (DMs closed or bot blocked)."
                         )
-                        end_msg = f"Je voulais leur botter le cul, mais <@{mate.id}> m'a bloqué, quel connard!"
+                        end_msg = f"Je voulais leur botter le cul, mais <@{mate.id}> m'a bloqué!"
                     except Exception as e:
-                        end_msg = f"Je voulais leur botter le cul, mais j'ai pas réussi pour <@{mate.id}>!\n-# La co du serveur de mon owner doit puer la merde"
+                        end_msg = f"Je voulais leur botter le cul, mais j'ai pas réussi pour <@{mate.id}>!"
                         logger.error(f"Error sending DM to {mate.display_name}: {e}")
 
                 await interaction.followup.send(end_msg)
