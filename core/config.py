@@ -1,12 +1,10 @@
 """Configuration loading helpers."""
 
 import os
+import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-import sqlite3
 from typing import Any
-
-from colorama.ansi import Cursor
 
 try:
     import tomllib as _toml
@@ -420,10 +418,12 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
     cfg.BOT_TOKEN = os.getenv("BOT_TOKEN")
     cfg.WEBHOOK_POSTURL = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
 
-    if isinstance(path_raw, str) and Path(path_raw).exists():
-        cfg.DB_PATH = Path(path_raw)
-    else:
-        raise FileNotFoundError(f"{path_raw} does not exists or is not well formatted, please provide a correct database file")
+    if not isinstance(path_raw, str):
+        raise FileNotFoundError(
+            f"{path_raw} is not well formatted, please provide a correct database path"
+        )
+    # The DB may not exist yet: the generator creates it on first run.
+    cfg.DB_PATH = Path(path_raw)
 
     env_webhook_url = _normalize_webhook_url(os.getenv("WEBHOOK_URL"))
 

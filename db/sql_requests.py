@@ -5,12 +5,26 @@ contains function to interract esaely with the database
 
 import sqlite3
 from datetime import datetime
+from enum import Enum
 
 from core.colle import Colle
 from core.config import cfg
 from utils.logger import get_logger
 
 logger = get_logger()
+
+
+class Jours(Enum):
+    LUNDI = "Lundi"
+    MARDI = "Mardi"
+    MERCREDI = "Mercredi"
+    JEUDI = "Jeudi"
+    VENDREDI = "Vendredi"
+    SAMEDI = "Samedi"
+    DIMANCHE = "Dimanche"
+
+
+JOURS = {index: jour.value for index, jour in enumerate(Jours)}
 
 
 def get_db_connection() -> sqlite3.Connection:
@@ -29,47 +43,49 @@ def get_colles(groupe_id: int) -> list[Colle]:
     Fetch the DB and return a Colle class with the extracted data from the database
     """
 
-    if not isinstance(cfg.CUR, sqlite3.Cursor):
-        raise Exception("LALALALLA")
+    cur = cfg.CUR
+    if cur is None:
+        logger.error("Failed to get colles: database cursor is not initialised")
+        raise RuntimeError("Failed to get colles: database cursor is not initialised")
 
-    dt = datetime.now()  # Fuck timezone we're french
+    dt = datetime.now()  # Fuck timezone we're french  # noqa: DTZ005
     week = int(dt.strftime("%W"))
 
     # That's the number of weeks of the year formatted to match a starting point the 14/09/2026
     magic_week = week - 36
 
-    _ = cfg.CUR.execute(
+    cur.execute(
         """
-        SELECT * FROM colleurs
-        JOIN planning ON colleurs.id = planning.colleur_id
-        WHERE planning.groupe = ?
-        AND planning.semaine = ?
+        SELECT c.nom AS colleur_name,
+               m.nom AS matiere,
+               p.jour_id,
+               p.creneau_start,
+               p.salle
+        FROM planning p
+        JOIN colleurs c ON c.id = p.colleur_id
+        JOIN matieres m ON m.id = p.matiere_id
+        WHERE p.groupe = ?
+          AND p.semaine = ?
     """,
         (groupe_id, magic_week),
     )
 
-    rows = cfg.CUR.fetchall()
+    rows = cur.fetchall()
 
     if rows is None:
         logger.error("Failed to get colles: db returned None")
-        raise Exception("Failed to get colles: db returned None")
+        raise RuntimeError("Failed to get colles: db returned None")
 
     colles = []
 
     for row in rows:
-        colleur_name: str | None = row["nom"]  # pyright: ignore[reportArgumentType, reportCallIssue]
-        matiere: str | None = row["matiere"]  # pyright: ignore[reportArgumentType, reportCallIssue]
-        jour: str | None = row["jour"]  # pyright: ignore[reportArgumentType, reportCallIssue]
-        creneau: str | None = row["creneau"]  # pyright: ignore[reportArgumentType, reportCallIssue]
-        salle: str | None = row["salle"]  # pyright: ignore[reportArgumentType, reportCallIssue]
-
         colles.append(
             Colle(
-                colleur_name=colleur_name,  # pyright: ignore[reportArgumentType]
-                matiere=matiere,  # pyright: ignore[reportArgumentType]
-                jour=jour,  # pyright: ignore[reportArgumentType]
-                creneau=creneau,  # pyright: ignore[reportArgumentType]
-                salle=salle,  #  pyright: ignore[reportArgumentType]
+                colleur_name=row["colleur_name"],
+                matiere=row["matiere"],
+                jour=JOURS[row["jour_id"]],
+                creneau=f"{row['creneau_start']}h-{row['creneau_start'] + 1}h",
+                salle=row["salle"],
             )
         )
     return colles
