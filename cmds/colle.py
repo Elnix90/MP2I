@@ -10,6 +10,7 @@ import discord
 from discord import Role, app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
+from core.get_first_group_role import get_first_group_role
 from core.roles_ids import ROLES_IDS
 from db.sql_requests import get_colles
 from utils.logger import get_logger
@@ -43,28 +44,19 @@ async def setup(tree: app_commands.CommandTree, bot):
             else:
                 user_requested = interaction.user
 
-            roles: list[Role] = user_requested.roles  # pyright: ignore[reportAttributeAccessIssue]
-            roles_list: list[int] = [role.id for role in roles]
+            group_role = get_first_group_role(user_requested)
 
-            user_group: int | None = None
-            user_group_role_id: int | None = None
+            if group_role is not None:
 
-            group_roles_number: int = 0
-
-            for group, role_id in ROLES_IDS.items():
-                if role_id in roles_list:
-                    user_group, user_group_role_id = group, role_id
-                    group_roles_number += 1
-
-            if user_group is not None and user_group_role_id is not None:
-                colles = get_colles(user_group)
+                role_number = list(ROLES_IDS.keys())[list(ROLES_IDS.values()).index(group_role.id)]
+                colles = get_colles(role_number)
 
                 colles_str = f"\n- {colles[0]}\n- {colles[1]}"
 
                 if user is not None:
-                    msg = f"<@{user_requested.id}> aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                    msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
                 else:
-                    msg = f"Hello <@{user_requested.id}>, tu fais parti du Groupe {user_group}! (<@&{user_group_role_id}>)\ntes colles sont:{colles_str}"
+                    msg = f"Hello {user_requested.mention}, tu fais parti du {group_role.mention}\nTes colles sont:{colles_str}"
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
 
