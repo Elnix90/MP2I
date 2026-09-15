@@ -23,29 +23,25 @@ except Exception:
         "Warning: python-dotenv not installed, environment variables from .env will not be loaded."
     )
 
-# base paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_CONFIG_PATH = os.path.join(BASE_DIR, "config.toml")
+
+CONFIG_PATH = Path("config.toml")
+DB_PATH = Path("db/colloscope.db")
 
 
-def _load_toml(path: str = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
+def _load_toml() -> dict[str, Any]:
     """Load and parse a TOML configuration file.
-
-    Parameters
-    ----------
-    path : str
-        Path to the TOML file. Default is DEFAULT_CONFIG_PATH.
 
     Returns
     -------
     Dict[str, Any]
         Parsed TOML content or an empty dict.
     """
+
     if _toml is None:
         return {}
-    if os.path.exists(path):
+    if CONFIG_PATH.exists():
         with open(
-            path,
+            CONFIG_PATH,
             "rb"
             if hasattr(_toml, "loads")
             and _toml is not None
@@ -290,13 +286,10 @@ class Config:
         Path of the colloscope DB
     """
 
-    BOT_TOKEN: str | None = None
-    WEBHOOK_POSTURL: str | None = None
-    WEBHOOK_URL: str | None = None
+    BOT_TOKEN: str
+    WEBHOOK_POSTURL: str | None
+    WEBHOOK_URL: str | None
 
-    BASE_DIR: str = BASE_DIR
-    CONFIG_PATH: str = DEFAULT_CONFIG_PATH
-    DB_PATH: Path | None = None
     CUR: sqlite3.Cursor | None = None
     CONN: sqlite3.Connection | None = None
 
@@ -342,12 +335,12 @@ def _normalize_webhook_url(url: str | None) -> str | None:
         if not env_val:
             return None
         url = url.replace("<URL>", env_val)
-    if url.startswith("http://") or url.startswith("https://"):
+    if url.startswith(("http://", "https://")):
         return url
     return f"https://discord.com/api/webhooks/{url.lstrip('/')}"
 
 
-def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
+def load_config() -> tuple[Config, LoggingConfig]:
     """Load application and logging configuration.
 
     Parameters
@@ -360,16 +353,12 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
     Tuple[Config, LoggingConfig]
         Resolved app config and logging config.
     """
-    toml_path = config_path or DEFAULT_CONFIG_PATH
-    raw = _load_toml(toml_path)
+    raw = _load_toml()
 
     raw_logging = raw.get("logging", {}) if isinstance(raw, dict) else {}
     console_raw = _first_table(raw.get("console"))
     file_raw = _first_table(raw.get("file"))
     discord_raw = _first_table(raw.get("discord"))
-
-    constants = raw.get("constants", {}) if isinstance(raw, dict) else {}
-    path_raw = constants.get("db_path")
 
     # Backward compatibility with previous flat schema if present under [logging]
     console_conf = ConsoleLoggingConfig(
@@ -414,24 +403,19 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
         discord=discord_conf,
     )
 
-    cfg = Config()
-    cfg.BOT_TOKEN = os.getenv("BOT_TOKEN")
-    cfg.WEBHOOK_POSTURL = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
+    bot_token = os.getenv("BOT_TOKEN")
+    if bot_token is None:
+        raise RuntimeError("No bot token provided")
 
-    if not isinstance(path_raw, str):
-        raise FileNotFoundError(
-            f"{path_raw} is not well formatted, please provide a correct database path"
-        )
-    # The DB may not exist yet: the generator creates it on first run.
-    cfg.DB_PATH = Path(path_raw)
-
+    webhook_post_url = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
     env_webhook_url = _normalize_webhook_url(os.getenv("WEBHOOK_URL"))
 
+    webhook_url = None
     # Determine final webhook URL: priority - env WEBHOOK_URL, logging.discord_webhook, combine webhook_base + posturl
     if env_webhook_url:
-        cfg.WEBHOOK_URL = env_webhook_url
+        webhook_url = env_webhook_url
     elif logging_conf.discord_webhook:
-        cfg.WEBHOOK_URL = logging_conf.discord_webhook
+        webhook_url = logging_conf.discord_webhook
     else:
         # combine base + posturl if present
         root_webhook_base = raw.get("webhook_base") or raw.get("webhook", {}).get(
@@ -443,15 +427,20 @@ def load_config(config_path: str | None = None) -> tuple[Config, LoggingConfig]:
                 env_val = os.getenv("WEBHOOK_URL")
                 if env_val:
                     substituted = root_webhook_base.replace("<URL>", env_val)
-                    cfg.WEBHOOK_URL = _normalize_webhook_url(substituted)
-            elif cfg.WEBHOOK_POSTURL:
-                cfg.WEBHOOK_URL = (
+                    webhook_url = _normalize_webhook_url(substituted)
+            elif webhook_post_url:
+                webhook_url = (
                     root_webhook_base.rstrip("/")
                     + "/"
-                    + cfg.WEBHOOK_POSTURL.lstrip("/")
+                    + webhook_post_url.lstrip("/")
                 )
 
-    cfg.CONFIG_PATH = toml_path
+    cfg = Config(
+        BOT_TOKEN=bot_token,
+        WEBHOOK_POSTURL=webhook_post_url,
+        WEBHOOK_URL=webhook_url
+    )
+
     return cfg, logging_conf
 
 

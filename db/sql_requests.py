@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 
 from core.colle import Colle
-from core.config import cfg
+from core.config import DB_PATH, cfg
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -32,7 +32,7 @@ def get_db_connection() -> sqlite3.Connection:
     Connect to the SQLite database. If the DB file does not exist, create it.
     """
 
-    conn = sqlite3.connect(cfg.DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     logger.debug("[Get DB conn] Successfully connected")
     return conn
@@ -85,7 +85,7 @@ def get_colles(groupe_id: int) -> list[Colle]:
                 matiere=row["matiere"],
                 jour=JOURS[row["jour_id"]],
                 creneau=f"{row['creneau_start']}h-{row['creneau_start'] + 1}h",
-                salle=row["salle"],
+                salle=row["salle"]
             )
         )
     return colles

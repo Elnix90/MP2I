@@ -91,7 +91,7 @@ def log_command_error(logger: Any, command_name: str, exc: Exception) -> None:
     logger.error("Error in /%s: %s", command_name, exc, exc_info=True)
 
 
-async def defer_interaction(interaction: Any, *, ephemeral: bool = True) -> bool:
+async def defer_interaction(interaction: Any) -> bool:
     """Defer an interaction response if it has not already been deferred.
 
     Parameters
@@ -111,7 +111,7 @@ async def defer_interaction(interaction: Any, *, ephemeral: bool = True) -> bool
     if interaction.response.is_done():
         return False
 
-    await interaction.response.defer(ephemeral=ephemeral)
+    await interaction.response.defer()
     return True
 
 

@@ -25,7 +25,7 @@ class MP2IBot(discord.Client):
         super().__init__(*args, **kwargs)
         self.tree = app_commands.CommandTree(self)
         self._commands_sync_state_path = (
-            Path(cfg.BASE_DIR) / "data" / "command_sync_state.json"
+            Path("data") / "command_sync_state.json"
         )
 
     @staticmethod
