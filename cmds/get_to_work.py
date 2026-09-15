@@ -48,8 +48,10 @@ async def setup(tree: app_commands.CommandTree, bot):
 
                 if len(mates) == 0:
                     return await interaction.followup.send("Tu es tout seul dans ton groupe bro, force")
-                    
-                end_msg = f"Je botte le cul à tes {len(mates)} mates 👌"
+                elif len(mates) == 1:
+                    end_msg = "Je botte le cul à ton (seul) mate 👌\n-# Dcp je suis plus violent avec lui. Comme Gaudillat avec ceux qui passent au tableau"
+                else:
+                    end_msg = f"Je botte le cul à tes {len(mates)} mates 👌"
 
                 for mate in mates:
                     try:
