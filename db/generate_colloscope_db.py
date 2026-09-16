@@ -5,7 +5,7 @@ Le schéma est normalisé : COLLEURS, MATIERES et PLANNING.
 Les créneaux du bloc du haut (Ratte/Mensah/Gaudillat) sont des colles d'Anglais.
 """
 
-from core.config import cfg
+from core.config import DB_PATH
 from db.init.colleurs import COLLEURS
 from db.init.rows import ROWS
 from db.init.subjects import MATIERES
@@ -13,10 +13,10 @@ from db.sql_requests import get_db_connection
 
 
 def main() -> None:
-    if cfg.DB_PATH is None:
+    if DB_PATH is None:
         return
-    if cfg.DB_PATH.exists():
-        cfg.DB_PATH.unlink()
+    if DB_PATH.exists():
+        DB_PATH.unlink()
     with get_db_connection() as conn:
         cur = conn.cursor()
 
@@ -87,7 +87,7 @@ def main() -> None:
                 ],
             )
 
-        print(f"OK: {cfg.DB_PATH}")
+        print(f"OK: {DB_PATH}")
 
 
 if __name__ == "__main__":
