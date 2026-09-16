@@ -1,5 +1,4 @@
 import time
-from turtle import update
 
 import discord
 from discord import app_commands
