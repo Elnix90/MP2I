@@ -47,8 +47,9 @@ async def setup(tree: app_commands.CommandTree, bot):
             group_role = get_first_group_role(user_requested)
 
             if group_role is not None:
-
-                role_number = list(ROLES_IDS.keys())[list(ROLES_IDS.values()).index(group_role.id)]
+                role_number = list(ROLES_IDS.keys())[
+                    list(ROLES_IDS.values()).index(group_role.id)
+                ]
                 colles = get_colles(role_number)
 
                 colles_str = f"\n- {colles[0]}\n- {colles[1]}"

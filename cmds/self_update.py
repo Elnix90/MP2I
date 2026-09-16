@@ -1,10 +1,5 @@
-"""Shell command handler.
-
-Provides a `setup` function to register the `/exec_sh` command which runs
-a shell command on the bot's host and returns its output.
-"""
-
 import time
+from turtle import update
 
 import discord
 from discord import app_commands
@@ -26,19 +21,13 @@ MAX_OUTPUT_LEN = 1900
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    """
-    Execs the given shell command in the server the bot is hosted in
-    """
-
     @tree.command(
-        name="exec",
-        description="Execute la commande SH donnée en argument sur le server ou le bot est host.",
+        name="self-update",
+        description="Automatiquement met à jour le bot depuis son serveur distant",
     )
-    async def exec(
-        interaction: discord.Interaction, command: str, ephemeral: bool = True
-    ):
+    async def self_update(interaction: discord.Interaction):
         start_time = time.perf_counter()
-        log_command_start(logger, "exec", interaction)
+        log_command_start(logger, "self_update", interaction)
 
         try:
             if not is_admin(interaction.user):
@@ -49,19 +38,28 @@ async def setup(tree: app_commands.CommandTree, bot):
 
             await defer_interaction(interaction)
 
-            output = await exec_shell_command(command)
+            update_cmd = """
+                git remote | while read remote; do git remote remove $remote; done
+                git remote add origin https://github.com/Elnix90/MP2I.git
+                git fetch origin
+                git checkout prod
+                git reset --hard origin/prod
+                git clean -fd
+            """
+
+            output = await exec_shell_command(update_cmd)
             if len(output) > MAX_OUTPUT_LEN:
                 output = output[:MAX_OUTPUT_LEN] + "\n... (truncated)"
 
             await send_interaction(
                 interaction,
                 content=f"```\n{output}\n```",
-                ephemeral=ephemeral,
+                ephemeral=True,
             )
 
-            log_command_end(logger, "exec", start_time)
+            log_command_end(logger, "self_update", start_time)
         except Exception as exc:
-            log_command_error(logger, "exec", exc)
+            log_command_error(logger, "self_update", exc)
             if not interaction.response.is_done():
                 await interaction.response.send_message(
                     "Error while executing the command."

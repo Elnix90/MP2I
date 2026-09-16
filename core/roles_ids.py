@@ -4,7 +4,6 @@ A dictionry that associate a group number to a discord role id.
 The bot uses them to determinate the group in which the user that requests the command is.
 """
 
-
 ROLES_IDS: dict[int, int] = {
     1: 1547629723239059486,
     2: 1547630075762049024,
@@ -19,5 +18,5 @@ ROLES_IDS: dict[int, int] = {
     11: 1547631567634038846,
     12: 1547631772806946857,
     13: 1547631889274118275,
-    14: 1547631955615420416
+    14: 1547631955615420416,
 }

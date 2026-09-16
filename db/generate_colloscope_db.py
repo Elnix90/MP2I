@@ -13,7 +13,8 @@ from db.sql_requests import get_db_connection
 
 
 def main() -> None:
-    if cfg.DB_PATH is None: return
+    if cfg.DB_PATH is None:
+        return
     if cfg.DB_PATH.exists():
         cfg.DB_PATH.unlink()
     with get_db_connection() as conn:
@@ -55,7 +56,7 @@ def main() -> None:
                 """
                 INSERT INTO COLLEURS (id, nom) VALUES (?, ?)
                 """,
-                (colleur_id, colleur_name)
+                (colleur_id, colleur_name),
             )
 
         for matiere_id, matiere_name in MATIERES.items():
@@ -63,7 +64,7 @@ def main() -> None:
                 """
                 INSERT INTO MATIERES (id, nom) VALUES (?, ?)
                 """,
-                (matiere_id, matiere_name)
+                (matiere_id, matiere_name),
             )
 
         for matiere_id, colleur_id, jour_id, creneau_start, salle, groups in ROWS:
@@ -73,7 +74,15 @@ def main() -> None:
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
-                    (colleur_id, matiere_id, salle, jour_id, creneau_start, semaine, groupe)
+                    (
+                        colleur_id,
+                        matiere_id,
+                        salle,
+                        jour_id,
+                        creneau_start,
+                        semaine,
+                        groupe,
+                    )
                     for semaine, groupe in groups.items()
                 ],
             )

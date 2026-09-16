@@ -24,9 +24,7 @@ class MP2IBot(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tree = app_commands.CommandTree(self)
-        self._commands_sync_state_path = (
-            Path("data") / "command_sync_state.json"
-        )
+        self._commands_sync_state_path = Path("data") / "command_sync_state.json"
 
     @staticmethod
     def _compute_commands_fingerprint(cmds_path: Path) -> str:

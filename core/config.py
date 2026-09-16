@@ -430,15 +430,11 @@ def load_config() -> tuple[Config, LoggingConfig]:
                     webhook_url = _normalize_webhook_url(substituted)
             elif webhook_post_url:
                 webhook_url = (
-                    root_webhook_base.rstrip("/")
-                    + "/"
-                    + webhook_post_url.lstrip("/")
+                    root_webhook_base.rstrip("/") + "/" + webhook_post_url.lstrip("/")
                 )
 
     cfg = Config(
-        BOT_TOKEN=bot_token,
-        WEBHOOK_POSTURL=webhook_post_url,
-        WEBHOOK_URL=webhook_url
+        BOT_TOKEN=bot_token, WEBHOOK_POSTURL=webhook_post_url, WEBHOOK_URL=webhook_url
     )
 
     return cfg, logging_conf

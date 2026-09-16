@@ -23,13 +23,12 @@ if __name__ == "__main__":
 
         logger.info("Démarrage du bot MP2I...")
 
-
         with get_db_connection() as conn:
             cur = conn.cursor()
 
             cfg.CUR = cur
             cfg.CONN = conn
-            
+
             bot.run_bot()
 
     except KeyboardInterrupt:

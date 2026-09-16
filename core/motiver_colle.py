@@ -3,7 +3,6 @@ import random
 
 def motiver_colle_msg() -> str:
 
-
     phrases = [
         "Penses à Gaudillat demain en colle 😈",
         "J'ai dit 80% pas 8.0%",

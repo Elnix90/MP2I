@@ -85,7 +85,7 @@ def get_colles(groupe_id: int) -> list[Colle]:
                 matiere=row["matiere"],
                 jour=JOURS[row["jour_id"]],
                 creneau=f"{row['creneau_start']}h-{row['creneau_start'] + 1}h",
-                salle=row["salle"]
+                salle=row["salle"],
             )
         )
     return colles

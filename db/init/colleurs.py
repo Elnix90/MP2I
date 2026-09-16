@@ -1,6 +1,7 @@
 """
 The names of the colleurs, associated by id, to easily add some
 """
+
 COLLEURS = {
     0: "Vinsu",
     1: "Chabauty",
@@ -17,5 +18,5 @@ COLLEURS = {
     12: "Funes",
     13: "Jeanneret",
     14: "Torterotot",
-    15: "Pesenti"
+    15: "Pesenti",
 }

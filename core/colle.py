@@ -1,5 +1,7 @@
 class Colle:
-    def __init__(self, colleur_name: str, matiere: str, jour: str, creneau: str, salle: str) -> None:
+    def __init__(
+        self, colleur_name: str, matiere: str, jour: str, creneau: str, salle: str
+    ) -> None:
         self.colleur_name = colleur_name
         self.matiere = matiere
         self.jour = jour
@@ -12,5 +14,5 @@ class Colle:
             end_msg = " (tu es foutu)"
         else:
             end_msg = ""
-   
+
         return f"Colle de **{self.matiere}**, {self.jour} à {self.creneau} par *{self.colleur_name}* en salle **{self.salle}**{end_msg}"
