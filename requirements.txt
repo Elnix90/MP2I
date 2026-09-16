@@ -2,3 +2,4 @@ discord.py==2.7.1
 python-dotenv==1.2.2
 colorama
 requests
+aiohttp

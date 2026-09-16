@@ -2,7 +2,7 @@
 
 import os
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +26,15 @@ except Exception:
 
 CONFIG_PATH = Path("config.toml")
 DB_PATH = Path("db/colloscope.db")
+
+DEFAULT_AI_API_URL = "https://opencode.ai/zen/v1/chat/completions"
+DEFAULT_AI_MODEL = "big-pickle"
+DEFAULT_AI_ANSWER_DELAY_SECONDS = 2.0
+DEFAULT_AI_SYSTEM_PROMPT = (
+    "Tu es le bot du serveur Discord de la classe MP2I. "
+    "Tu es utile mais avec un ton sarcastique et humoristique en français. "
+    "Réponds de manière concise, en français sauf si on te demande autre chose."
+)
 
 
 def _load_toml() -> dict[str, Any]:
@@ -293,6 +302,14 @@ class Config:
     CUR: sqlite3.Cursor | None = None
     CONN: sqlite3.Connection | None = None
 
+    # AI answering (OpenCode free model, no auth)
+    AI_ENABLED: bool = True
+    AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
+    AI_ANSWER_DELAY_SECONDS: float = DEFAULT_AI_ANSWER_DELAY_SECONDS
+    AI_MODEL: str = DEFAULT_AI_MODEL
+    AI_API_URL: str = DEFAULT_AI_API_URL
+    AI_SYSTEM_PROMPT: str = DEFAULT_AI_SYSTEM_PROMPT
+
 
 def _first_table(items: Any) -> dict[str, Any]:
     """Return the first dict from a TOML table-or-list value.
@@ -356,6 +373,7 @@ def load_config() -> tuple[Config, LoggingConfig]:
     raw = _load_toml()
 
     raw_logging = raw.get("logging", {}) if isinstance(raw, dict) else {}
+    ai_raw = _first_table(raw.get("ai")) if isinstance(raw, dict) else {}
     console_raw = _first_table(raw.get("console"))
     file_raw = _first_table(raw.get("file"))
     discord_raw = _first_table(raw.get("discord"))
@@ -434,7 +452,17 @@ def load_config() -> tuple[Config, LoggingConfig]:
                 )
 
     cfg = Config(
-        BOT_TOKEN=bot_token, WEBHOOK_POSTURL=webhook_post_url, WEBHOOK_URL=webhook_url
+        BOT_TOKEN=bot_token,
+        WEBHOOK_POSTURL=webhook_post_url,
+        WEBHOOK_URL=webhook_url,
+        AI_ENABLED=ai_raw.get("enabled", True),
+        AI_ALLOWED_CHANNELS=[int(c) for c in ai_raw.get("allowed_channels", [])],
+        AI_ANSWER_DELAY_SECONDS=float(
+            ai_raw.get("answer_delay_seconds", DEFAULT_AI_ANSWER_DELAY_SECONDS)
+        ),
+        AI_MODEL=ai_raw.get("model", DEFAULT_AI_MODEL),
+        AI_API_URL=ai_raw.get("api_url", DEFAULT_AI_API_URL),
+        AI_SYSTEM_PROMPT=ai_raw.get("system_prompt") or DEFAULT_AI_SYSTEM_PROMPT,
     )
 
     return cfg, logging_conf

@@ -10,6 +10,7 @@ import discord
 from discord import app_commands
 
 from cmds import loader as cmds_loader
+from core.ai import generate_answer, is_allowed_channel
 from core.config import cfg
 from utils.logger import get_logger
 
@@ -20,10 +21,32 @@ intents.message_content = True
 intents.members = True
 
 
+async def send_text_chunks(
+    channel: discord.abc.Messageable, text: str, max_length: int = 2000
+) -> None:
+    """Send `text` to `channel`, splitting it into Discord-sized chunks."""
+    current = ""
+    for line in text.splitlines():
+        if len(line) > max_length:
+            if current:
+                await channel.send(current.rstrip())
+                current = ""
+            for i in range(0, len(line), max_length):
+                await channel.send(line[i : i + max_length])
+        elif len(current) + len(line) + 1 > max_length:
+            await channel.send(current.rstrip())
+            current = line
+        else:
+            current = f"{current}\n{line}"
+    if current.strip():
+        await channel.send(current.rstrip())
+
+
 class MP2IBot(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tree = app_commands.CommandTree(self)
+        self._processing = set()
         self._commands_sync_state_path = Path("data") / "command_sync_state.json"
 
     @staticmethod
@@ -98,6 +121,41 @@ class MP2IBot(discord.Client):
             self.user,
             self.user.id,
         )
+
+    async def on_message(self, message):
+        if message.author.bot or message.guild is None:
+            return
+        if message.content.startswith("/"):
+            return
+        if not cfg.AI_ENABLED or not is_allowed_channel(message.channel.id):
+            return
+        if not self.user.mention in message.content:
+            return
+
+        logger.info(f"Anwsering to {message.author.display_name}")
+
+        uid = message.author.id
+        if uid in self._processing:
+            return
+
+        self._processing.add(uid)
+        try:
+            if cfg.AI_ANSWER_DELAY_SECONDS > 0:
+                await asyncio.sleep(cfg.AI_ANSWER_DELAY_SECONDS)
+
+            async with message.channel.typing():
+                messages = [
+                    {"role": "system", "content": cfg.AI_SYSTEM_PROMPT},
+                    {"role": "user", "content": message.content},
+                ]
+                answer = await generate_answer(messages)
+                if answer:
+                    await send_text_chunks(message.channel, answer)
+        except Exception:
+            logger.exception("Erreur lors du traitement du message IA")
+            await message.channel.send("Une erreur interne m'empêche de répondre.")
+        finally:
+            self._processing.discard(uid)
 
 
 def run_bot():

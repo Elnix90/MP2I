@@ -11,3 +11,11 @@ file_format = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message
 enable_discord_logging = true
 discord_webhook = "https://discord.com/api/webhooks/<URL>"
 discord_format = "%(asctime)s - %(filename)s:%(lineno)d\n%(message)s"
+
+[ai]
+enabled = true
+allowed_channels = []
+answer_delay_seconds = 2.0
+model = "big-pickle"
+api_url = "https://opencode.ai/zen/v1/chat/completions"
+system_prompt = ""
