@@ -1,13 +1,14 @@
-[logging]
-[[console]]
+[console]
 enable = true
 level = "INFO"
 console_format = "%(asctime)s - %(filename)s:%(lineno)d - %(message)s"
-[[file]]
+
+[file]
 enable_file_logging = true
 log_file = "logs/mp2i.log"
 file_format = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
-[[discord]]
+
+[discord]
 enable_discord_logging = true
 discord_webhook = "https://discord.com/api/webhooks/<URL>"
 discord_format = "%(asctime)s - %(filename)s:%(lineno)d\n%(message)s"
@@ -15,7 +16,6 @@ discord_format = "%(asctime)s - %(filename)s:%(lineno)d\n%(message)s"
 [ai]
 enabled = true
 allowed_channels = []
-answer_delay_seconds = 2.0
 model = "big-pickle"
 api_url = "https://opencode.ai/zen/v1/chat/completions"
 system_prompt = ""

@@ -19,9 +19,7 @@ try:
 
     load_dotenv()
 except Exception:
-    print(
-        "Warning: python-dotenv not installed, environment variables from .env will not be loaded."
-    )
+    print("Warning: python-dotenv not installed, environment variables from .env will not be loaded.")
 
 
 CONFIG_PATH = Path("config.toml")
@@ -30,7 +28,6 @@ BASE_DIR = Path(__file__)
 
 DEFAULT_AI_API_URL = "https://opencode.ai/zen/v1/chat/completions"
 DEFAULT_AI_MODEL = "big-pickle"
-DEFAULT_AI_ANSWER_DELAY_SECONDS = 2.0
 DEFAULT_AI_SYSTEM_PROMPT = (
     "Tu es le bot du serveur Discord de la classe MP2I. "
     "Tu es utile mais avec un ton sarcastique et humoristique en français. "
@@ -52,18 +49,8 @@ def _load_toml() -> dict[str, Any]:
     if CONFIG_PATH.exists():
         with open(
             CONFIG_PATH,
-            "rb"
-            if hasattr(_toml, "loads")
-            and _toml is not None
-            and hasattr(_toml, "__name__")
-            and _toml.__name__ == "tomllib"
-            else "r",
-            encoding=None
-            if hasattr(_toml, "loads")
-            and _toml is not None
-            and hasattr(_toml, "__name__")
-            and _toml.__name__ == "tomllib"
-            else "utf-8",
+            "rb" if hasattr(_toml, "loads") and _toml is not None and hasattr(_toml, "__name__") and _toml.__name__ == "tomllib" else "r",
+            encoding=None if hasattr(_toml, "loads") and _toml is not None and hasattr(_toml, "__name__") and _toml.__name__ == "tomllib" else "utf-8",
         ) as f:
             # tomllib expects bytes I/O in py3.11, toml package expects text
             if getattr(_toml, "__name__", "") == "tomllib":
@@ -73,9 +60,7 @@ def _load_toml() -> dict[str, Any]:
     return {}
 
 
-def read_from_toml_config(
-    param: str, config: dict[str, Any] | None = None
-) -> dict[str, Any]:
+def read_from_toml_config(param: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
     """Read a nested config table from TOML data.
 
     Parameters
@@ -112,6 +97,13 @@ class ConsoleLoggingConfig:
     level: str = "INFO"
     console_format: str = "%(asctime)s - %(message)s"
 
+    def __str__(self) -> str:
+        return f"""ConsoleLoggingConfig(
+    enable: {self.enable}
+    level: {self.level}
+    console_format: {self.console_format}
+)"""
+
 
 @dataclass
 class FileLoggingConfig:
@@ -133,6 +125,13 @@ class FileLoggingConfig:
     # file logs can keep more context; filename is more useful than logger name
     file_format: str = "%(asctime)s - %(filename)s - %(message)s"
 
+    def __str__(self) -> str:
+        return f"""FileLoggingConfig(
+    enable_file_logging: {self.enable_file_logging}
+    log_file: {self.log_file}
+    file_format: {self.file_format}
+)"""
+
 
 @dataclass
 class DiscordLoggingConfig:
@@ -151,6 +150,13 @@ class DiscordLoggingConfig:
     enable_discord_logging: bool = False
     discord_webhook: str | None = None
     discord_format: str = "%(asctime)s - %(filename)s %(message)s"
+
+    def __str__(self) -> str:
+        return f"""DiscordLoggingConfig(
+    enable_discord_logging: {self.enable_discord_logging}
+    discord_webhook: {"*******" if self.discord_webhook else None}
+    discord_format: {self.discord_format}
+)"""
 
 
 @dataclass
@@ -186,6 +192,13 @@ class LoggingConfig:
     console: ConsoleLoggingConfig
     file: FileLoggingConfig
     discord: DiscordLoggingConfig
+
+    def __str__(self) -> str:
+        return f"""LoggingConfig(
+    console: {self.console}
+    file: {self.file}
+    discord: {self.discord}
+)"""
 
     @property
     def level(self) -> str:
@@ -278,25 +291,9 @@ class LoggingConfig:
 
 @dataclass
 class Config:
-    """Runtime config values resolved from environment and files.
-
-    Attributes
-    ----------
-    BOT_TOKEN : Optional[str]
-        Discord bot token.
-    WEBHOOK_POSTURL : Optional[str]
-        Webhook path or id component.
-    WEBHOOK_URL : Optional[str]
-        Resolved webhook URL.
-    BASE_DIR : str
-        Repository base directory.
-    CONFIG_PATH : str
-        Path to the active config file.
-    DB_PATH : str
-        Path of the colloscope DB
-    """
-
     BOT_TOKEN: str
+    GUILD_ID: int
+
     WEBHOOK_POSTURL: str | None
     WEBHOOK_URL: str | None
 
@@ -306,30 +303,24 @@ class Config:
     # AI answering (OpenCode free model, no auth)
     AI_ENABLED: bool = True
     AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
-    AI_ANSWER_DELAY_SECONDS: float = DEFAULT_AI_ANSWER_DELAY_SECONDS
     AI_MODEL: str = DEFAULT_AI_MODEL
     AI_API_URL: str = DEFAULT_AI_API_URL
     AI_SYSTEM_PROMPT: str = DEFAULT_AI_SYSTEM_PROMPT
 
-
-def _first_table(items: Any) -> dict[str, Any]:
-    """Return the first dict from a TOML table-or-list value.
-
-    Parameters
-    ----------
-    items : Any
-        Value extracted from TOML.
-
-    Returns
-    -------
-    Dict[str, Any]
-        First mapping if available, otherwise an empty dict.
-    """
-    if isinstance(items, list) and items:
-        return items[0] if isinstance(items[0], dict) else {}
-    if isinstance(items, dict):
-        return items
-    return {}
+    def __str__(self) -> str:
+        return f"""Config(
+    token: {"*******" if self.BOT_TOKEN else ""}
+    guild_id: {self.GUILD_ID}
+    webhook_posturl: {self.WEBHOOK_POSTURL}
+    webhook_url: {self.WEBHOOK_URL}
+    ai_enabled: {self.AI_ENABLED}
+    ai_allowed_channels: {self.AI_ALLOWED_CHANNELS}
+    ai_model: {self.AI_MODEL}
+    ai_api_url: {self.AI_API_URL}
+    ai_system_prompt: {self.AI_SYSTEM_PROMPT}
+    cur: {self.CUR}
+    conn: {self.CONN}
+)"""
 
 
 def _normalize_webhook_url(url: str | None) -> str | None:
@@ -373,47 +364,21 @@ def load_config() -> tuple[Config, LoggingConfig]:
     """
     raw = _load_toml()
 
-    raw_logging = raw.get("logging", {}) if isinstance(raw, dict) else {}
-    ai_raw = _first_table(raw.get("ai")) if isinstance(raw, dict) else {}
-    console_raw = _first_table(raw.get("console"))
-    file_raw = _first_table(raw.get("file"))
-    discord_raw = _first_table(raw.get("discord"))
+    console_raw = raw.get("console", {})
+    console_conf = ConsoleLoggingConfig(enable=console_raw.get("enable", True), level=console_raw.get("level", "INFO"), console_format=console_raw.get("console_format", "%(asctime)s - %(message)s"))
 
-    # Backward compatibility with previous flat schema if present under [logging]
-    console_conf = ConsoleLoggingConfig(
-        enable=console_raw.get("enable", raw_logging.get("enable", True)),
-        level=console_raw.get("level", raw_logging.get("level", "INFO")),
-        console_format=console_raw.get(
-            "console_format",
-            raw_logging.get("console_format", "%(asctime)s - %(message)s"),
-        ),
-    )
+    file_raw = raw.get("file", {})
     file_conf = FileLoggingConfig(
-        enable_file_logging=file_raw.get(
-            "enable_file_logging", raw_logging.get("enable_file_logging", True)
-        ),
-        log_file=file_raw.get("log_file", raw_logging.get("log_file", "logs/bot.log")),
-        file_format=file_raw.get(
-            "file_format",
-            raw_logging.get("file_format", "%(asctime)s - %(filename)s - %(message)s"),
-        ),
+        enable_file_logging=file_raw.get("enable_file_logging", True),
+        log_file=file_raw.get("log_file", "logs/bot.log"),
+        file_format=file_raw.get("file_format", "%(asctime)s - %(filename)s - %(message)s"),
     )
+
+    discord_raw = raw.get("discord", {})
     discord_conf = DiscordLoggingConfig(
-        enable_discord_logging=discord_raw.get(
-            "enable_discord_logging",
-            raw_logging.get("enable_discord_logging", False),
-        ),
-        discord_webhook=_normalize_webhook_url(
-            discord_raw.get("discord_webhook")
-            or raw_logging.get("discord_webhook")
-            or None
-        ),
-        discord_format=discord_raw.get(
-            "discord_format",
-            raw_logging.get(
-                "discord_format", "%(asctime)s - %(filename)s%(message)s"
-            ),
-        ),
+        enable_discord_logging=discord_raw.get("enable_discord_logging", False),
+        discord_webhook=_normalize_webhook_url(discord_raw.get("discord_webhook")),
+        discord_format=discord_raw.get("discord_format", "%(asctime)s - %(filename)s%(message)s"),
     )
 
     logging_conf = LoggingConfig(
@@ -426,6 +391,11 @@ def load_config() -> tuple[Config, LoggingConfig]:
     if bot_token is None:
         raise RuntimeError("No bot token provided")
 
+    guild_id = os.getenv("GUILD_ID")
+    if guild_id is None:
+        raise RuntimeError("No guild ID provided")
+    guild_id = int(guild_id)
+
     webhook_post_url = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
     env_webhook_url = _normalize_webhook_url(os.getenv("WEBHOOK_URL"))
 
@@ -437,9 +407,7 @@ def load_config() -> tuple[Config, LoggingConfig]:
         webhook_url = logging_conf.discord_webhook
     else:
         # combine base + posturl if present
-        root_webhook_base = raw.get("webhook_base") or raw.get("webhook", {}).get(
-            "base"
-        )
+        root_webhook_base = raw.get("webhook_base") or raw.get("webhook", {}).get("base")
         if root_webhook_base:
             # If base contains placeholder, replace with env WEBHOOK_URL
             if "<URL>" in root_webhook_base:
@@ -448,22 +416,25 @@ def load_config() -> tuple[Config, LoggingConfig]:
                     substituted = root_webhook_base.replace("<URL>", env_val)
                     webhook_url = _normalize_webhook_url(substituted)
             elif webhook_post_url:
-                webhook_url = (
-                    root_webhook_base.rstrip("/") + "/" + webhook_post_url.lstrip("/")
-                )
+                webhook_url = root_webhook_base.rstrip("/") + "/" + webhook_post_url.lstrip("/")
+
+    ai_raw = raw.get("ai", {})
+    ai_enabled = ai_raw.get("enabled", True)
+    ai_allowed_channels = [int(c) for c in ai_raw.get("allowed_channels", [])]
+    ai_model = ai_raw.get("model", DEFAULT_AI_MODEL)
+    ai_api_url = ai_raw.get("api_url", DEFAULT_AI_API_URL)
+    ai_system_prompt = ai_raw.get("system_prompt") or DEFAULT_AI_SYSTEM_PROMPT
 
     cfg = Config(
         BOT_TOKEN=bot_token,
+        GUILD_ID=guild_id,
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
-        AI_ENABLED=ai_raw.get("enabled", True),
-        AI_ALLOWED_CHANNELS=[int(c) for c in ai_raw.get("allowed_channels", [])],
-        AI_ANSWER_DELAY_SECONDS=float(
-            ai_raw.get("answer_delay_seconds", DEFAULT_AI_ANSWER_DELAY_SECONDS)
-        ),
-        AI_MODEL=ai_raw.get("model", DEFAULT_AI_MODEL),
-        AI_API_URL=ai_raw.get("api_url", DEFAULT_AI_API_URL),
-        AI_SYSTEM_PROMPT=ai_raw.get("system_prompt") or DEFAULT_AI_SYSTEM_PROMPT,
+        AI_ENABLED=ai_enabled,
+        AI_ALLOWED_CHANNELS=ai_allowed_channels,
+        AI_MODEL=ai_model,
+        AI_API_URL=ai_api_url,
+        AI_SYSTEM_PROMPT=ai_system_prompt,
     )
 
     return cfg, logging_conf
