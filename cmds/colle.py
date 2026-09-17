@@ -53,7 +53,7 @@ async def setup(tree: app_commands.CommandTree, bot):
                 if user is not None:
                     msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
                 else:
-                    msg = f"Hello {user_requested.mention}, tu fais parti du {group_role.mention}\nTes colles sont:{colles_str}"
+                    msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
 
