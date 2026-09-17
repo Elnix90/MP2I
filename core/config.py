@@ -26,6 +26,7 @@ except Exception:
 
 CONFIG_PATH = Path("config.toml")
 DB_PATH = Path("db/colloscope.db")
+BASE_DIR = Path(__file__)
 
 DEFAULT_AI_API_URL = "https://opencode.ai/zen/v1/chat/completions"
 DEFAULT_AI_MODEL = "big-pickle"
