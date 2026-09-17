@@ -123,14 +123,16 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── roles_ids.py
 ├── db
 │   ├── colloscope.db
+│   ├── cvs_parseur.py
 │   ├── generate_colloscope_db.py
 │   ├── init
 │   │   ├── colleurs.py
-│   │   ├── Colloscope MP2I S1 copy.csv
 │   │   ├── Colloscope MP2I S1.csv
+│   │   ├── __init__.py
 │   │   ├── jours.py
 │   │   ├── rows.py
 │   │   └── subjects.py
+│   ├── __init__.py
 │   └── sql_requests.py
 ├── .github
 │   └── workflows
@@ -155,7 +157,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
     ├── handlers
     └── logger.py
 
-11 directories, 47 files
+12 directories, 47 files
 ```
 <!-- TREE-END -->
 
