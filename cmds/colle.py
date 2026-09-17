@@ -23,9 +23,7 @@ async def setup(tree: app_commands.CommandTree, bot):
     Returns the colles of the week for the user issuing the command
     """
 
-    @tree.command(
-        name="colle", description="Renvoie les colles de la semaine pour l'utilisateur"
-    )
+    @tree.command(name="colle", description="Renvoie les colles de la semaine pour l'utilisateur")
     async def colle(interaction: discord.Interaction, user: discord.User | None = None):
         """Respond with gateway latency.
 
@@ -47,9 +45,7 @@ async def setup(tree: app_commands.CommandTree, bot):
             group_role = get_first_group_role(user_requested)
 
             if group_role is not None:
-                role_number = list(ROLES_IDS.keys())[
-                    list(ROLES_IDS.values()).index(group_role.id)
-                ]
+                role_number = list(ROLES_IDS.keys())[list(ROLES_IDS.values()).index(group_role.id)]
                 colles = get_colles(role_number)
 
                 colles_str = f"\n- {colles[0]}\n- {colles[1]}"
@@ -67,8 +63,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "colle", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Error while checking your colles."
-                )
+                await interaction.response.send_message("Error while checking your colles.")
             else:
                 await interaction.followup.send("Error while checking colles.")

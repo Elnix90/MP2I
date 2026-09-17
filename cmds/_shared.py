@@ -28,15 +28,10 @@ def interaction_context(interaction: Any) -> str:
     if channel_name is None:
         channel_name = f"#{channel_id}" if channel_id is not None else "unknown"
 
-    return (
-        f"user={interaction.user} (id={interaction.user.id}), "
-        f"guild={guild_name}, channel={channel_name}"
-    )
+    return f"user={interaction.user} (id={interaction.user.id}), guild={guild_name}, channel={channel_name}"
 
 
-def log_command_start(
-    logger: Any, command_name: str, interaction: Any, **extra
-) -> None:
+def log_command_start(logger: Any, command_name: str, interaction: Any, **extra) -> None:
     """Log the start of a command invocation.
 
     Parameters
@@ -56,9 +51,7 @@ def log_command_start(
     logger.info("Command /%s invoked (%s)", command_name, details)
 
 
-def log_command_end(
-    logger: Any, command_name: str, start_time: float, status: str = "ok"
-) -> None:
+def log_command_end(logger: Any, command_name: str, start_time: float, status: str = "ok") -> None:
     """Log the end of a command and its duration.
 
     Parameters

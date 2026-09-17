@@ -131,7 +131,8 @@ class MP2IBot(discord.Client):
             or not cfg.AI_ENABLED
             or not is_allowed_channel(message.channel.id)
             or not self.user.mention in message.content  # pyright: ignore[reportOptionalMemberAccess]
-        ): return
+        ):
+            return
 
         logger.info(f"Anwsering to {message.author.display_name}")
 
