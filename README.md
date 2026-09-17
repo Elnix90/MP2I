@@ -26,8 +26,13 @@
 <!-- COMMANDS-START -->
 | Command | Description |
 | :--- | :--- |
-| `/health` | Show runtime health for bot subsystems |
+| `/ai-allow` | Autorise le bot IA à répondre dans ce salon (réservé aux admins) |
+| `/ai-deny` | Empêche le bot IA de répondre dans ce salon (réservé aux admins) |
+| `/colle` | Renvoie les colles de la semaine pour l'utilisateur |
+| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. |
+| `/get-to-work` | Mentionne tes mate de groupe pour qu'ils se bougent le cul |
 | `/ping` | Check bot latency and responsiveness |
+| `/self-update` | Automatiquement met à jour le bot depuis son serveur distant |
 
 <!-- COMMANDS-END -->
 
@@ -65,6 +70,7 @@
 ```env
 BOT_TOKEN=
 GUILD_ID=
+WEBHOOK_URL=
 ```
 <!--ENV-END-->
 
@@ -91,15 +97,37 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │       └── MPI2-server-icon.png
 ├── bot.py
 ├── cmds
-│   ├── health.py
+│   ├── ai_channel.py
+│   ├── colle.py
+│   ├── exec_shell.py
+│   ├── get_to_work.py
 │   ├── __init__.py
 │   ├── loader.py
 │   ├── ping.py
 │   ├── _registry.py
+│   ├── self_update.py
 │   └── _shared.py
 ├── config.toml
 ├── core
-│   └── config.py
+│   ├── ai.py
+│   ├── colle.py
+│   ├── config.py
+│   ├── exec_shell_command.py
+│   ├── get_first_group_role.py
+│   ├── is_admin.py
+│   ├── motiver_colle.py
+│   └── roles_ids.py
+├── db
+│   ├── colloscope.db
+│   ├── generate_colloscope_db.py
+│   ├── init
+│   │   ├── colleurs.py
+│   │   ├── Colloscope MP2I S1 copy.csv
+│   │   ├── Colloscope MP2I S1.csv
+│   │   ├── jours.py
+│   │   ├── rows.py
+│   │   └── subjects.py
+│   └── sql_requests.py
 ├── .github
 │   └── workflows
 │       └── pre-commit.yml
@@ -116,9 +144,10 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── generate_docs.py
 │   └── strip_metadata.sh
 └── utils
+    ├── console.py
     └── logger.py
 
-9 directories, 23 files
+11 directories, 44 files
 ```
 <!-- TREE-END -->
 
@@ -130,6 +159,9 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 ```markdown
 - `discord.py==2.7.1` - A Python wrapper for the Discord API (latest: 2.7.1)
 - `python-dotenv==1.2.2` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
+- `colorama` - Cross-platform colored terminal text. (latest: 0.4.6)
+- `requests` - Python HTTP for Humans. (latest: 2.34.2)
+- `aiohttp` - Async http client/server framework (asyncio) (latest: 3.14.3)
 ```
 <!--DEPS-END-->
 
