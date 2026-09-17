@@ -22,9 +22,7 @@ intents.message_content = True
 intents.members = True
 
 
-async def send_text_chunks(
-    channel: discord.abc.Messageable, text: str, max_length: int = 2000
-) -> None:
+async def send_text_chunks(channel: discord.abc.Messageable, text: str, max_length: int = 2000) -> None:
     """Send `text` to `channel`, splitting it into Discord-sized chunks."""
     current = ""
     for line in text.splitlines():
@@ -120,17 +118,20 @@ class MP2IBot(discord.Client):
         logger.info(
             "Bot MP2I est en ligne ! Connecté en tant que %s (ID: %s)",
             self.user,
-            self.user.id,
+            self.user.id,  # pyright: ignore[reportOptionalMemberAccess]
         )
 
     async def on_message(self, message):
-        if message.author.bot or message.guild is None:
-            return
-        if message.content.startswith("/"):
-            return
-        if not cfg.AI_ENABLED or not is_allowed_channel(message.channel.id):
-            return
-        if not self.user.mention in message.content:
+
+        # DO NOT USE LOGGER HERE, otherwise the bot will send messages forever!
+        if (
+            message.guild is None
+            or message.guild.id != cfg.GUILD_ID
+            or message.author.bot
+            or not cfg.AI_ENABLED
+            or not is_allowed_channel(message.channel.id)
+            or not self.user.mention in message.content  # pyright: ignore[reportOptionalMemberAccess]
+        ):
             return
 
         logger.info(f"Anwsering to {message.author.display_name}")
@@ -141,9 +142,6 @@ class MP2IBot(discord.Client):
 
         self._processing.add(uid)
         try:
-            if cfg.AI_ANSWER_DELAY_SECONDS > 0:
-                await asyncio.sleep(cfg.AI_ANSWER_DELAY_SECONDS)
-
             async with message.channel.typing():
                 messages = [
                     {"role": "system", "content": cfg.AI_SYSTEM_PROMPT},
@@ -160,10 +158,6 @@ class MP2IBot(discord.Client):
 
 
 def run_bot():
-    if not cfg.BOT_TOKEN:
-        logger.error("BOT_TOKEN est manquant dans l'environnement !")
-        return
-
     async def _main():
         client = MP2IBot(intents=intents)
 

@@ -47,9 +47,7 @@ async def setup(tree: app_commands.CommandTree, bot):
                 color=discord.Color.blurple(),
                 description="Bot is responsive.",
             )
-            embed.add_field(
-                name="Gateway Latency", value=f"{gateway_ms} ms", inline=True
-            )
+            embed.add_field(name="Gateway Latency", value=f"{gateway_ms} ms", inline=True)
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -57,10 +55,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "ping", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Error while checking latency.", ephemeral=True
-                )
+                await interaction.response.send_message("Error while checking latency.", ephemeral=True)
             else:
-                await interaction.followup.send(
-                    "Error while checking latency.", ephemeral=True
-                )
+                await interaction.followup.send("Error while checking latency.", ephemeral=True)

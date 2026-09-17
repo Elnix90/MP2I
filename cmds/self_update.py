@@ -3,9 +3,13 @@ import time
 import discord
 from discord import app_commands
 
-from cmds._shared import (defer_interaction, log_command_end,
-                          log_command_error, log_command_start,
-                          send_interaction)
+from cmds._shared import (
+    defer_interaction,
+    log_command_end,
+    log_command_error,
+    log_command_start,
+    send_interaction,
+)
 from core.exec_shell_command import exec_shell_command
 from core.is_admin import is_admin
 from utils.logger import get_logger
@@ -56,8 +60,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "self_update", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Error while executing the command."
-                )
+                await interaction.response.send_message("Error while executing the command.")
             else:
                 await interaction.followup.send("Error while executing the command.")

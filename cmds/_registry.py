@@ -46,27 +46,16 @@ def get_all_commands() -> list[CommandInfo]:
                             is_command = False
 
                             # Matches @tree.command or @app_commands.command
-                            if (
-                                (
-                                    isinstance(func, ast.Attribute)
-                                    and func.attr == "command"
-                                )
-                                or isinstance(func, ast.Name)
-                                and func.id == "command"
-                            ):
+                            if (isinstance(func, ast.Attribute) and func.attr == "command") or isinstance(func, ast.Name) and func.id == "command":
                                 is_command = True
 
                             if is_command:
                                 name = "unknown"
                                 description = "No description provided"
                                 for keyword in decorator.keywords:
-                                    if keyword.arg == "name" and isinstance(
-                                        keyword.value, ast.Constant
-                                    ):
+                                    if keyword.arg == "name" and isinstance(keyword.value, ast.Constant):
                                         name = keyword.value.value
-                                    elif keyword.arg == "description" and isinstance(
-                                        keyword.value, ast.Constant
-                                    ):
+                                    elif keyword.arg == "description" and isinstance(keyword.value, ast.Constant):
                                         description = keyword.value.value
 
                                 if name == "unknown":

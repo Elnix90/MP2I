@@ -238,9 +238,7 @@ class DiscordWebhookHandler(Handler):
                 chunk_payload = dict(payload)
                 chunk_payload["content"] = chunk
                 if len(chunks) > 1:
-                    chunk_payload["content"] = (
-                        f"{chunk_payload['content']}\n\n[{index}/{len(chunks)}]"
-                    )
+                    chunk_payload["content"] = f"{chunk_payload['content']}\n\n[{index}/{len(chunks)}]"
 
                 for attempt in range(3):
                     response = requests.post(
@@ -315,11 +313,7 @@ def setup_logging(level: int = logging.INFO, config=None):
     handlers = []
 
     # stream handler (interactive console when a TTY is available)
-    if (
-        config is None
-        or getattr(config, "console", None) is None
-        or getattr(config.console, "enable", True)
-    ):
+    if config is None or getattr(config, "console", None) is None or getattr(config.console, "enable", True):
         # Deferred import to avoid a circular dependency between
         # utils.logger (imports the console renderer) and utils.console
         # (imports utils.logger).
@@ -341,11 +335,7 @@ def setup_logging(level: int = logging.INFO, config=None):
             pass
 
     # optional discord webhook
-    if (
-        config is not None
-        and getattr(config, "enable_discord_logging", False)
-        and _is_real_webhook_url(getattr(config, "discord_webhook", None))
-    ):
+    if config is not None and getattr(config, "enable_discord_logging", False) and _is_real_webhook_url(getattr(config, "discord_webhook", None)):
         try:
             dh = DiscordWebhookHandler(config.discord_webhook)
             dh.setFormatter(DiscordAnsiFormatter(discord_format))

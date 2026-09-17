@@ -12,3 +12,6 @@ dependencies = []
 
 [tool.ruff.lint]
 ignore = ["BLE001"]
+
+[tool.ruff]
+line-length = 200

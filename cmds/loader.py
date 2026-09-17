@@ -72,9 +72,7 @@ async def load_commands(bot: Any, tree: app_commands.CommandTree, cmds_path: Pat
         # Convert filesystem path style to module-like import path
         # We'll import via importlib by path: convert file path to module spec
         try:
-            spec = importlib.util.spec_from_file_location(
-                modname, str(cmds_path / (modname + ".py"))
-            )
+            spec = importlib.util.spec_from_file_location(modname, str(cmds_path / (modname + ".py")))
             if spec is None:
                 # maybe a package
                 # try import by package name relative to project
@@ -91,9 +89,7 @@ async def load_commands(bot: Any, tree: app_commands.CommandTree, cmds_path: Pat
             except Exception:
                 failed += 1
                 failed_modules.append(modname)
-                logger.warning(
-                    "Failed to import command module %s", modname, exc_info=True
-                )
+                logger.warning("Failed to import command module %s", modname, exc_info=True)
                 continue
 
         # If module defines setup function, call it

@@ -23,9 +23,7 @@ async def setup(tree: app_commands.CommandTree, bot):
     Returns the colles of the week for the user issuing the command
     """
 
-    @tree.command(
-        name="colle", description="Renvoie les colles de la semaine pour l'utilisateur"
-    )
+    @tree.command(name="colle", description="Renvoie les colles de la semaine pour l'utilisateur")
     async def colle(interaction: discord.Interaction, user: discord.User | None = None):
         """Respond with gateway latency.
 
@@ -47,9 +45,7 @@ async def setup(tree: app_commands.CommandTree, bot):
             group_role = get_first_group_role(user_requested)
 
             if group_role is not None:
-                role_number = list(ROLES_IDS.keys())[
-                    list(ROLES_IDS.values()).index(group_role.id)
-                ]
+                role_number = list(ROLES_IDS.keys())[list(ROLES_IDS.values()).index(group_role.id)]
                 colles = get_colles(role_number)
 
                 colles_str = f"\n- {colles[0]}\n- {colles[1]}"
@@ -57,7 +53,7 @@ async def setup(tree: app_commands.CommandTree, bot):
                 if user is not None:
                     msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
                 else:
-                    msg = f"Hello {user_requested.mention}, tu fais parti du {group_role.mention}\nTes colles sont:{colles_str}"
+                    msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
 
@@ -67,8 +63,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "colle", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Error while checking your colles."
-                )
+                await interaction.response.send_message("Error while checking your colles.")
             else:
                 await interaction.followup.send("Error while checking colles.")
