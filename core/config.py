@@ -150,7 +150,7 @@ class DiscordLoggingConfig:
 
     enable_discord_logging: bool = False
     discord_webhook: str | None = None
-    discord_format: str = "%(asctime)s - %(filename)s\n%(message)s"
+    discord_format: str = "%(asctime)s - %(filename)s %(message)s"
 
 
 @dataclass
@@ -411,7 +411,7 @@ def load_config() -> tuple[Config, LoggingConfig]:
         discord_format=discord_raw.get(
             "discord_format",
             raw_logging.get(
-                "discord_format", "%(asctime)s - %(filename)s\n%(message)s"
+                "discord_format", "%(asctime)s - %(filename)s%(message)s"
             ),
         ),
     )
