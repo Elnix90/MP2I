@@ -60,6 +60,42 @@ class ColoredFormatter(logging.Formatter):
         return f"{color}{message}{Style.RESET_ALL}"
 
 
+class ConsoleHandler(Handler):
+    """Route log records to the interactive console renderer.
+
+    The console keeps typed input pinned at the bottom of the terminal while
+    log lines scroll above; when no interactive console is attached the
+    records are printed plainly to stderr.
+    """
+
+    def __init__(self, console, level: int = logging.NOTSET):
+        """Initialize a console handler.
+
+        Parameters
+        ----------
+        console : Any
+            Interactive console instance used to render records.
+        level : int
+            Logging level threshold (default: logging.NOTSET).
+        """
+        super().__init__(level)
+        self._console = console
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Emit a log record through the console renderer.
+
+        Parameters
+        ----------
+        record : logging.LogRecord
+            Log record to render.
+        """
+        try:
+            message = self.format(record)
+            self._console.print_log(message)
+        except Exception:
+            self.handleError(record)
+
+
 class DiscordAnsiFormatter(logging.Formatter):
     """Wrap log output in a Discord-compatible ANSI code block."""
 
@@ -278,13 +314,18 @@ def setup_logging(level: int = logging.INFO, config=None):
 
     handlers = []
 
-    # stream handler
+    # stream handler (interactive console when a TTY is available)
     if (
         config is None
         or getattr(config, "console", None) is None
         or getattr(config.console, "enable", True)
     ):
-        handler = logging.StreamHandler()
+        # Deferred import to avoid a circular dependency between
+        # utils.logger (imports the console renderer) and utils.console
+        # (imports utils.logger).
+        from utils.console import get_console
+
+        handler = ConsoleHandler(get_console())
         handler.setFormatter(ColoredFormatter(console_format))
         handler.addFilter(BotFilter())
         handlers.append(handler)
