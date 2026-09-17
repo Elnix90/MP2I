@@ -11,6 +11,7 @@ from discord import app_commands
 
 from cmds import loader as cmds_loader
 from core.config import cfg
+from utils.console import get_console
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -124,6 +125,8 @@ def run_bot():
                 # Windows or environments where add_signal_handler isn't supported
                 pass
 
+        get_console().attach(loop, client)
+
         try:
             await client.start(cfg.BOT_TOKEN)
         finally:
@@ -132,6 +135,7 @@ def run_bot():
                     await client.close()
             except Exception:
                 logger.exception("Error closing client during shutdown")
+            await get_console().aclose()
 
     try:
         asyncio.run(_main())
