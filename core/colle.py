@@ -13,4 +13,4 @@ class Colle:
         else:
             end_msg = ""
 
-        return f"Colle de **{self.matiere}**, {self.jour} à {self.creneau} par *{self.colleur_name}* en salle **{self.salle}**{end_msg}"
+        return f"Colle de **{self.matiere}**, {self.jour} à {self.creneau} avec *{self.colleur_name}* en salle **{self.salle}**{end_msg}"

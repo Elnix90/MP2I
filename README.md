@@ -73,6 +73,7 @@ BOT_TOKEN=
 GUILD_ID=
 BOT_ID=
 WEBHOOK_URL=
+OPENCODE_API_KEY=
 ```
 <!--ENV-END-->
 
@@ -136,7 +137,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │       └── pre-commit.yml
 ├── .gitignore
 ├── LICENSE
-├── lint.sh
 ├── main.py
 ├── mise.toml
 ├── .pre-commit-config.yaml
@@ -144,14 +144,18 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── README.md
 ├── requirements.txt
 ├── scripts
-│   ├── generate_docs.py
-│   └── strip_metadata.sh
+│   ├── cmds.py
+│   ├── deps.py
+│   ├── env.py
+│   ├── lint.sh
+│   ├── strip_metadata.sh
+│   └── tree.py
 └── utils
     ├── console.py
     ├── handlers
     └── logger.py
 
-12 directories, 45 files
+11 directories, 47 files
 ```
 <!-- TREE-END -->
 
@@ -161,11 +165,13 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 
 <!--DEPS-START-->
 ```markdown
-- `discord.py==2.7.1` - A Python wrapper for the Discord API (latest: 2.7.1)
-- `python-dotenv==1.2.2` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
+- `discord.py` - A Python wrapper for the Discord API (latest: 2.7.1)
+- `python-dotenv` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
 - `colorama` - Cross-platform colored terminal text. (latest: 0.4.6)
 - `requests` - Python HTTP for Humans. (latest: 2.34.2)
 - `aiohttp` - Async http client/server framework (asyncio) (latest: 3.14.3)
+- `httpx` - The next generation HTTP client. (latest: 0.28.1)
+- `starlette` - The little ASGI library that shines. (latest: 1.6.0)
 ```
 <!--DEPS-END-->
 

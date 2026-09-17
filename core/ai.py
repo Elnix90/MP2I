@@ -1,14 +1,15 @@
 """AI answering helpers.
 
-Generates answers using the OpenCode free API (no auth required) and
+Generates answers using an OpenAI-compatible API and
 manages the list of channels the bot is allowed to answer in.
 """
 
 import json
-import uuid
 from pathlib import Path
+from typing import Any, Dict, Optional
 
-import aiohttp
+import httpx
+from starlette.responses import StreamingResponse
 
 from core.config import cfg
 from utils.logger import get_logger
@@ -17,20 +18,17 @@ logger = get_logger()
 
 AI_STATE_PATH = Path("data") / "ai_state.json"
 
-_SESSION_ID = f"ses_{uuid.uuid4()}"
-_BASE_HEADERS = {
-    "User-Agent": "opencode/1.15.0 ai-sdk/provider-utils/4.0.23 runtime/bun/1.3.13",
-    "x-opencode-client": "cli",
-    "x-opencode-project": "global",
-}
+
+def _get_auth_header(headers: Dict[str, str]) -> str:
+    auth = headers.get("authorization", "")
+    if auth:
+        return auth
+    if cfg.AI_API_KEY:
+        return f"Bearer {cfg.AI_API_KEY}"
+    return ""
 
 
 def load_allowed_channels() -> list[int]:
-    """Return the persisted list of channel IDs where the bot may answer.
-
-    The state file, once written by an admin command, becomes the source
-    of truth. Before any admin command is used, the config value applies.
-    """
     if not AI_STATE_PATH.exists():
         return list(cfg.AI_ALLOWED_CHANNELS)
     try:
@@ -43,7 +41,6 @@ def load_allowed_channels() -> list[int]:
 
 
 def save_allowed_channels(channels: list[int]) -> None:
-    """Persist the list of channel IDs the bot may answer in."""
     try:
         AI_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(AI_STATE_PATH, "w", encoding="utf-8") as f:
@@ -53,14 +50,12 @@ def save_allowed_channels(channels: list[int]) -> None:
 
 
 def is_allowed_channel(channel_id: int | None) -> bool:
-    """Return True when the bot is allowed to answer in the given channel."""
     if channel_id is None:
         return False
     return channel_id in load_allowed_channels()
 
 
 def _extract_content(message: dict) -> str:
-    """Extract the assistant text from an OpenAI-style chat message."""
     content = message.get("content")
     if isinstance(content, str):
         return content
@@ -75,36 +70,54 @@ def _extract_content(message: dict) -> str:
     return ""
 
 
-async def generate_answer(messages: list[dict[str, str]], *, timeout: int = 120) -> str:
-    """Generate an answer from `messages` using the OpenCode free model.
+def _parse_stream_chunk(line: str) -> str:
+    if not line.startswith("data: ") or line == "data: [DONE]":
+        return ""
+    try:
+        return json.loads(line[6:])["choices"][0]["delta"].get("content", "")
+    except (json.JSONDecodeError, KeyError):
+        return ""
 
-    The free tier does not require a real API key: the "public" key plus
-    the session/request headers normally sent by the opencode CLI suffice.
-    """
+
+async def generate_answer(
+    messages: list[dict[str, str]],
+    request: Optional[Any] = None,
+    *,
+    timeout: int = 120,
+) -> str:
+    if request is not None:
+        headers = dict(request.headers)
+        body: Dict[str, Any] = await request.json()
+    else:
+        headers = {}
+        body = {}
+
+    auth = _get_auth_header(headers)
+    headers = {
+        "Content-Type": "application/json",
+    }
+    if auth:
+        headers["Authorization"] = auth
+
     payload = {
         "model": cfg.AI_MODEL,
         "messages": messages,
         "stream": False,
     }
-    headers = {
-        **_BASE_HEADERS,
-        "Authorization": "Bearer public",
-        "Content-Type": "application/json",
-        "x-opencode-request": f"msg_{uuid.uuid4()}",
-        "x-opencode-session": _SESSION_ID,
-    }
+
+    print(f"Requesting answer from OpenCode API: {messages}")
+    print(f"Request payload: {payload}")
+    print(f"Request headers: {headers}")
+
     try:
-        async with (
-            aiohttp.ClientSession() as session,
-            session.post(
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            resp = await client.post(
                 cfg.AI_API_URL,
                 headers=headers,
                 json=payload,
-                timeout=aiohttp.ClientTimeout(total=timeout),
-            ) as resp,
-        ):
+            )
             resp.raise_for_status()
-            data = await resp.json()
+            data = resp.json()
 
         content = _extract_content(data["choices"][0]["message"]).strip()
         if not content:
@@ -115,3 +128,46 @@ async def generate_answer(messages: list[dict[str, str]], *, timeout: int = 120)
     except Exception:
         logger.exception("OpenCode API error")
         return "Désolé, une erreur m'a empêché de répondre (t'appelleras le prof si ça continue)."
+
+
+async def chat_completions(request: Optional[Any] = None):
+    if request is not None:
+        headers = dict(request.headers)
+        body: Dict[str, Any] = await request.json()
+    else:
+        headers = {}
+        body = {}
+
+    auth = _get_auth_header(headers)
+    if auth:
+        headers["Authorization"] = auth
+
+    async def stream_generator():
+        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
+            async with client.stream(
+                "POST",
+                cfg.AI_API_URL,
+                headers=headers,
+                json=body,
+            ) as response:
+                async for line in response.aiter_lines():
+                    if line.startswith("data: ") and line != "data: [DONE]":
+                        try:
+                            data = json.loads(line[6:])
+                            content = data["choices"][0]["delta"].get("content", "")
+                            if content:
+                                yield f"data: {json.dumps({'choices': [{'delta': {'content': content}}]})}\n\n"
+                        except (json.JSONDecodeError, KeyError):
+                            continue
+                yield "data: [DONE]\n\n"
+
+    if body.get("stream", False):
+        return StreamingResponse(stream_generator(), media_type="text/event-stream")
+    else:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            resp = await client.post(
+                cfg.AI_API_URL,
+                headers=upstream_headers,
+                json=body,
+            )
+            return resp.json()

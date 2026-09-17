@@ -2,12 +2,14 @@ import asyncio
 import hashlib
 import json
 import os
+import random
 import signal
 import time
 from pathlib import Path
 
 import discord
 from discord import app_commands
+from discord.ext import tasks
 
 from cmds import loader as cmds_loader
 from core.ai import generate_answer, is_allowed_channel
@@ -47,6 +49,17 @@ class MP2IBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self._processing = set()
         self._commands_sync_state_path = Path("data") / "command_sync_state.json"
+
+    @tasks.loop(minutes=1.0)
+    async def status_task(self) -> None:
+        """Setup the game status task of the bot."""
+        statuses = ["with you!", "with Krypton!", "with humans!"]
+        await self.change_presence(activity=discord.Game(random.choice(statuses)))
+
+    @status_task.before_loop
+    async def before_status_task(self) -> None:
+        """Before starting the status changing task, we make sure the bot is ready."""
+        await self.wait_until_ready()
 
     @staticmethod
     def _compute_commands_fingerprint(cmds_path: Path) -> str:

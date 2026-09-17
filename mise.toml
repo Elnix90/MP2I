@@ -12,8 +12,8 @@ run = "uv venv"
 description = "Create virtual environment"
 
 [tasks.lint]
-run = "./lint.sh"
-description = "Run lint.sh"
+run = "scripts/lint.sh"
+description = "Run linter"
 
 [tasks.format]
 run = "ruff format"

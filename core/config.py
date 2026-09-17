@@ -14,12 +14,31 @@ except Exception:
     except Exception:
         _toml = None
 
+_ENV_FILE = Path(".env")
+_LOCAL_ENV_FILE = Path(".env.local")
+
+
+def _load_env_files() -> None:
+    """Load the environment file matching the running mode.
+
+    - ``ENV=PROD`` loads ``.env``.
+    - Otherwise ``.env.local`` is preferred, falling back to ``.env``
+      when only the production file exists (e.g. on the server).
+    """
+    if os.getenv("ENV", "LOCAL").upper() == "PROD" or not _LOCAL_ENV_FILE.exists():
+        load_dotenv(_ENV_FILE)
+    else:
+        load_dotenv(_LOCAL_ENV_FILE)
+
+
 try:
     from dotenv import load_dotenv
 
-    load_dotenv()
+    _load_env_files()
 except Exception:
-    print("Warning: python-dotenv not installed, environment variables from .env will not be loaded.")
+    print(
+        "Warning: python-dotenv not installed, environment variables from .env files will not be loaded."
+    )
 
 
 CONFIG_PATH = Path("config.toml")
@@ -300,7 +319,8 @@ class Config:
     CUR: sqlite3.Cursor | None = None
     CONN: sqlite3.Connection | None = None
 
-    # AI answering (OpenCode free model, no auth)
+    # AI answering (OpenCode Zen)
+    AI_API_KEY: str | None = None
     AI_ENABLED: bool = True
     AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
     AI_MODEL: str = DEFAULT_AI_MODEL
@@ -427,7 +447,9 @@ def load_config() -> tuple[Config, LoggingConfig]:
 
     cfg = Config(
         BOT_TOKEN=bot_token,
-        GUILD_ID=guild_id,
+        AI_API_KEY=os.getenv("AI_API_KEY")
+        or os.getenv("OPENCODE_ZEN_API_KEY")
+        or os.getenv("OPENCODE_API_KEY"),
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
         AI_ENABLED=ai_enabled,

@@ -1,5 +1,7 @@
-discord.py==2.7.1
-python-dotenv==1.2.2
+discord.py
+python-dotenv
 colorama
 requests
 aiohttp
+httpx
+starlette
