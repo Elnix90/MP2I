@@ -19,12 +19,12 @@ logger = get_logger()
 
 async def setup(tree: app_commands.CommandTree, bot):
     """
-    Returns the getToWorks of the week for the user issuing the command
+    Mp the other member of the group to kick their ass
     """
 
     @tree.command(
         name="get-to-work",
-        description="Mentionne tes mate de groupe pour qu'ils se bougent le cul",
+        description="Mp tes mate de groupe pour qu'ils se bougent le cul",
     )
     async def getToWork(interaction: discord.Interaction):
         start_time = time.perf_counter()

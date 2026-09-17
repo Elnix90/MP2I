@@ -29,9 +29,10 @@
 | `/ai-allow` | Autorise le bot IA à répondre dans ce salon (réservé aux admins) |
 | `/ai-deny` | Empêche le bot IA de répondre dans ce salon (réservé aux admins) |
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur |
-| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. |
-| `/get-to-work` | Mentionne tes mate de groupe pour qu'ils se bougent le cul |
+| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins) |
+| `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul |
 | `/ping` | Check bot latency and responsiveness |
+| `/restart` | Redémarre le bot (réservé aux admins) |
 | `/self-update` | Automatiquement met à jour le bot depuis son serveur distant |
 
 <!-- COMMANDS-END -->
@@ -43,7 +44,7 @@
 
 - Python 3.8+
 - Discord Bot Token
-- 
+
 ### Installation
 
 1. **Clone and Setup**
@@ -70,6 +71,7 @@
 ```env
 BOT_TOKEN=
 GUILD_ID=
+BOT_ID=
 WEBHOOK_URL=
 ```
 <!--ENV-END-->
@@ -99,12 +101,13 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── cmds
 │   ├── ai_channel.py
 │   ├── colle.py
-│   ├── exec_shell.py
+│   ├── exec.py
 │   ├── get_to_work.py
 │   ├── __init__.py
 │   ├── loader.py
 │   ├── ping.py
 │   ├── _registry.py
+│   ├── restart.py
 │   ├── self_update.py
 │   └── _shared.py
 ├── config.toml
@@ -145,9 +148,10 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── strip_metadata.sh
 └── utils
     ├── console.py
+    ├── handlers
     └── logger.py
 
-11 directories, 44 files
+12 directories, 45 files
 ```
 <!-- TREE-END -->
 
