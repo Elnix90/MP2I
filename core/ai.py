@@ -7,7 +7,7 @@ manages the list of channels the bot is allowed to answer in.
 import json
 from pathlib import Path
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from core.config import cfg
 from utils.logger import get_logger
@@ -44,12 +44,17 @@ def is_allowed_channel(channel_id: int | None) -> bool:
     return channel_id in load_allowed_channels()
 
 
-_CLIENT = OpenAI(base_url=cfg.AI_API_URL, api_key=cfg.AI_API_KEY)
+_CLIENT = AsyncOpenAI(
+    base_url=cfg.AI_API_URL,
+    api_key=cfg.AI_API_KEY,
+    timeout=60.0,
+    max_retries=1,
+)
 
 
 async def generate_answer(message: str) -> str:
     try:
-        response = _CLIENT.chat.completions.create(
+        response = await _CLIENT.chat.completions.create(
             model=cfg.AI_MODEL,
             messages=[
                 {"role": "system", "content": cfg.AI_SYSTEM_PROMPT},
