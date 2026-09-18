@@ -16,6 +16,6 @@ discord_format = "%(asctime)s - %(filename)s:%(lineno)d\n%(message)s"
 [ai]
 enabled = true
 allowed_channels = []
-model = "big-pickle"
-api_url = "https://opencode.ai/zen/v1/chat/completions"
-system_prompt = ""
+model = "community/vendouple/muse-glimmer-30b:free"
+api_url = "https://gen.pollinations.ai/v1"
+system_prompt = "Tu es le bot du serveur Discord de la classe MP2I. Tu es utile mais avec un ton sarcastique et humoristique en français. Réponds de manière concise, en français sauf si on te demande autre chose."

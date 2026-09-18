@@ -43,14 +43,6 @@ CONFIG_PATH = Path("config.toml")
 DB_PATH = Path("db/colloscope.db")
 BASE_DIR = Path(__file__)
 
-DEFAULT_AI_API_URL = "https://opencode.ai/zen/v1/chat/completions"
-DEFAULT_AI_MODEL = "big-pickle"
-DEFAULT_AI_SYSTEM_PROMPT = (
-    "Tu es le bot du serveur Discord de la classe MP2I. "
-    "Tu es utile mais avec un ton sarcastique et humoristique en français. "
-    "Réponds de manière concise, en français sauf si on te demande autre chose."
-)
-
 
 def _load_toml() -> dict[str, Any]:
     """Load and parse a TOML configuration file.
@@ -317,13 +309,12 @@ class Config:
     CUR: sqlite3.Cursor | None = None
     CONN: sqlite3.Connection | None = None
 
-    # AI answering (OpenCode Zen)
     AI_API_KEY: str | None = None
     AI_ENABLED: bool = True
     AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
-    AI_MODEL: str = DEFAULT_AI_MODEL
-    AI_API_URL: str = DEFAULT_AI_API_URL
-    AI_SYSTEM_PROMPT: str = DEFAULT_AI_SYSTEM_PROMPT
+    AI_MODEL: str = ""
+    AI_API_URL: str = ""
+    AI_SYSTEM_PROMPT: str = ""
 
     def __str__(self) -> str:
         return f"""Config(
@@ -439,14 +430,14 @@ def load_config() -> tuple[Config, LoggingConfig]:
     ai_raw = raw.get("ai", {})
     ai_enabled = ai_raw.get("enabled", True)
     ai_allowed_channels = [int(c) for c in ai_raw.get("allowed_channels", [])]
-    ai_model = ai_raw.get("model", DEFAULT_AI_MODEL)
-    ai_api_url = ai_raw.get("api_url", DEFAULT_AI_API_URL)
-    ai_system_prompt = ai_raw.get("system_prompt") or DEFAULT_AI_SYSTEM_PROMPT
+    ai_model = ai_raw.get("model")
+    ai_api_url = ai_raw.get("api_url")
+    ai_system_prompt = ai_raw.get("system_prompt")
 
     cfg = Config(
         BOT_TOKEN=bot_token,
         GUILD_ID=guild_id,
-        AI_API_KEY=os.getenv("AI_API_KEY") or os.getenv("OPENCODE_ZEN_API_KEY") or os.getenv("OPENCODE_API_KEY"),
+        AI_API_KEY=os.getenv("AI_API_KEY"),
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
         AI_ENABLED=ai_enabled,

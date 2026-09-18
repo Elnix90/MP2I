@@ -144,6 +144,9 @@ class MP2IBot(discord.Client):
             or not cfg.AI_ENABLED
             or not is_allowed_channel(message.channel.id)
             or not self.user.mention in message.content  # pyright: ignore[reportOptionalMemberAccess]
+            or not cfg.AI_API_KEY
+            or not cfg.AI_SYSTEM_PROMPT
+            or not cfg.AI_API_URL
         ):
             return
 
@@ -156,11 +159,8 @@ class MP2IBot(discord.Client):
         self._processing.add(uid)
         try:
             async with message.channel.typing():
-                messages = [
-                    {"role": "system", "content": cfg.AI_SYSTEM_PROMPT},
-                    {"role": "user", "content": message.content},
-                ]
-                answer = await generate_answer(messages)
+
+                answer = await generate_answer(message.content)
                 if answer:
                     await send_text_chunks(message.channel, answer)
         except Exception:
