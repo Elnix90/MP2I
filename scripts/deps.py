@@ -16,9 +16,7 @@ def fetch_pypi(pkg):
     try:
         with urlopen(f"https://pypi.org/pypi/{pkg.lower()}/json", timeout=5) as r:
             info = json.loads(r.read())["info"]
-            return info.get("summary", "").replace("\n", " ").strip(), info.get(
-                "version", ""
-            )
+            return info.get("summary", "").replace("\n", " ").strip(), info.get("version", "")
     except (URLError, KeyError):
         return "", ""
 

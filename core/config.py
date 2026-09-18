@@ -36,9 +36,7 @@ try:
 
     _load_env_files()
 except Exception:
-    print(
-        "Warning: python-dotenv not installed, environment variables from .env files will not be loaded."
-    )
+    print("Warning: python-dotenv not installed, environment variables from .env files will not be loaded.")
 
 
 CONFIG_PATH = Path("config.toml")
@@ -447,9 +445,8 @@ def load_config() -> tuple[Config, LoggingConfig]:
 
     cfg = Config(
         BOT_TOKEN=bot_token,
-        AI_API_KEY=os.getenv("AI_API_KEY")
-        or os.getenv("OPENCODE_ZEN_API_KEY")
-        or os.getenv("OPENCODE_API_KEY"),
+        GUILD_ID=guild_id,
+        AI_API_KEY=os.getenv("AI_API_KEY") or os.getenv("OPENCODE_ZEN_API_KEY") or os.getenv("OPENCODE_API_KEY"),
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
         AI_ENABLED=ai_enabled,

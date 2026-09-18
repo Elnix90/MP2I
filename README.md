@@ -157,7 +157,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
     ├── handlers
     └── logger.py
 
-12 directories, 47 files
+12 directories, 50 files
 ```
 <!-- TREE-END -->
 

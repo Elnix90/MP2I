@@ -60,8 +60,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "self_update", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Error while execuouiting the command."
-                )
+                await interaction.response.send_message("Error while execuouiting the command.")
             else:
                 await interaction.followup.send("Error while executing the command.")
