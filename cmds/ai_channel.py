@@ -31,9 +31,9 @@ async def _update_channel(interaction: discord.Interaction, *, allow: bool):
 
         channels = load_allowed_channels()
         if allow and channel.id in channels:
-            return await interaction.response.send_message(f"Le bot répond déjà dans <#{channel.id}>.", ephemeral=True)
+            return await interaction.followup.send(f"Le bot répond déjà dans <#{channel.id}>.", ephemeral=True)
         if not allow and channel.id not in channels:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 f"Le bot ne répondait déjà pas dans <#{channel.id}>.",
                 ephemeral=True,
             )
