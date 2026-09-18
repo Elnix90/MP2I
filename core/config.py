@@ -18,6 +18,7 @@ except Exception:
 _ENV_FILE = Path(".env")
 _LOCAL_ENV_FILE = Path(".env.local")
 
+
 class Env(Enum):
     PROD = True
     LOCAL = False
@@ -39,6 +40,7 @@ def _load_env_files() -> None:
     else:
         load_dotenv(_LOCAL_ENV_FILE)
         ENV = Env.LOCAL
+
 
 try:
     from dotenv import load_dotenv

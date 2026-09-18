@@ -11,7 +11,7 @@ requires-python = ">=3.13"
 dependencies = []
 
 [tool.ruff.lint]
-ignore = ["BLE001"]
+ignore = ["BLE001", "S110"]
 
 [tool.ruff]
 line-length = 200

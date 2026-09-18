@@ -7,6 +7,8 @@ from logging import Handler
 import colorama
 from colorama import Fore, Style
 
+from core.config import LoggingConfig
+
 colorama.init(autoreset=True)
 
 LOGGER_NAME = "MP2I"
@@ -34,7 +36,7 @@ class BotFilter(logging.Filter):
 class ColoredFormatter(logging.Formatter):
     """Add ANSI color codes to console log messages."""
 
-    COLORS = {
+    COLORS = {  # noqa: RUF012
         logging.DEBUG: Fore.CYAN,
         logging.INFO: Fore.GREEN,
         logging.WARNING: Fore.YELLOW,
@@ -99,7 +101,7 @@ class ConsoleHandler(Handler):
 class DiscordAnsiFormatter(logging.Formatter):
     """Wrap log output in a Discord-compatible ANSI code block."""
 
-    LEVEL_COLORS = {
+    LEVEL_COLORS = {  # noqa: RUF012
         logging.DEBUG: "\x1b[36m",
         logging.INFO: "\x1b[32m",
         logging.WARNING: "\x1b[33m",
@@ -296,7 +298,7 @@ def _is_real_webhook_url(url: str | None) -> bool:
     return bool(url) and "<URL>" not in url
 
 
-def setup_logging(level: int = logging.INFO, config=None):
+def setup_logging(level: int, config: LoggingConfig):
     """Configure console, file and Discord webhook logging.
 
     Parameters
@@ -334,10 +336,11 @@ def setup_logging(level: int = logging.INFO, config=None):
         except Exception:
             pass
 
+    webhook = config.discord_webhook
     # optional discord webhook
-    if config is not None and getattr(config, "enable_discord_logging", False) and _is_real_webhook_url(getattr(config, "discord_webhook", None)):
+    if webhook is not None and config.discord.enable_discord_logging and _is_real_webhook_url(webhook):
         try:
-            dh = DiscordWebhookHandler(config.discord_webhook)
+            dh = DiscordWebhookHandler(webhook)
             dh.setFormatter(DiscordAnsiFormatter(discord_format))
             handlers.append(dh)
         except Exception:
