@@ -159,7 +159,6 @@ class MP2IBot(discord.Client):
         self._processing.add(uid)
         try:
             async with message.channel.typing():
-
                 answer = await generate_answer(message.content)
                 if answer:
                     await send_text_chunks(message.channel, answer)

@@ -44,8 +44,8 @@ def is_allowed_channel(channel_id: int | None) -> bool:
     return channel_id in load_allowed_channels()
 
 
-
 _CLIENT = OpenAI(base_url=cfg.AI_API_URL, api_key=cfg.AI_API_KEY)
+
 
 async def generate_answer(message: str) -> str:
     try:

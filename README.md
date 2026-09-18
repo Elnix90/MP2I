@@ -146,9 +146,9 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── README.md
 ├── requirements.txt
 ├── scripts
-│   ├── cmds.py
 │   ├── deps.py
 │   ├── env.py
+│   ├── gen_cmds.py
 │   ├── lint.sh
 │   ├── strip_metadata.sh
 │   └── tree.py
@@ -171,9 +171,7 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 - `python-dotenv` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
 - `colorama` - Cross-platform colored terminal text. (latest: 0.4.6)
 - `requests` - Python HTTP for Humans. (latest: 2.34.2)
-- `aiohttp` - Async http client/server framework (asyncio) (latest: 3.14.3)
-- `httpx` - The next generation HTTP client. (latest: 0.28.1)
-- `starlette` - The little ASGI library that shines. (latest: 1.6.0)
+- `openai` - The official Python library for the openai API (latest: 3.15.0)
 ```
 <!--DEPS-END-->
 

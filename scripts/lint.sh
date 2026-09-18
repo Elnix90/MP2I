@@ -42,6 +42,6 @@ python3 scripts/env.py
 # ---------------------------------------------------------------------------
 # 5. Command documentation → README (between <!-- COMMANDS-START --> / <!-- COMMANDS-END -->)
 # ---------------------------------------------------------------------------
-python3 scripts/cmds.py
+python3 scripts/gen_cmds.py
 
 echo "✅ All updates completed!"
