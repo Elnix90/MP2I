@@ -7,7 +7,7 @@ returns the bot's gateway latency.
 import time
 
 import discord
-from discord import Role, app_commands
+from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.get_first_group_role import get_first_group_role
@@ -25,14 +25,6 @@ async def setup(tree: app_commands.CommandTree, bot):
 
     @tree.command(name="colle", description="Renvoie les colles de la semaine pour l'utilisateur")
     async def colle(interaction: discord.Interaction, user: discord.User | None = None):
-        """Respond with gateway latency.
-
-        Parameters
-        ----------
-        interaction : discord.Interaction
-            The interaction that triggered the command.
-        """
-
         start_time = time.perf_counter()
         log_command_start(logger, "colle", interaction)
 
