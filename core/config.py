@@ -3,6 +3,7 @@
 import os
 import sqlite3
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,13 @@ except Exception:
 _ENV_FILE = Path(".env")
 _LOCAL_ENV_FILE = Path(".env.local")
 
+class Env(Enum):
+    PROD = True
+    LOCAL = False
+
+
+ENV = Env.LOCAL
+
 
 def _load_env_files() -> None:
     """Load the environment file matching the running mode.
@@ -27,9 +35,10 @@ def _load_env_files() -> None:
     """
     if os.getenv("ENV", "LOCAL").upper() == "PROD" or not _LOCAL_ENV_FILE.exists():
         load_dotenv(_ENV_FILE)
+        ENV = Env.PROD
     else:
         load_dotenv(_LOCAL_ENV_FILE)
-
+        ENV = Env.LOCAL
 
 try:
     from dotenv import load_dotenv

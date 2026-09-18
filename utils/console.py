@@ -18,7 +18,7 @@ import sys
 import time
 from typing import Any
 
-from core.config import BASE_DIR
+from core.config import BASE_DIR, ENV, Env
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -108,7 +108,7 @@ class Console:
         self._client = client
         self._started_at = time.monotonic()
 
-        if os.getenv("BOT_CONSOLE", "1").lower() in ("0", "false"):
+        if ENV == Env.LOCAL:
             logger.info("Console interactive désactivée (BOT_CONSOLE=0).")
             return
         if not sys.stdin.isatty():
