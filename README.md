@@ -17,6 +17,7 @@
 - [Features](#-features)
 - [Commands](#📜-commands)
 - [Quick Start](#-quick-start)
+- [Docs](docs/)
 - [Dependencies](#-dependencies)
 - [Development](#-development)
 - [License](#-license)
