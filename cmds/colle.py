@@ -43,12 +43,17 @@ async def setup(tree: app_commands.CommandTree, bot):
                 ]
                 colles = get_colles(role_number)
 
-                colles_str = f"\n- {colles[0]}\n- {colles[1]}"
-
-                if user is not None:
-                    msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                if colles:
+                    colles_str = "\n".join(f"- {colle}" for colle in colles)
+                    if user is not None:
+                        msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                    else:
+                        msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
                 else:
-                    msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
+                    msg = (
+                        f"{user_requested.mention}, aucune colle cette semaine pour le "
+                        f"{group_role.mention} 🎉"
+                    )
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
 
