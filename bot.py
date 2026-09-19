@@ -136,13 +136,11 @@ class MP2IBot(discord.Client):
             or message.guild.id != cfg.GUILD_ID
             or message.author.bot
             or not cfg.AI_ENABLED
-            or not is_allowed_channel(message.channel.id)
-            or is_blacklisted_user_id(message.author.id)
-            or self.user.mention not in message.content  # pyright: ignore[reportOptionalMemberAccess]
             or not cfg.AI_API_KEY
             or not cfg.AI_SYSTEM_PROMPT
             or not cfg.AI_API_URL
-            or self.user.mention not in message.content
+            or is_blacklisted_user_id(message.author.id)
+            or self.user.mention not in message.content  # pyright: ignore[reportOptionalMemberAccess]
         ):
             return
 
