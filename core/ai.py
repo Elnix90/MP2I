@@ -4,38 +4,28 @@ Generates answers using an OpenAI-compatible API and
 manages the list of channels the bot is allowed to answer in.
 """
 
-import json
-from pathlib import Path
-
 from openai import AsyncOpenAI
 
 from core.config import cfg
+from db.settings_store import get_setting, set_setting
 from utils.logger import get_logger
 
 logger = get_logger()
 
-AI_STATE_PATH = Path("data") / "ai_state.json"
-
 
 def load_allowed_channels() -> list[int]:
-    if not AI_STATE_PATH.exists():
+    stored = get_setting("ai.allowed_channels")
+    if stored is None:
         return list(cfg.AI_ALLOWED_CHANNELS)
     try:
-        with open(AI_STATE_PATH, encoding="utf-8") as f:
-            payload = json.load(f)
-        return [int(c) for c in payload.get("allowed_channels", [])]
-    except Exception:
-        logger.warning("Failed to read allowed AI channels", exc_info=True)
+        return [int(c) for c in stored]
+    except (TypeError, ValueError):
+        logger.warning("Invalid allowed AI channels in store, using config default")
         return list(cfg.AI_ALLOWED_CHANNELS)
 
 
 def save_allowed_channels(channels: list[int]) -> None:
-    try:
-        AI_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(AI_STATE_PATH, "w", encoding="utf-8") as f:
-            json.dump({"allowed_channels": [int(c) for c in channels]}, f, indent=2)
-    except Exception:
-        logger.warning("Failed to write allowed AI channels", exc_info=True)
+    set_setting("ai.allowed_channels", [int(c) for c in channels])
 
 
 def is_allowed_channel(channel_id: int | None) -> bool:

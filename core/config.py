@@ -7,14 +7,18 @@ from enum import Enum
 from pathlib import Path
 
 from config.ai_conf import load_ai_config
-from config.logging_conf import (LoggingConfig, _normalize_webhook_url,
-                                 load_logging_config)
+from config.logging_conf import (
+    LoggingConfig,
+    _normalize_webhook_url,
+    load_logging_config,
+)
 from config.perms_conf import load_perms_config
 
 _ENV_FILE = Path(".env")
 _LOCAL_ENV_FILE = Path(".env.local")
 BASE_DIR = Path(__file__).parent.parent
 DB_PATH = Path("data/colloscope.db")
+BOT_STATE_DB_PATH = Path("data/bot_state.db")
 MAX_OUTPUT_LEN = 1900
 DEFAULT_REMOTE = os.getenv("BOT_REMOTE_URL", "https://github.com/Elnix90/MP2I.git")
 DEFAULT_BRANCH = os.getenv("BOT_UPDATE_BRANCH", "prod")

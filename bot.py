@@ -1,6 +1,5 @@
 import asyncio
 import hashlib
-import json
 import os
 import random
 import signal
@@ -15,6 +14,7 @@ from discord.ext import tasks
 from cmds import loader as cmds_loader
 from core.ai import generate_answer, is_allowed_channel
 from core.config import cfg, perms_cfg
+from db.settings_store import get_setting, set_setting
 from utils.console import get_console
 from utils.logger import get_logger
 
@@ -53,7 +53,6 @@ class MP2IBot(discord.Client):
         super().__init__(*args, **kwargs)
         self.tree = app_commands.CommandTree(self)
         self._processing = set()
-        self._commands_sync_state_path = Path("data") / "command_sync_state.json"
         self.bot_owners = set(perms_cfg.bot_admins)
         with open(Path("config/statuses.json5")) as f:
             self.statuses = json5.load(f).get("statuses")
@@ -89,31 +88,23 @@ class MP2IBot(discord.Client):
         return hasher.hexdigest()
 
     def _read_last_commands_fingerprint(self) -> str | None:
-        try:
-            if not self._commands_sync_state_path.exists():
-                return None
-            with open(self._commands_sync_state_path, encoding="utf-8") as f:
-                payload = json.load(f)
-            return payload.get("fingerprint")
-        except Exception:
-            logger.warning("Failed to read command sync state", exc_info=True)
+        fingerprint = get_setting("commands.fingerprint")
+        updated_at = get_setting("commands.updatedAt")
+        if not isinstance(fingerprint, str) or not isinstance(updated_at, int):
             return None
+        if updated_at < int(time.time()):
+            return None
+        return fingerprint
 
     def _write_last_commands_fingerprint(self, fingerprint: str) -> None:
-        try:
-            self._commands_sync_state_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._commands_sync_state_path, "w", encoding="utf-8") as f:
-                json.dump(
-                    {
-                        "fingerprint": fingerprint,
-                        "updatedAt": int(time.time()),
-                    },
-                    f,
-                    ensure_ascii=True,
-                    indent=2,
-                )
-        except Exception:
-            logger.warning("Failed to write command sync state", exc_info=True)
+        set_setting(
+            "commands.fingerprint",
+            fingerprint,
+        )
+        set_setting(
+            "commands.updatedAt",
+            int(time.time()),
+        )
 
     async def _sync_commands_if_needed(self, cmds_path: Path) -> None:
         force_sync = os.getenv("FORCE_COMMAND_SYNC", "0") == "1"
