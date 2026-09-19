@@ -19,6 +19,7 @@ repos:
       - id: check-json
       - id: check-toml
       - id: debug-statements
+        args: ["--auto"]
 
   # Ruff (format + lint)
   - repo: https://github.com/astral-sh/ruff-pre-commit
