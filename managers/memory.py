@@ -238,6 +238,7 @@ class MemoryManager:
         guild_id: int | None,
         channel_id: int | None,
         thread_id: int | None = None,
+        turn_id: str | None = None,
     ) -> str:
         async with self._sync_lock:
             turn_id = self.record_exchange(
@@ -248,6 +249,7 @@ class MemoryManager:
                 guild_id=guild_id,
                 channel_id=channel_id,
                 thread_id=thread_id,
+                turn_id=turn_id,
             )
             self._save_state()
             await self._app.update()

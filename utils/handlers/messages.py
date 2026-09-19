@@ -1,7 +1,7 @@
 """Helpers for sending long or formatted Discord messages."""
 
 import re
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import discord
 
@@ -9,6 +9,9 @@ from utils.handlers.codeblock import send_code_block_with_return
 from utils.handlers.latex import LATEX_TO_EMOJI, detect_latex
 from utils.handlers.table import TABLE_IMAGE_PLACEHOLDER, detect_and_convert_tables
 from utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from utils.debug import DebugWriter
 
 logger = get_logger()
 
@@ -19,10 +22,13 @@ class MessageSender:
         channel: discord.abc.Messageable,
         bot: discord.Client | None = None,
         max_length: int = 2000,
+        *,
+        debug: "DebugWriter | None" = None,
     ):
         self.channel = channel
         self.bot = bot
         self.max_length = max_length
+        self.debug = debug
 
     def _get_target_channel(self) -> discord.abc.Messageable:
         if self.bot:
@@ -37,6 +43,8 @@ class MessageSender:
     async def send_text_chunks(self, text: str) -> discord.Message | None:
         if not text.strip():
             return None
+        if self.debug:
+            self.debug.add_content(text)
         target = self._get_target_channel()
         lines = text.splitlines(keepends=True)
         current_message = ""
@@ -68,6 +76,10 @@ class MessageSender:
         if success:
             if isinstance(result, str):
                 return await target.send(result)
+            if self.debug:
+                result.seek(0)
+                self.debug.save_image(result, f"latex_{self.debug._image_counter}.png")
+                result.seek(0)
             file = discord.File(result, filename="formula.png")
             return await target.send(file=file)
         latex_display = latex[:100] + "..." if len(latex) > 100 else latex
@@ -115,11 +127,16 @@ class MessageSender:
 
     async def process_and_send(self, response: str) -> tuple[discord.Message | None, list[dict]]:
         response, table_images, table_data = detect_and_convert_tables(response)
+
+        # Prepend debug header to the first text chunk
+        debug_prefix = self.debug.debug_header() if self.debug else ""
+
         placeholder_escaped = re.escape(TABLE_IMAGE_PLACEHOLDER)
         pattern = re.compile(f"({placeholder_escaped}_\\d+__)|(```[\\s\\S]*?```)")
         parts = [p for p in pattern.split(response) if p is not None]
         target = self._get_target_channel()
         last_message = None
+        first_text = True
         for part in parts:
             if not part:
                 continue
@@ -130,8 +147,14 @@ class MessageSender:
                     if idx < len(table_images):
                         img_buffer = table_images[idx]
                         img_buffer.seek(0)
+                        if self.debug:
+                            img_buffer.seek(0)
+                            self.debug.save_image(img_buffer, f"table_{idx}.png")
+                            img_buffer.seek(0)
                         file = discord.File(fp=img_buffer, filename=f"table_{idx}.png")
                         last_message = await target.send(file=file)
+                        if self.debug:
+                            self.debug.add_content(f"![table_{idx}](images/table_{idx}.png)")
                     else:
                         last_message = await self.send_text_with_latex(part)
                 except Exception as exc:
@@ -139,7 +162,13 @@ class MessageSender:
                     last_message = await self.send_text_with_latex(part)
             elif part.startswith("```") and part.endswith("```"):
                 if TABLE_IMAGE_PLACEHOLDER not in part:
+                    if first_text and debug_prefix:
+                        part = debug_prefix + part
+                        first_text = False
                     last_message = await send_code_block_with_return(target, part, self.max_length, bot=self.bot)
             else:
+                if first_text and debug_prefix:
+                    part = debug_prefix + part
+                    first_text = False
                 last_message = await self.send_text_with_latex(part)
         return last_message, table_data
