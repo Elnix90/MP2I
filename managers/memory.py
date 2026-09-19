@@ -15,6 +15,7 @@ import uuid
 from collections.abc import AsyncIterator, Iterable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any, cast
 
 import cocoindex as coco
 from cocoindex.connectors import sqlite as coco_sqlite
@@ -79,11 +80,16 @@ async def memory_lifespan(builder: coco.EnvironmentBuilder) -> AsyncIterator[Non
 async def memory_app_main() -> None:
     store = coco.use_context(MEMORY_STORE_KEY)
 
-    turn_schema = await coco_sqlite.TableSchema.from_class(MemoryTurn, primary_key=["turn_id"])
+    # cocoindex's RowT TypeVar defaults to dict[str, Any], but dataclasses are
+    # supported at runtime; cast to satisfy the stub.
+    turn_schema = await coco_sqlite.TableSchema.from_class(
+        cast("type[dict[str, Any]]", MemoryTurn),
+        primary_key=["turn_id"],
+    )
     turn_table = await coco_sqlite.mount_table_target(MEMORY_DB_KEY, "memory_turns", turn_schema)
 
     for turn in store.iter_turns():
-        turn_table.declare_row(row=turn)
+        turn_table.declare_row(row=asdict(turn))
 
 
 class MemoryManager:
@@ -123,9 +129,9 @@ class MemoryManager:
         for item in payload.get("turns", []) if isinstance(payload, dict) else []:
             try:
                 turn = MemoryTurn(**item)
+                self._turns[turn.turn_id] = turn
             except Exception as exc:
                 logger.warning("Skipping invalid memory turn: %s", exc)
-            self._turns[turn.turn_id] = turn
 
     def _save_state(self) -> None:
         payload = {"turns": [asdict(turn) for turn in self.iter_turns()]}
