@@ -38,9 +38,7 @@ async def setup(tree: app_commands.CommandTree, bot):
 
             if group_role is not None:
                 # ALl the user's mates, not including himself
-                mates = [
-                    member for member in group_role.members if member.id != user.id
-                ]
+                mates = [member for member in group_role.members if member.id != user.id]
 
                 if len(mates) == 0:
                     return await interaction.followup.send(
