@@ -28,4 +28,4 @@ async def generate_answer(message: str) -> str:
         {"role": "user", "content": message},
     ]
     answer = await _generate_answer(messages, stream=False)
-    return answer.content or "No answer"
+    return (answer.content or "No answer") if isinstance(answer, Answer) else "No answer"

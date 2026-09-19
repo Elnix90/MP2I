@@ -12,7 +12,9 @@ back, and a final answer is produced. Streaming applies to the final round.
 import asyncio
 import json
 import re
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from typing import Any
 
 from openai import AsyncOpenAI
 
@@ -137,8 +139,8 @@ async def _run_round(
         return None, [], str(exc)
 
 
-def _assistant_tool_message(message: object) -> dict:
-    base = {
+def _assistant_tool_message(message: object) -> dict[str, Any]:
+    base: dict[str, Any] = {
         "role": "assistant",
         "content": strip_tool_artifacts(getattr(message, "content", None) or ""),
     }
@@ -180,7 +182,7 @@ async def generate_answer(
     *,
     stream: bool = False,
     tools: list | None = None,
-) -> Answer | object:
+) -> Answer | AsyncIterator[Any]:
     models = _model_priority()
     if not models:
         return Answer(
@@ -237,7 +239,7 @@ async def generate_answer(
     )
 
 
-async def _stream_final(client: AsyncOpenAI, model: str, messages: list) -> object | None:
+async def _stream_final(client: AsyncOpenAI, model: str, messages: list) -> AsyncIterator[Any] | None:
     try:
         return await client.chat.completions.create(
             model=model,
@@ -255,7 +257,7 @@ async def _synthesize(
     messages: list,
     *,
     stream: bool,
-) -> Answer | object | None:
+) -> Answer | AsyncIterator[Any] | None:
     stream_result = None
     for model in models:
         try:
