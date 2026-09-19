@@ -1,11 +1,11 @@
 {
   ai: {
     enabled: true,
+    needle_tool_calling: true,
     allowed_channels: [],
     models: [
       "community/vendouple/muse-glimmer-30b:free",
-      "openai/gpt-4o-mini",
-      "mistral/mistral-small-latest",
+      "community/chigwell/llm7-fast"
     ],
     api_url: "https://gen.pollinations.ai/v1",
     system_prompt_path: "config/prompts/system.md",

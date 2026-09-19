@@ -63,6 +63,7 @@ class Config:
     AI_STREAMING: bool = True
     AI_MEMORY_MAX_HISTORY: int = 15
     AI_TOOLS: list[str] = field(default_factory=list)
+    AI_NEEDLE_TOOL_CALLING: bool = False
 
 
 def load_config() -> tuple[Config, LoggingConfig]:
@@ -102,6 +103,7 @@ def load_config() -> tuple[Config, LoggingConfig]:
         AI_STREAMING=ai_conf.streaming,
         AI_MEMORY_MAX_HISTORY=ai_conf.memory_max_history,
         AI_TOOLS=ai_conf.tools,
+        AI_NEEDLE_TOOL_CALLING=ai_conf.needle_tool_calling,
     ), logging_conf
 
 
