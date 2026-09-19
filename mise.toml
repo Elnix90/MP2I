@@ -27,10 +27,14 @@ description = "Format and fix imports using ruff"
 run = "uv run ruff check . && uv run ruff format --check ."
 description = "Check formatting and linting"
 
-[tasks.test]
-run = "uv run python -m pytest tests/"
-description = "Run tests"
-
 [tasks.setup-hooks]
 run = "uv run pre-commit install"
 description = "Install git hooks (pre-commit + commit-msg)"
+
+[tasks.clean]
+run = "echo 'Supprimer logs/ et debug/? (y/N)' && read -r confirm && [ \"$confirm\" = 'y' ] && rm -rf logs debug && echo 'Nettoyé.' || echo 'Annulé.'"
+description = "Clean up debug messages and logs"
+
+[tasks.reset]
+run = "echo 'Supprimer .venv/, logs/, debug/, data/? Irréversible! (y/N)' && read -r confirm && [ \"$confirm\" = 'y' ] && rm -rf .venv logs debug data && echo 'Réinitialisé.' || echo 'Annulé.'"
+description = "Reset project"
