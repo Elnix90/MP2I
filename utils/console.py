@@ -9,8 +9,6 @@ When stdin is not a TTY the interactive input is disabled and the console
 falls back to plain log output.
 """
 
-from __future__ import annotations
-
 import asyncio
 import os
 import subprocess
@@ -109,7 +107,7 @@ class Console:
         self._started_at = time.monotonic()
 
         if ENV == Env.LOCAL:
-            logger.info("Console interactive désactivée (BOT_CONSOLE=0).")
+            logger.info("Console interactive désactivée.")
             return
         if not sys.stdin.isatty():
             logger.info("Console interactive désactivée : stdin n'est pas un terminal.")
@@ -120,10 +118,10 @@ class Console:
             self._tui = True
             self._render_prompt()
             loop.add_reader(self._fd, self._on_readable)
-            logger.info("Console interactive active — tapez 'help'.")
+            logger.info("Console interactive active - tapez 'help'.")
         else:
             self._read_task = loop.create_task(self._read_loop())
-            logger.info("Console interactive active (mode ligne) — tapez 'help'.")
+            logger.info("Console interactive active (mode ligne) - tapez 'help'.")
 
     async def aclose(self) -> None:
         """Stop reading input, restore terminal settings and free the console.
@@ -254,20 +252,6 @@ class Console:
             if self._buffer:
                 self._buffer = self._buffer[:-1]
                 self._render_prompt()
-        elif code == 3:  # Ctrl+C: clear the current line
-            self._buffer = ""
-            self._render_prompt()
-        elif code == 4 and not self._buffer:  # Ctrl+D on an empty line: quit
-            self._submit("quit")
-        elif code == 12:  # Ctrl+L: clear the screen
-            self._write(_CLEAR_SCREEN)
-            self._render_prompt()
-        elif code == 27:  # Escape sequence, skip it until the final byte
-            self._esc = 1
-        elif self._esc:
-            self._esc += 1
-            if 3 <= self._esc and 0x40 <= code <= 0x7E:
-                self._esc = 0
         elif 0x20 <= code <= 0x7E or code >= 0xA0:
             self._buffer += chr(code)
             self._render_prompt()
@@ -305,7 +289,7 @@ class Console:
             return
         entry = _ALL.get(name)
         if entry is None:
-            logger.warning("Commande inconnue %r — tapez 'help'.", name)
+            logger.warning("Commande inconnue %r - tapez 'help'.", name)
             return
         logger.info("Commande console : %s", raw)
         args = parts[1].split() if len(parts) > 1 else []
@@ -343,7 +327,7 @@ async def _cmd_status(console: Console, _args: list[str]) -> None:
     if client is not None:
         guilds = len(client.guilds)
         latency_ms = getattr(client, "latency", 0.0) * 1000
-        line += f" — Serveurs : {guilds} — Latence : {latency_ms:.1f} ms"
+        line += f" - Serveurs : {guilds} - Latence : {latency_ms:.1f} ms"
     console.say(line)
 
 
@@ -397,20 +381,7 @@ _CMDS: dict[str, tuple[Any, str]] = {
 
 _SHELL_NAMES = {"shell", "sh", "bash", "exec"}
 
-_ALIASES = {
-    "aide": "help",
-    "?": "help",
-    "info": "status",
-    "uptime": "status",
-    "quit": "shutdown",
-    "exit": "shutdown",
-    "stop": "shutdown",
-    "cls": "clear",
-}
-
 _ALL: dict[str, tuple[Any, str]] = dict(_CMDS)
-for _alias, _target in _ALIASES.items():
-    _ALL[_alias] = _CMDS[_target]
 
 _console = Console()
 
