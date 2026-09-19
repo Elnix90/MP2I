@@ -12,10 +12,17 @@ from discord import app_commands
 from discord.ext import tasks
 
 from cmds import loader as cmds_loader
-from core.ai import generate_answer, is_allowed_channel
+from core.ai.channels import get_channel_mode
+from core.ai.client import Answer, generate_answer, strip_tool_artifacts
+from core.ai.prompts import build_system_prompt
+from core.ai.tools import get_combined_tools
 from core.config import cfg, perms_cfg
 from db.settings_store import get_setting, set_setting
+from managers.context import format_context_for_prompt, get_server_context
+from managers.mcp import mcp_manager
+from managers.memory import MemoryManager, make_scope_key
 from utils.console import get_console
+from utils.handlers.messages import MessageSender
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -25,35 +32,13 @@ intents.message_content = True
 intents.members = True
 
 
-async def send_text_chunks(
-    channel: discord.abc.Messageable,
-    text: str,
-    max_length: int = 2000,
-) -> None:
-    """Send `text` to `channel`, splitting it into Discord-sized chunks."""
-    current = ""
-    for line in text.splitlines():
-        if len(line) > max_length:
-            if current:
-                await channel.send(current.rstrip())
-                current = ""
-            for i in range(0, len(line), max_length):
-                await channel.send(line[i : i + max_length])
-        elif len(current) + len(line) + 1 > max_length:
-            await channel.send(current.rstrip())
-            current = line
-        else:
-            current = f"{current}\n{line}"
-    if current.strip():
-        await channel.send(current.rstrip())
-
-
 class MP2IBot(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tree = app_commands.CommandTree(self)
         self._processing = set()
         self.bot_owners = set(perms_cfg.bot_admins)
+        self.memory = MemoryManager(max_history=cfg.AI_MEMORY_MAX_HISTORY)
         with open(Path("config/statuses.json5")) as f:
             self.statuses = json5.load(f).get("statuses")
 
@@ -97,14 +82,8 @@ class MP2IBot(discord.Client):
         return fingerprint
 
     def _write_last_commands_fingerprint(self, fingerprint: str) -> None:
-        set_setting(
-            "commands.fingerprint",
-            fingerprint,
-        )
-        set_setting(
-            "commands.updatedAt",
-            int(time.time()),
-        )
+        set_setting("commands.fingerprint", fingerprint)
+        set_setting("commands.updatedAt", int(time.time()))
 
     async def _sync_commands_if_needed(self, cmds_path: Path) -> None:
         force_sync = os.getenv("FORCE_COMMAND_SYNC", "0") == "1"
@@ -128,6 +107,12 @@ class MP2IBot(discord.Client):
         logger.info("Slash command sync completed in %.2fs", sync_elapsed)
 
     async def setup_hook(self):
+        # Bootstrap memory and MCP concurrently to speed startup
+        try:
+            await asyncio.gather(self.memory.bootstrap(), mcp_manager.initialize())
+        except Exception as exc:
+            logger.error("Error during bootstrap/init: %s", exc)
+
         # load commands from cmds/ directory (loggers inside loader will report details)
         cmds_path = Path(__file__).parent / "cmds"
         await cmds_loader.load_commands(self, self.tree, cmds_path)
@@ -142,22 +127,18 @@ class MP2IBot(discord.Client):
         )
 
     async def on_message(self, message):
-
         # DO NOT USE LOGGER HERE, otherwise the bot will send messages forever!
         if (
             message.guild is None
             or message.guild.id != cfg.GUILD_ID
             or message.author.bot
             or not cfg.AI_ENABLED
-            or not is_allowed_channel(message.channel.id)
-            or self.user.mention not in message.content  # pyright: ignore[reportOptionalMemberAccess]
             or not cfg.AI_API_KEY
             or not cfg.AI_SYSTEM_PROMPT
             or not cfg.AI_API_URL
+            or self.user.mention not in message.content
         ):
             return
-
-        logger.info(f"Anwsering to {message.author.display_name}")
 
         uid = message.author.id
         if uid in self._processing:
@@ -165,15 +146,159 @@ class MP2IBot(discord.Client):
 
         self._processing.add(uid)
         try:
-            async with message.channel.typing():
-                answer = await generate_answer(message.content)
-                if answer:
-                    await send_text_chunks(message.channel, answer)
+            channel = message.channel
+
+            if isinstance(channel, discord.Thread):
+                parent_mode = get_channel_mode(channel.parent_id)
+                if parent_mode == "thread":
+                    await self._process(
+                        message,
+                        channel,
+                        make_scope_key(thread_id=channel.id),
+                    )
+            else:
+                mode = get_channel_mode(channel.id)
+                if mode is None:
+                    return
+                if mode == "normal":
+                    await self._process(
+                        message,
+                        channel,
+                        make_scope_key(channel_id=channel.id),
+                    )
+                else:  # thread mode -> start a thread conversation
+                    thread = await message.create_thread(
+                        name=self._thread_name(message.content)
+                    )
+                    await self._process(
+                        message,
+                        thread,
+                        make_scope_key(thread_id=thread.id),
+                    )
         except Exception:
             logger.exception("Erreur lors du traitement du message IA")
-            await message.channel.send("Une erreur interne m'empêche de répondre.")
+            try:
+                await message.channel.send("Une erreur interne m'empêche de répondre.")
+            except Exception:
+                pass
         finally:
             self._processing.discard(uid)
+
+    @staticmethod
+    def _flushable(buffer: str) -> bool:
+        """True when the stream buffer ends at a safe block boundary.
+
+        Prevents flushing in the middle of a code fence or a LaTeX fragment,
+        which would break block detection and rendering.
+
+        Parameters
+        ----------
+        buffer : str
+            Pending streamed content.
+
+        Returns
+        -------
+        bool
+            True when the buffer can be sent as-is.
+        """
+        if buffer.count("```") % 2 != 0:
+            return False
+        for delimiter in ("$", r"\[", r"\]", r"\(", r"\)"):
+            if buffer.count(delimiter) % 2 != 0:
+                return False
+        return True
+
+    @staticmethod
+    def _thread_name(content: str, max_length: int = 100) -> str:
+        """Build a thread name from the message content."""
+        topic = content.strip().replace("\n", " ")
+        if len(topic) > max_length:
+            topic = topic[:max_length].rstrip() + "…"
+        return topic or "Conversation IA"
+
+    @staticmethod
+    def _strip_mention(content: str, bot_user: discord.ClientUser) -> str:
+        """Remove the bot mention from the message content."""
+        text = content
+        text = text.replace(f"<@{bot_user.id}>", "").replace(f"<@!{bot_user.id}>", "")
+        return text.strip()
+
+    async def _process(
+        self,
+        message: discord.Message,
+        channel: discord.abc.Messageable,
+        scope: str,
+    ) -> None:
+        """Answer a mention in `channel`, using the memory scope `scope`."""
+        user = message.author
+        server_ctx = await get_server_context(message.guild)
+        system_prompt = build_system_prompt(
+            format_context_for_prompt(server_ctx),
+            include_tools=True,
+        )
+
+        history = self.memory.get_history(scope)
+        user_text = self._strip_mention(message.content, self.user)  # pyright: ignore[reportArgumentType]
+
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(history)
+        messages.append(
+            {"role": "user", "content": f"[{user.display_name}]: {user_text}"}
+        )
+
+        full_content = ""
+        sender = MessageSender(channel, self)
+        async with channel.typing():
+            result = await generate_answer(
+                messages,
+                stream=cfg.AI_STREAMING,
+                tools=get_combined_tools(),
+            )
+
+            if isinstance(result, Answer):
+                if result.error:
+                    logger.warning(
+                        "AI generation error=%s detail=%s",
+                        result.error,
+                        result.error_detail,
+                    )
+                full_content = strip_tool_artifacts(result.content or "")
+            else:
+                buffer = ""
+                async for chunk in result:
+                    if not chunk.choices:
+                        continue
+                    delta = chunk.choices[0].delta.content or ""
+                    if not delta:
+                        continue
+                    full_content += delta
+                    buffer += delta
+                    if ("\n\n" in buffer or len(buffer) > 1500) and self._flushable(
+                        buffer
+                    ):
+                        to_send = strip_tool_artifacts(buffer)
+                        buffer = ""
+                        if to_send.strip():
+                            await sender.process_and_send(to_send)
+                if buffer.strip():
+                    await sender.process_and_send(strip_tool_artifacts(buffer))
+
+        if isinstance(result, Answer):
+            # non-stream path: send the complete answer now.
+            await sender.process_and_send(full_content)
+
+        if full_content.strip():
+            thread = channel if isinstance(channel, discord.Thread) else None
+            await self.memory.record_and_sync(
+                user_id=user.id,
+                user_name=user.display_name,
+                user_content=user_text or message.content,
+                assistant_content=strip_tool_artifacts(full_content),
+                guild_id=message.guild.id if message.guild else None,
+                channel_id=thread.parent_id if thread else channel.id,
+                thread_id=thread.id if thread else None,
+            )
+        logger.info("Réponse envoyée à %s (scope=%s)", user.display_name, scope)
 
 
 def run_bot():
@@ -204,6 +329,10 @@ def run_bot():
                     await client.close()
             except Exception:
                 logger.exception("Error closing client during shutdown")
+            try:
+                await client.memory.sync()
+            except Exception:
+                logger.exception("Error syncing memory during shutdown")
             await get_console().aclose()
 
     try:

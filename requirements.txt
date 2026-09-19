@@ -4,3 +4,11 @@ colorama
 requests
 openai
 json5
+aiohttp
+Pillow
+pilmoji
+cairosvg
+pytesseract
+fastmcp
+cocoindex
+pint
