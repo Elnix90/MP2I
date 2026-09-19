@@ -53,6 +53,9 @@
 
 ### Installation
 
+We use `mise` and `uv` to manage dependencies and environment variables.
+See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for installation instructions.
+
 1. **Clone and Setup**
 
     ```bash
@@ -65,7 +68,7 @@
 2. **Install Dependencies** (Using `uv` is recommended for speed)
 
     ```bash
-    pip install uv
+    mise tool install uv
     uv pip install -r requirements.txt
     ```
 
@@ -92,7 +95,7 @@ PARALLEL_API_KEY=
 ### Running the Bot
 
 ```bash
-python main.py
+mise run bot
 ```
 
 ## Project Structure
@@ -195,6 +198,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── __init__.py
 │   ├── mcp.py
 │   ├── memory.py
+│   ├── needle.py
 │   └── tools
 │       ├── image_ocr.py
 │       ├── __init__.py
@@ -221,7 +225,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-21 directories, 98 files
+21 directories, 99 files
 ```
 <!-- TREE-END -->
 
@@ -245,6 +249,7 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 - `fastmcp` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
 - `cocoindex` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.23)
 - `pint` - Physical quantities module (latest: 0.26.1)
+- `cactus-needle` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.2)
 ```
 <!--DEPS-END-->
 
@@ -252,11 +257,12 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 
 ### Linting & CI
 
-- Project provides `lint.sh` at repo root.
+- Project provides `lint.sh` at `/scripts/`.
 - Run locally before commit:
 
 ```bash
-./lint.sh
+chmod +x scripts/lint.sh
+scripts/lint.sh
 ```
 
 - CI: GitHub Actions workflow runs `lint.sh` on `push` and `pull_request` to `master` and feature branches. Fix issues locally and push again.
