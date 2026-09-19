@@ -84,11 +84,13 @@ class NeedleRouter:
     def _sync_select(self, user_text: str, tools_meta: list[dict]) -> ToolSelection:
         fingerprint = self._fingerprint_of(tools_meta)
         with self._lock:
-            if self._agent is None or fingerprint != self._fingerprint:
-                self._agent = self._build_agent(tools_meta)
+            agent = self._agent
+            if agent is None or fingerprint != self._fingerprint:
+                agent = self._build_agent(tools_meta)
+                self._agent = agent
                 self._fingerprint = fingerprint
-            out = self._agent.complete(user_text)
-            self._agent.reset()
+            out = agent.complete(user_text)
+            agent.reset()
 
         if not isinstance(out, dict):
             raise TypeError(f"unexpected Needle response: {type(out).__name__}")
