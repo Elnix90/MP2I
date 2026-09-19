@@ -1,6 +1,13 @@
 {
   "name": "safe_eval_math",
   "description": "Safely evaluate math expressions and unit conversions",
+  "triggers": [
+    "\\b(calc|calcule|calculer|math|equation|formule)\\b",
+    "\\b(combien font)\\b",
+    "\\b(evaluer|evaluate)\\b",
+    "\\b(resultat|result)\\b",
+    "\\b(conversion|convertir|convert)\\b"
+  ],
   "inputSchema": {
     "type": "object",
     "properties": {
