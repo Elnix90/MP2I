@@ -33,7 +33,8 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
                 log_command_end(logger, "memory_delete", start_time, status="not_found")
                 return
 
-            can_manage = interaction.user.guild_permissions.manage_messages if interaction.guild else False
+            member = interaction.user if isinstance(interaction.user, discord.Member) else None
+            can_manage = bool(member and member.guild_permissions.manage_messages)
             if turn.user_id != interaction.user.id and not can_manage:
                 await interaction.followup.send(
                     "Tu n'as pas la permission de supprimer cet échange.",
