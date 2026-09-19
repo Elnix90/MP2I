@@ -19,12 +19,8 @@ description = "Create virtual environment"
 run = "uv sync"
 description = "Install project dependencies"
 
-[tasks.lint]
-run = "scripts/lint.sh"
-description = "Run linter"
-
 [tasks.format]
-run = "uv run ruff format && uv run ruff check --fix ."
+run = "uv run ruff format && uv run ruff check --fix . && ./scripts/lint.sh"
 description = "Format and fix imports using ruff"
 
 [tasks.check]

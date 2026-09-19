@@ -22,7 +22,7 @@ MAX_OUTPUT_LEN = 1900
 async def setup(tree: app_commands.CommandTree, bot):
     @tree.command(
         name="exec",
-        description="Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins)",
+        description="Execute la commande SH donnée en argument sur le server ou le bot est host.",
     )
     @app_commands.check(is_bot_admin)
     async def exec(

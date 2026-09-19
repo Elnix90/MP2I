@@ -20,7 +20,18 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    @tree.command(name="restart", description="Redémarre le bot (réservé aux admins)")
+    """Register the `restart` command on the given command tree.
+
+    Parameters
+    ----------
+    tree : app_commands.CommandTree
+        Command tree to register the command on.
+    bot : Any
+        Bot instance passed to command modules' setup functions.
+
+    """
+
+    @tree.command(name="restart", description="Redémarre le bot")
     @app_commands.check(is_bot_admin)
     async def restart(interaction: discord.Interaction):
         start_time = time.perf_counter()

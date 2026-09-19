@@ -122,8 +122,8 @@ async def _list_channels(interaction: discord.Interaction):
 
 async def setup(tree: app_commands.CommandTree, bot):
     @tree.command(
-        name="ai",
-        description="Configure le mode IA d'un salon (admin)",
+        name="ai-allow",
+        description="Autorise le bot IA à répondre dans ce salon",
     )
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
@@ -150,14 +150,10 @@ async def setup(tree: app_commands.CommandTree, bot):
             )
             return
 
-        if action == "deny":
-            await _deny_channel(interaction, channel)
-        elif action == "list":
-            await _list_channels(interaction)
-        elif action in ("normal", "thread"):
-            await _set_mode(interaction, action, channel)
-        else:
-            await interaction.response.send_message(
-                f"Action inconnue : {action}",
-                ephemeral=True,
-            )
+    @tree.command(
+        name="ai-deny",
+        description="Empêche le bot IA de répondre dans ce salon",
+    )
+    @app_commands.check(is_bot_admin)
+    async def ai_deny(interaction: discord.Interaction):
+        await _update_channel(interaction, allow=False)
