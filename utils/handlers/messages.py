@@ -29,6 +29,7 @@ class MessageSender:
         self.bot = bot
         self.max_length = max_length
         self.debug = debug
+        self._debug_header_sent = False
 
     def _get_target_channel(self) -> discord.abc.Messageable:
         if self.bot:
@@ -128,8 +129,10 @@ class MessageSender:
     async def process_and_send(self, response: str) -> tuple[discord.Message | None, list[dict]]:
         response, table_images, table_data = detect_and_convert_tables(response)
 
-        # Prepend debug header to the first text chunk
-        debug_prefix = self.debug.debug_header() if self.debug else ""
+        debug_prefix = ""
+        if self.debug and not self._debug_header_sent:
+            debug_prefix = self.debug.debug_header()
+            self._debug_header_sent = True
 
         placeholder_escaped = re.escape(TABLE_IMAGE_PLACEHOLDER)
         pattern = re.compile(f"({placeholder_escaped}_\\d+__)|(```[\\s\\S]*?```)")
