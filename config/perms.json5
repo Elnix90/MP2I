@@ -10,5 +10,6 @@
     "model": ["bot_admins"],
     "colle": ["bot_admins", "bot_users"],
     "get-to-work": ["bot_admins", "bot_users"],
+    "namestyle": ["bot_admins"],
   },
 }

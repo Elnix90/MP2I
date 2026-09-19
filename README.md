@@ -38,6 +38,7 @@
 | `/memory-delete` | Supprime un échange précis (son auteur ou un admin) | — |
 | `/memory-list` | Affiche les derniers échanges en mémoire | — |
 | `/model` | Change le modèle d'IA que le bot utilise | Admins |
+| `/namestyle` | Change le style d'affichage du bot dans ce serveur | Admins |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
 | `/restart` | Redémarre le bot (réservé aux admins) | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
@@ -128,6 +129,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── memory_list.py
 │   ├── _memory.py
 │   ├── model.py
+│   ├── namestyle.py
 │   ├── ping.py
 │   ├── _registry.py
 │   ├── restart.py
@@ -185,8 +187,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   ├── settings_schema.sql
 │   │   └── settings_upsert.sql
 │   └── sql_requests.py
-├── debug
-│   └── messages
 ├── docs
 │   └── settings_store.md
 ├── .github
@@ -194,6 +194,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │       └── pre-commit.yml
 ├── .gitignore
 ├── LICENSE
+├── logs
 ├── main.py
 ├── managers
 │   ├── context.py
@@ -224,7 +225,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-23 directories, 100 files
+22 directories, 101 files
 ```
 <!-- TREE-END -->
 
