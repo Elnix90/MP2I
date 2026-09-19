@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint (ruff)
+    name: Lint (scripts/lint.sh)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,11 +24,22 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install uv and project dependencies
+        run: |
+          python -m pip install --quiet uv
+          uv sync --quiet
 
-      - name: Ruff check
-        run: ruff check .
+      - name: Install system tree
+        run: sudo apt-get install -y tree
+        # scripts/tree.py regenerates the README tree snapshot via `tree`
 
-      - name: Ruff format check
-        run: ruff format --check .
+      - name: Run local lint
+        run: bash scripts/lint.sh
+
+      - name: Fail on drift
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            echo "::error::Lint modified files. Run ./scripts/lint.sh locally and commit the changes."
+            exit 1
+          fi

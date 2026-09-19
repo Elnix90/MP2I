@@ -22,6 +22,7 @@ class ToolsLoader:
         self.tools_dir = Path(tools_dir)
         self.tools_metadata: list[dict[str, Any]] = []
         self.tools_handlers: dict[str, Any] = {}
+        self.tools_triggers: dict[str, list[str]] = {}
         self._load_tools()
 
     def _load_tools(self) -> None:
@@ -52,6 +53,10 @@ class ToolsLoader:
                         },
                     }
                 )
+
+                triggers = raw.get("triggers", []) if isinstance(raw, dict) else []
+                if triggers:
+                    self.tools_triggers[name_field] = triggers
 
                 module = importlib.import_module(f"managers.tools.{tool_name}")
                 handler = getattr(module, tool_name)
