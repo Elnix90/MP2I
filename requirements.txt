@@ -12,3 +12,4 @@ pytesseract
 fastmcp
 cocoindex
 pint
+cactus-needle
