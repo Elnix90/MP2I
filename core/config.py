@@ -30,9 +30,6 @@ class Env(Enum):
     LOCAL = False
 
 
-ENV = Env.LOCAL
-
-
 def _load_env_files() -> None:
     """Load the environment file matching the running mode."""
     if os.getenv("ENV", "LOCAL").upper() == "PROD" or not _LOCAL_ENV_FILE.exists():
@@ -49,6 +46,8 @@ except Exception:
     print(
         "Warning: python-dotenv not installed, environment variables from .env files will not be loaded.",
     )
+
+ENV = Env.PROD if os.getenv("ENV", "LOCAL").upper() == "PROD" else Env.LOCAL
 
 
 @dataclass
