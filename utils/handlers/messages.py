@@ -79,7 +79,8 @@ class MessageSender:
                 return await target.send(result)
             if self.debug:
                 result.seek(0)
-                self.debug.save_image(result, f"latex_{self.debug._image_counter}.png")
+                rel_path = self.debug.save_image(result, f"latex_{self.debug._image_counter}.png")
+                self.debug.add_content(f"![latex]({rel_path})")
                 result.seek(0)
             file = discord.File(result, filename="formula.png")
             return await target.send(file=file)
