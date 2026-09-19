@@ -20,6 +20,7 @@ from core.config import cfg, perms_cfg
 from core.perms import is_blacklisted_user_id
 from db.settings_store import get_setting, set_setting
 from managers.context import get_server_context
+from managers.discord_search import init_discord_search
 from managers.mcp import mcp_manager
 from managers.memory import MemoryManager, make_scope_key
 from managers.needle import needle_router
@@ -114,6 +115,10 @@ class MP2IBot(discord.Client):
             await asyncio.gather(self.memory.bootstrap(), mcp_manager.initialize())
         except Exception as exc:
             logger.error("Error during bootstrap/init: %s", exc)
+
+        # Initialize Discord search client
+        if cfg.AI_API_KEY:
+            init_discord_search(cfg.AI_API_KEY)
 
         # load commands from cmds/ directory (loggers inside loader will report details)
         cmds_path = Path(__file__).parent / "cmds"
@@ -222,6 +227,10 @@ class MP2IBot(discord.Client):
         if message.guild is None:
             return
         user = message.author
+        # Set guild for discord_search tool
+        from managers.tools.discord_search import set_guild
+
+        set_guild(message.guild)
         server_ctx = await get_server_context(message.guild)
         ctx_str = f"Information about the current Discord server '{server_ctx.get('server_name', '?')}':\n- Total member count: {server_ctx.get('member_count', 0)}"
         system_prompt = build_system_prompt(

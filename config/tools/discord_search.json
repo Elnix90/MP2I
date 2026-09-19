@@ -1,0 +1,78 @@
+{
+  "name": "discord_search",
+  "description": "Recherche native dans le serveur Discord — messages, membres, canaux, threads, rôles. Les résultats incluent des liens directs vers les messages.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": ["messages", "members", "channels", "threads", "roles", "history"],
+        "description": "Ce que tu veux chercher"
+      },
+      "query": {
+        "type": "string",
+        "description": "Texte de recherche (requis pour messages)"
+      },
+      "channel_id": {
+        "type": "string",
+        "description": "ID du canal Discord (optionnel, filtre par canal)"
+      },
+      "author_id": {
+        "type": "string",
+        "description": "ID de l'auteur (optionnel, filtre par auteur)"
+      },
+      "has": {
+        "type": "string",
+        "enum": ["link", "embed", "file", "video", "image", "sound"],
+        "description": "Filtre par type d'attachement"
+      },
+      "pinned": {
+        "type": "boolean",
+        "description": "Filtre les messages épinglés uniquement"
+      },
+      "sort_order": {
+        "type": "string",
+        "enum": ["desc", "asc"],
+        "description": "desc=plus récent d'abord, asc=plus ancien d'abord"
+      },
+      "top_n": {
+        "type": "integer",
+        "description": "Nombre max de résultats (1-25, défaut 5)"
+      },
+      "user_id": {
+        "type": "string",
+        "description": "ID utilisateur pour search_members"
+      },
+      "role_id": {
+        "type": "string",
+        "description": "ID du rôle pour filtrer membres ou chercher des rôles"
+      },
+      "channel_type": {
+        "type": "string",
+        "enum": ["text", "voice", "forum", "category"],
+        "description": "Type de canal pour search_channels"
+      },
+      "include_archived": {
+        "type": "boolean",
+        "description": "Inclure les threads archivés (défaut true)"
+      },
+      "include_members": {
+        "type": "boolean",
+        "description": "Inclure la liste des membres pour les rôles"
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Nombre max de résultats pour history (1-100, défaut 25)"
+      },
+      "before": {
+        "type": "string",
+        "description": "ID message pour paginer avant"
+      },
+      "after": {
+        "type": "string",
+        "description": "ID message pour paginer après"
+      }
+    },
+    "required": ["action"]
+  }
+}

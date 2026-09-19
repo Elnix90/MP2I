@@ -1,0 +1,27 @@
+{
+  "name": "render_visual",
+  "description": "Crée un graphique, diagramme ou tableau visuel en image. Types : bar, line, pie, scatter, heatmap, table, diagram (Mermaid).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": ["bar", "line", "pie", "scatter", "table", "diagram"],
+        "description": "Type de visualisation"
+      },
+      "title": {
+        "type": "string",
+        "description": "Titre du graphique"
+      },
+      "data": {
+        "type": "object",
+        "description": "Données : {labels, datasets} pour graphiques, {headers, rows} pour tableaux, string Mermaid pour diagram"
+      },
+      "options": {
+        "type": "object",
+        "description": "Options : x_label, y_label, caption, sort, stacked"
+      }
+    },
+    "required": ["type", "title", "data"]
+  }
+}
