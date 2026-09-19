@@ -17,7 +17,7 @@ from cmds._shared import (
     send_interaction,
 )
 from core.exec_shell_command import exec_shell_command
-from core.is_admin import is_admin
+from core.perms import is_bot_admin
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -32,6 +32,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         name="exec",
         description="Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins)",
     )
+    @app_commands.check(is_bot_admin)
     async def exec(
         interaction: discord.Interaction,
         command: str,
@@ -41,12 +42,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         log_command_start(logger, "exec", interaction)
 
         try:
-            if not is_admin(interaction.user):
-                return await interaction.response.send_message(
-                    "You don't have the permissions to use this command (cheh)",
-                    ephemeral=True,
-                )
-
             await defer_interaction(interaction)
 
             output = await exec_shell_command(command)

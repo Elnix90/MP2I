@@ -1,3 +1,4 @@
+import os
 import time
 
 import discord
@@ -10,58 +11,141 @@ from cmds._shared import (
     log_command_start,
     send_interaction,
 )
+from core.config import DEFAULT_BRANCH, DEFAULT_REMOTE, MAX_OUTPUT_LEN, UPDATE_TIMEOUT
 from core.exec_shell_command import exec_shell_command
-from core.is_admin import is_admin
+from core.perms import is_bot_admin
 from utils.logger import get_logger
 
 logger = get_logger()
-
-MAX_OUTPUT_LEN = 1900
 
 
 async def setup(tree: app_commands.CommandTree, bot):
     @tree.command(
         name="self-update",
-        description="Automatiquement met à jour le bot depuis son serveur distant",
+        description="Met à jour le bot depuis le dépôt distant",
     )
-    async def self_update(interaction: discord.Interaction):
+    @app_commands.describe(
+        branch="Branche cible de la mise à jour (défaut: prod)",
+        force="Inclut git clean -fd dans la mise à jour",
+        restart="Redémarre le bot après la mise à jour",
+    )
+    @app_commands.check(is_bot_admin)
+    async def self_update(
+        interaction: discord.Interaction,
+        branch: str | None = None,
+        force: bool = False,
+        restart: bool = False,
+    ):
         start_time = time.perf_counter()
         log_command_start(logger, "self_update", interaction)
 
         try:
-            if not is_admin(interaction.user):
-                return await interaction.response.send_message(
-                    "You don't have the permissions to use this command (cheh)",
-                    ephemeral=True,
-                )
+            target_branch = branch or DEFAULT_BRANCH
+            target_remote = DEFAULT_REMOTE
 
             await defer_interaction(interaction)
 
-            update_cmd = """
-                git remote | while read remote; do git remote remove $remote; done
-                git remote add origin https://github.com/Elnix90/MP2I.git
-                git fetch origin
-                git checkout prod
-                git reset --hard origin/prod
-                git clean -fd
-            """
+            steps = _build_steps(target_remote, target_branch, do_clean=force)
+            output = ""
+            failed = False
+            failed_step = None
 
-            output = await exec_shell_command(update_cmd)
-            if len(output) > MAX_OUTPUT_LEN:
-                output = output[:MAX_OUTPUT_LEN] + "\n... (truncated)"
+            for step_name, step_cmd in steps:
+                output += f"🔧 {step_name}...\n"
+                result = await exec_shell_command(step_cmd, timeout=UPDATE_TIMEOUT)
+                output += f"   {result[:1000]}\n\n"
+
+                if result and "exit code" in result:
+                    failed = True
+                    failed_step = step_name
+                    break
+
+                if "timed out" in result.lower():
+                    failed = True
+                    failed_step = step_name
+                    output += "   ⏰ Cette étape a dépassé le délai autorisé.\n\n"
+                    break
+
+            if restart and not failed:
+                output += "🔄 Redémarrage du bot...\n"
+                restart_cmd = os.getenv("BOT_RESTART_CMD", "")
+                if restart_cmd:
+                    result = await exec_shell_command(restart_cmd, timeout=30.0)
+                    output += f"   {result[:500]}\n"
+                else:
+                    output += "   ⚠️ Aucune commande de redémarrage configurée (BOT_RESTART_CMD).\n"
+                    output += "   Le bot ne sera pas redémarré automatiquement.\n"
+
+            if failed and failed_step:
+                output += f"\n❌ **Échec à l'étape :** `{failed_step}`\n"
+                output += f"Résultat :\n```\n{output[-MAX_OUTPUT_LEN:]}\n```"
+                await send_interaction(
+                    interaction,
+                    content=output[-MAX_OUTPUT_LEN:],
+                    ephemeral=True,
+                )
+                log_command_end(logger, "self_update", start_time, status="failed")
+                return
+
+            output += f"\n✅ **Mise à jour terminée** (branche `{target_branch}`)"
+            if restart:
+                output += " + redémarrage initié."
+            else:
+                output += "."
 
             await send_interaction(
                 interaction,
-                content=f"```\n{output}\n```",
+                content=f"```\n{output[-MAX_OUTPUT_LEN:]}\n```",
                 ephemeral=True,
             )
-
             log_command_end(logger, "self_update", start_time)
+
         except Exception as exc:
             log_command_error(logger, "self_update", exc)
             if not interaction.response.is_done():
                 await interaction.response.send_message(
-                    "Error while execuouiting the command.",
+                    "Error while executing the command.",
                 )
             else:
                 await interaction.followup.send("Error while executing the command.")
+
+
+def _build_steps(
+    remote: str, branch: str, do_clean: bool = False
+) -> list[tuple[str, str]]:
+    steps: list[tuple[str, str]] = []
+
+    steps.append(
+        (
+            "Vérification du dépôt",
+            f"git -C {os.getcwd()} rev-parse --is-inside-work-tree 2>/dev/null || echo 'not_a_repo'",
+        )
+    )
+    steps.append(
+        (
+            "Reset des remotes",
+            f"git -C {os.getcwd()} remote | while read r; do git -C {os.getcwd()} remote remove $r; done",
+        )
+    )
+    steps.append(
+        ("Ajout du remote", f"git -C {os.getcwd()} remote add origin {remote}")
+    )
+    steps.append(("Fetch", f"git -C {os.getcwd()} fetch origin --depth=1"))
+    steps.append(
+        (f"Checkout de la branche {branch}", f"git -C {os.getcwd()} checkout {branch}")
+    )
+    steps.append(
+        (
+            f"Reset sur origin/{branch}",
+            f"git -C {os.getcwd()} reset --hard origin/{branch}",
+        )
+    )
+    if do_clean:
+        steps.append(
+            ("Nettoyage des fichiers non suivés", f"git -C {os.getcwd()} clean -fd")
+        )
+    steps.append(
+        ("Vérification de la version", f"git -C {os.getcwd()} rev-parse --short HEAD")
+    )
+
+    return steps

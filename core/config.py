@@ -12,11 +12,16 @@ from config.logging_conf import (
     _normalize_webhook_url,
     load_logging_config,
 )
+from config.perms_conf import load_perms_config
 
 _ENV_FILE = Path(".env")
 _LOCAL_ENV_FILE = Path(".env.local")
 BASE_DIR = Path(__file__).parent.parent
 DB_PATH = Path("data/colloscope.db")
+MAX_OUTPUT_LEN = 1900
+DEFAULT_REMOTE = os.getenv("BOT_REMOTE_URL", "https://github.com/Elnix90/MP2I.git")
+DEFAULT_BRANCH = os.getenv("BOT_UPDATE_BRANCH", "prod")
+UPDATE_TIMEOUT = float(os.getenv("BOT_UPDATE_TIMEOUT", "120"))
 
 
 class Env(Enum):
@@ -99,3 +104,4 @@ def load_config() -> tuple[Config, LoggingConfig]:
 
 
 cfg, logging_cfg = load_config()
+perms_cfg = load_perms_config()

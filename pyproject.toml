@@ -41,6 +41,7 @@ dev = [
 
 [tool.ruff.lint]
 ignore = ["BLE001", "S110"]
+exclude = ["**/*.json5"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["I001"]

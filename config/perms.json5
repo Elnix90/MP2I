@@ -1,0 +1,15 @@
+{
+  "bot_admins": [1416319211495755898, 1123534156626939945],
+  "blacklist": [],
+  "command_permissions": {
+    "self-update": ["bot_admins"],
+    "restart": ["bot_admins"],
+    "exec": ["bot_admins"],
+    "ping": ["bot_admins", "bot_users"],
+    "ai-allow": ["bot_admins"],
+    "ai-deny": ["bot_admins"],
+    "model": ["bot_admins"],
+    "colle": ["bot_admins", "bot_users"],
+    "get-to-work": ["bot_admins", "bot_users"],
+  },
+}

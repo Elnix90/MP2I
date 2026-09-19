@@ -7,7 +7,7 @@ from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.ai import load_allowed_channels, save_allowed_channels
-from core.is_admin import is_admin
+from core.perms import is_bot_admin
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -19,12 +19,6 @@ async def _update_channel(interaction: discord.Interaction, *, allow: bool):
     log_command_start(logger, command_name, interaction)
 
     try:
-        if not is_admin(interaction.user):
-            return await interaction.response.send_message(
-                "You don't have the permissions to use this command (cheh)",
-                ephemeral=True,
-            )
-
         channel = interaction.channel
         if channel is None:
             return await interaction.response.send_message(
@@ -77,6 +71,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         name="ai-allow",
         description="Autorise le bot IA à répondre dans ce salon (réservé aux admins)",
     )
+    @app_commands.check(is_bot_admin)
     async def ai_allow(interaction: discord.Interaction):
         await _update_channel(interaction, allow=True)
 
@@ -84,5 +79,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         name="ai-deny",
         description="Empêche le bot IA de répondre dans ce salon (réservé aux admins)",
     )
+    @app_commands.check(is_bot_admin)
     async def ai_deny(interaction: discord.Interaction):
         await _update_channel(interaction, allow=False)

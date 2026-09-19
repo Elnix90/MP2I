@@ -12,7 +12,7 @@ import discord
 from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
-from core.is_admin import is_admin
+from core.perms import is_bot_admin
 from utils.console import _cmd_shutdown, get_console
 from utils.logger import get_logger
 
@@ -32,18 +32,13 @@ async def setup(tree: app_commands.CommandTree, bot):
     """
 
     @tree.command(name="restart", description="Redémarre le bot (réservé aux admins)")
+    @app_commands.check(is_bot_admin)
     async def restart(interaction: discord.Interaction):
         """Acknowledge the request, then stop the bot so it restarts."""
         start_time = time.perf_counter()
         log_command_start(logger, "restart", interaction)
 
         try:
-            if not is_admin(interaction.user):
-                return await interaction.response.send_message(
-                    "You don't have the permissions to use this command (cheh)",
-                    ephemeral=True,
-                )
-
             await interaction.response.send_message("Redémarrage du bot...")
 
             log_command_end(logger, "restart", start_time)
