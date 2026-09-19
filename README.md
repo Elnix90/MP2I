@@ -29,7 +29,7 @@
 | :--- | :--- | :--- |
 | `/ai` | Configure le mode IA d'un salon (admin) | Admins |
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
-| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins) | Admins |
+| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
 | `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | Admins, Tous les membres |
 | `/health` | Statut de santé des sous-systèmes du bot | — |
 | `/list-tools` | Liste les outils disponibles pour l'IA | — |
@@ -38,7 +38,7 @@
 | `/memory-list` | Affiche les derniers échanges en mémoire | — |
 | `/model` | Change le modèle d'IA que le bot utilise | Admins |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
-| `/restart` | Redémarre le bot (réservé aux admins) | Admins |
+| `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
 
 <!-- COMMANDS-END -->
@@ -76,8 +76,9 @@
 <!--ENV-START-->
 ```env
 BOT_TOKEN=
-GUILD_ID=
 WEBHOOK_URL=
+GUILD_ID=
+BOT_ID=
 AI_API_KEY=
 PARALLEL_API_KEY=
 ```
