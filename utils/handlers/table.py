@@ -19,9 +19,7 @@ COLUMN_MAX_WIDTH = 1200
 FONT_DIR = BASE_DIR / "assets" / "fonts"
 
 
-def _extract_links_and_sanitize(
-    text: str, current_links: list[str]
-) -> tuple[str, list[str]]:
+def _extract_links_and_sanitize(text: str, current_links: list[str]) -> tuple[str, list[str]]:
     """Replace raw links with numbered references and collect URLs.
 
     Parameters
@@ -173,9 +171,7 @@ def _wrap_text(text: str, max_width: int, font: ImageFont.FreeTypeFont) -> list[
     return lines
 
 
-def _render_table_image(
-    headers: list[str], rows: list[list[str]], alignments: list[str]
-) -> tuple[io.BytesIO, list[str]]:
+def _render_table_image(headers: list[str], rows: list[list[str]], alignments: list[str]) -> tuple[io.BytesIO, list[str]]:
     """Render a markdown table into an image buffer.
 
     Parameters
@@ -223,9 +219,7 @@ def _render_table_image(
     }
 
     padding, header_height, min_row_h = 24, 80, 60
-    col_widths = _calc_col_widths(
-        sanitized_headers, sanitized_rows, fonts["reg"], padding
-    )
+    col_widths = _calc_col_widths(sanitized_headers, sanitized_rows, fonts["reg"], padding)
 
     processed_rows = []
     for row in sanitized_rows:
@@ -238,9 +232,7 @@ def _render_table_image(
         processed_rows.append((row_content, max_h))
 
     total_w = sum(col_widths) + len(col_widths) + 1
-    total_h = (
-        header_height + sum(h for _, h in processed_rows) + len(processed_rows) + 1
-    )
+    total_h = header_height + sum(h for _, h in processed_rows) + len(processed_rows) + 1
 
     img = Image.new("RGB", (total_w, total_h), colors["bg"])
     draw = ImageDraw.Draw(img)
@@ -265,9 +257,7 @@ def _render_table_image(
             x = 0
             bg = colors["row_bg_alt"] if idx % 2 else colors["row_bg"]
             for cell_lines, w, al in zip(content, col_widths, alignments):
-                draw.rectangle(
-                    [x, y, x + w, y + h_row], fill=bg, outline=colors["border"]
-                )
+                draw.rectangle([x, y, x + w, y + h_row], fill=bg, outline=colors["border"])
                 for line_idx, line in enumerate(cell_lines):
                     pilmoji.text(
                         (
@@ -303,9 +293,7 @@ def detect_and_convert_tables(text: str) -> tuple[str, list[io.BytesIO], list[di
     table_images: list[io.BytesIO] = []
     table_data_list: list[dict] = []
 
-    code_block_pattern = re.compile(
-        r"```(?:markdown|md)?\n((?:\|.*\|(?:\n|$))+)```", re.MULTILINE
-    )
+    code_block_pattern = re.compile(r"```(?:markdown|md)?\n((?:\|.*\|(?:\n|$))+)```", re.MULTILINE)
 
     def replace_table(match: re.Match[str]) -> str:
         """Render one matched table block into an image placeholder.
@@ -320,7 +308,7 @@ def detect_and_convert_tables(text: str) -> tuple[str, list[io.BytesIO], list[di
         str
             Image placeholder or original block on failure.
         """
-        lines = [l for l in match.group(1).strip().split("\n") if l.strip()]
+        lines = [row_line for row_line in match.group(1).strip().split("\n") if row_line.strip()]
         if len(lines) < 2:
             return match.group(0)
 
@@ -347,14 +335,10 @@ def detect_and_convert_tables(text: str) -> tuple[str, list[io.BytesIO], list[di
             rows.append(cells[: len(headers)] + [""] * (len(headers) - len(cells)))
 
         try:
-            buf, links = _render_table_image(
-                headers, rows, aligns or ["left"] * len(headers)
-            )
+            buf, links = _render_table_image(headers, rows, aligns or ["left"] * len(headers))
             table_images.append(buf)
             idx = len(table_images) - 1
-            table_data_list.append(
-                {"id": idx, "headers": headers, "rows": rows, "links": links}
-            )
+            table_data_list.append({"id": idx, "headers": headers, "rows": rows, "links": links})
             return f"__TABLE_IMG_{idx}__"
         except Exception as exc:
             logger.error("Table render error: %s", exc)
