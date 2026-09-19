@@ -27,14 +27,19 @@
 <!-- COMMANDS-START -->
 | Command | Description | Permissions |
 | :--- | :--- | :--- |
-| `/ai-allow` | Autorise le bot IA à répondre dans ce salon | Admins |
-| `/ai-deny` | Empêche le bot IA de répondre dans ce salon | Admins |
+| `/ai` | Configure le mode IA d'un salon (admin) | Admins |
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
 | `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
 | `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | Admins, Tous les membres |
+| `/health` | Statut de santé des sous-systèmes du bot | — |
+| `/list-tools` | Liste les outils disponibles pour l'IA | — |
+| `/memory-clear` | Efface la mémoire de la conversation actuelle (admin) | — |
+| `/memory-delete` | Supprime un échange précis (son auteur ou un admin) | — |
+| `/memory-list` | Affiche les derniers échanges en mémoire | — |
 | `/model` | Change le modèle d'IA que le bot utilise | Admins |
+| `/namestyle` | Change le style d'affichage du bot dans ce serveur | Admins |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
-| `/restart` | Redémarre le bot | Admins |
+| `/restart` | Redémarre le bot (réservé aux admins) | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
 
 <!-- COMMANDS-END -->
@@ -49,6 +54,9 @@
 
 ### Installation
 
+We use `mise` and `uv` to manage dependencies and environment variables.
+See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for installation instructions.
+
 1. **Clone and Setup**
 
     ```bash
@@ -61,7 +69,7 @@
 2. **Install Dependencies** (Using `uv` is recommended for speed)
 
     ```bash
-    pip install uv
+    mise tool install uv
     uv pip install -r requirements.txt
     ```
 
@@ -72,10 +80,10 @@
 <!--ENV-START-->
 ```env
 BOT_TOKEN=
-WEBHOOK_URL=
 GUILD_ID=
-BOT_ID=
+WEBHOOK_URL=
 AI_API_KEY=
+PARALLEL_API_KEY=
 ```
 <!--ENV-END-->
 
@@ -87,7 +95,7 @@ AI_API_KEY=
 ### Running the Bot
 
 ```bash
-python main.py
+mise run bot
 ```
 
 ## Project Structure
@@ -98,6 +106,11 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ```
 .
 ├── assets
+│   ├── fonts
+│   │   ├── NotoSans-BoldItalic.ttf
+│   │   ├── NotoSans-Bold.ttf
+│   │   ├── NotoSans-Italic.ttf
+│   │   └── NotoSans-Regular.ttf
 │   └── images
 │       └── bot_profile_picture.png
 ├── bot.py
@@ -106,9 +119,16 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── colle.py
 │   ├── exec.py
 │   ├── get_to_work.py
+│   ├── health.py
 │   ├── __init__.py
+│   ├── list_tools.py
 │   ├── loader.py
+│   ├── memory_clear.py
+│   ├── memory_delete.py
+│   ├── memory_list.py
+│   ├── _memory.py
 │   ├── model.py
+│   ├── namestyle.py
 │   ├── ping.py
 │   ├── _registry.py
 │   ├── restart.py
@@ -119,13 +139,22 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── ai_conf.py
 │   ├── logging_config.json5
 │   ├── logging_conf.py
+│   ├── mcp.json
 │   ├── perms_conf.py
 │   ├── perms.json5
 │   ├── prompts
 │   │   └── system.md
-│   └── statuses.json5
+│   ├── statuses.json5
+│   └── tools
+│       ├── image_ocr.json
+│       └── safe_eval_math.json
 ├── core
-│   ├── ai.py
+│   ├── ai
+│   │   ├── channels.py
+│   │   ├── client.py
+│   │   ├── __init__.py
+│   │   ├── prompts.py
+│   │   └── tools.py
 │   ├── colle.py
 │   ├── config.py
 │   ├── exec_shell_command.py
@@ -164,7 +193,18 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │       └── pre-commit.yml
 ├── .gitignore
 ├── LICENSE
+├── logs
 ├── main.py
+├── managers
+│   ├── context.py
+│   ├── __init__.py
+│   ├── mcp.py
+│   ├── memory.py
+│   ├── needle.py
+│   └── tools
+│       ├── image_ocr.py
+│       ├── __init__.py
+│       └── safe_eval_math.py
 ├── mise.toml
 ├── .pre-commit-config.yaml
 ├── pyproject.toml
@@ -179,11 +219,16 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── tree.py
 ├── utils
 │   ├── console.py
+│   ├── debug.py
 │   ├── handlers
+│   │   ├── codeblock.py
+│   │   ├── latex.py
+│   │   ├── messages.py
+│   │   └── table.py
 │   └── logger.py
 └── uv.lock
 
-16 directories, 70 files
+22 directories, 101 files
 ```
 <!-- TREE-END -->
 
@@ -199,6 +244,15 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 - `requests` - Python HTTP for Humans. (latest: 2.34.2)
 - `openai` - The official Python library for the openai API (latest: 3.16.2)
 - `json5` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
+- `aiohttp` - Async http client/server framework (asyncio) (latest: 3.14.3)
+- `Pillow` - Python Imaging Library (fork) (latest: 12.3.0)
+- `pilmoji` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
+- `cairosvg` - A Simple SVG Converter based on Cairo (latest: 2.9.1)
+- `pytesseract` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
+- `fastmcp` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
+- `cocoindex` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.23)
+- `pint` - Physical quantities module (latest: 0.26.1)
+- `cactus-needle` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.2)
 ```
 <!--DEPS-END-->
 
@@ -206,11 +260,12 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 
 ### Linting & CI
 
-- Project provides `lint.sh` at repo root.
+- Project provides `lint.sh` at `/scripts/`.
 - Run locally before commit:
 
 ```bash
-./lint.sh
+chmod +x scripts/lint.sh
+scripts/lint.sh
 ```
 
 - CI: GitHub Actions workflow runs `lint.sh` on `push` and `pull_request` to `master` and feature branches. Fix issues locally and push again.

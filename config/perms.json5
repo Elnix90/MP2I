@@ -6,10 +6,10 @@
     "restart": ["bot_admins"],
     "exec": ["bot_admins"],
     "ping": ["bot_admins", "bot_users"],
-    "ai-allow": ["bot_admins"],
-    "ai-deny": ["bot_admins"],
+    "ai": ["bot_admins"],
     "model": ["bot_admins"],
     "colle": ["bot_admins", "bot_users"],
     "get-to-work": ["bot_admins", "bot_users"],
+    "namestyle": ["bot_admins"],
   },
 }

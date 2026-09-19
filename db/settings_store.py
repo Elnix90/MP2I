@@ -40,7 +40,6 @@ def _connection() -> sqlite3.Connection:
 
 
 def get_setting(key: str, default: object = None) -> object:
-    """Return the JSON-decoded value for `key`, or `default` if missing/invalid."""
     try:
         with _lock:
             conn = _connection()
@@ -54,7 +53,6 @@ def get_setting(key: str, default: object = None) -> object:
 
 
 def set_setting(key: str, value: object) -> None:
-    """Store a JSON-serializable `value` under `key`, overwriting any previous one."""
     try:
         payload = json.dumps(value)
         with _lock:

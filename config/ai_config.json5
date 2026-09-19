@@ -1,9 +1,17 @@
 {
-  "ai": {
-    "enabled": true,
-    "allowed_channels": [],
-    "model": "community/vendouple/muse-glimmer-30b:free",
-    "api_url": "https://gen.pollinations.ai/v1",
-    "system_prompt_path": "config/prompts/system.md"
+  ai: {
+    enabled: true,
+    needle_tool_calling: true,
+    allowed_channels: [],
+    models: [
+      "community/vendouple/muse-glimmer-30b:free",
+      "community/chigwell/llm7-fast",
+      "community/YoannDev90/muse-glimmer-30b:free"
+    ],
+    api_url: "https://gen.pollinations.ai/v1",
+    system_prompt_path: "config/prompts/system.md",
+    streaming: true,
+    memory_max_history: 15,
+    tools: ["image_ocr", "safe_eval_math", "search"],
   }
 }

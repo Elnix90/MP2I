@@ -20,19 +20,6 @@ logger = get_logger()
 
 
 def _iter_command_modules(base_path: Path):
-    """Yield top-level module names found in `base_path`.
-
-    Parameters
-    ----------
-    base_path : Path
-        Filesystem path to the `cmds` directory to scan.
-
-    Yields
-    ------
-    str
-        Module name (without package prefix) for each discovered module.
-
-    """
     pkg_path = str(base_path)
     for finder, name, ispkg in pkgutil.iter_modules([pkg_path]):
         if name.startswith("__"):
@@ -41,22 +28,6 @@ def _iter_command_modules(base_path: Path):
 
 
 async def load_commands(bot: Any, tree: app_commands.CommandTree, cmds_path: Path):
-    """Import and initialize command modules found under `cmds_path`.
-
-    This function walks the package tree under `cmds_path`, imports each
-    module, and calls its `setup(tree, bot)` function if present. Failing
-    modules are logged and skipped to avoid crashing startup.
-
-    Parameters
-    ----------
-    bot : Any
-        Bot instance passed to command modules' `setup` functions.
-    tree : app_commands.CommandTree
-        Command tree used to register application commands.
-    cmds_path : Path
-        Filesystem path to the `cmds` package directory.
-
-    """
     start = time.perf_counter()
     loaded = 0
     failed = 0

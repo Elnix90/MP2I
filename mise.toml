@@ -2,6 +2,7 @@
 uv = "latest"
 ruff = "latest"
 pre-commit = "latest"
+python = "3.14.7"
 
 [env]
 PYTHON_VERSION = "3.13"
@@ -18,6 +19,10 @@ description = "Create virtual environment"
 run = "uv sync"
 description = "Install project dependencies"
 
+[tasks.lint]
+run = "scripts/lint.sh"
+description = "Run linter"
+
 [tasks.format]
 run = "uv run ruff format && uv run ruff check --fix . && ./scripts/lint.sh"
 description = "Format and fix imports using ruff"
@@ -26,10 +31,14 @@ description = "Format and fix imports using ruff"
 run = "uv run ruff check . && uv run ruff format --check ."
 description = "Check formatting and linting"
 
-[tasks.test]
-run = "uv run python -m pytest tests/"
-description = "Run tests"
-
 [tasks.setup-hooks]
 run = "uv run pre-commit install"
 description = "Install git hooks (pre-commit + commit-msg)"
+
+[tasks.clean]
+run = "source scripts/confirm.sh && confirm 'Supprimer logs/ et debug/ ?' && rm -rf logs debug && echo 'Nettoyé.' || echo 'Annulé.'"
+description = "Clean up debug messages and logs"
+
+[tasks.reset]
+run = "source scripts/confirm.sh && confirm 'Supprimer .venv/, logs/, debug/, data/ ? Irréversible !' && rm -rf .venv logs debug data && echo 'Réinitialisé.' || echo 'Annulé.'"
+description = "Reset project"
