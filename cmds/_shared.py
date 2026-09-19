@@ -8,6 +8,8 @@ sending interaction responses.
 import time
 from typing import Any
 
+import discord
+
 
 def interaction_context(interaction: Any) -> str:
     guild_name = interaction.guild.name if interaction.guild is not None else "DM"
@@ -41,8 +43,15 @@ def log_command_end(
     logger.info("Command /%s completed in %.2fs (%s)", command_name, duration, status)
 
 
+def _is_already_acknowledged(exc: Exception) -> bool:
+    return isinstance(exc, discord.HTTPException) and getattr(exc, "code", None) == 40060
+
+
 def log_command_error(logger: Any, command_name: str, exc: Exception) -> None:
-    logger.exception("Error in /%s: %s", command_name, exc)
+    if _is_already_acknowledged(exc):
+        logger.warning("Command /%s: interaction already acknowledged (40060)", command_name)
+    else:
+        logger.exception("Error in /%s: %s", command_name, exc)
 
 
 async def defer_interaction(interaction: Any) -> bool:
