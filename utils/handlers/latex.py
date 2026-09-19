@@ -162,6 +162,8 @@ def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
     try:
         svg_bytes = latex_to_svg(cleaned)
         png_bytes = cairosvg.svg2png(bytestring=svg_bytes, scale=2)
+        if png_bytes is None:
+            return f"```\n{latex}\n``` (conversion failed)", True
         return _store(cleaned, io.BytesIO(png_bytes)), True
     except Exception as exc:
         logger.error("LaTeX conversion failed: %s", exc)
