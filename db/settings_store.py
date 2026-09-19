@@ -3,10 +3,15 @@
 Replaces the previous JSON-based state files (data/*.json) with a single
 `settings` table. It lives in its own database, separate from the colloscope
 DB which is regenerated wholesale by generate_colloscope_db.py.
+
+A single long-lived connection is reused (guarded by a lock) instead of
+opening a new one on every read/write, keeping the synchronous I/O cost as
+low as possible on the async hot paths.
 """
 
 import json
 import sqlite3
+import threading
 
 from core.config import BOT_STATE_DB_PATH
 from db.sql import load
@@ -18,20 +23,27 @@ _SCHEMA = load("settings_schema")
 _GET_SETTING = load("settings_get")
 _SET_SETTING = load("settings_upsert")
 
+_conn: sqlite3.Connection | None = None
+_lock = threading.Lock()
 
-def _connect() -> sqlite3.Connection:
-    BOT_STATE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(BOT_STATE_DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA busy_timeout = 5000")
-    conn.execute(_SCHEMA)
-    return conn
+
+def _connection() -> sqlite3.Connection:
+    global _conn
+    if _conn is None:
+        BOT_STATE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _conn = sqlite3.connect(BOT_STATE_DB_PATH, check_same_thread=False)
+        _conn.row_factory = sqlite3.Row
+        _conn.execute("PRAGMA busy_timeout = 5000")
+        _conn.execute(_SCHEMA)
+        _conn.commit()
+    return _conn
 
 
 def get_setting(key: str, default: object = None) -> object:
     """Return the JSON-decoded value for `key`, or `default` if missing/invalid."""
     try:
-        with _connect() as conn:
+        with _lock:
+            conn = _connection()
             row = conn.execute(_GET_SETTING, (key,)).fetchone()
         if row is None:
             return default
@@ -45,7 +57,9 @@ def set_setting(key: str, value: object) -> None:
     """Store a JSON-serializable `value` under `key`, overwriting any previous one."""
     try:
         payload = json.dumps(value)
-        with _connect() as conn:
+        with _lock:
+            conn = _connection()
             conn.execute(_SET_SETTING, (key, payload))
+            conn.commit()
     except Exception:
         logger.warning("Failed to write setting %r", key, exc_info=True)

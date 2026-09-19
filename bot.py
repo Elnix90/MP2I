@@ -17,6 +17,7 @@ from core.ai.client import Answer, generate_answer, strip_tool_artifacts
 from core.ai.prompts import build_system_prompt
 from core.ai.tools import get_combined_tools
 from core.config import cfg, perms_cfg
+from core.perms import is_blacklisted_user_id
 from db.settings_store import get_setting, set_setting
 from managers.context import format_context_for_prompt, get_server_context
 from managers.mcp import mcp_manager
@@ -26,6 +27,8 @@ from utils.handlers.messages import MessageSender
 from utils.logger import get_logger
 
 logger = get_logger()
+
+FINGERPRINT_TTL = 7 * 24 * 3600
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -77,7 +80,7 @@ class MP2IBot(discord.Client):
         updated_at = get_setting("commands.updatedAt")
         if not isinstance(fingerprint, str) or not isinstance(updated_at, int):
             return None
-        if updated_at < int(time.time()):
+        if int(time.time()) - updated_at > FINGERPRINT_TTL:
             return None
         return fingerprint
 
@@ -133,6 +136,9 @@ class MP2IBot(discord.Client):
             or message.guild.id != cfg.GUILD_ID
             or message.author.bot
             or not cfg.AI_ENABLED
+            or not is_allowed_channel(message.channel.id)
+            or is_blacklisted_user_id(message.author.id)
+            or self.user.mention not in message.content  # pyright: ignore[reportOptionalMemberAccess]
             or not cfg.AI_API_KEY
             or not cfg.AI_SYSTEM_PROMPT
             or not cfg.AI_API_URL
