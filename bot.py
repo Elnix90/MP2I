@@ -195,6 +195,11 @@ class MP2IBot(discord.Client):
         return True
 
     @staticmethod
+    def _inside_table(buffer: str) -> bool:
+        tails = [line for line in buffer.splitlines() if line.strip()]
+        return bool(tails and tails[-1].lstrip().startswith("|"))
+
+    @staticmethod
     def _thread_name(content: str, max_length: int = 100) -> str:
         topic = content.strip().replace("\n", " ")
         if len(topic) > max_length:
@@ -278,7 +283,7 @@ class MP2IBot(discord.Client):
                         continue
                     full_content += delta
                     buffer += delta
-                    if ("\n\n" in buffer or len(buffer) > 1500) and self._flushable(buffer):
+                    if ("\n\n" in buffer or len(buffer) > 1500) and self._flushable(buffer) and not self._inside_table(buffer):
                         to_send = strip_tool_artifacts(buffer)
                         buffer = ""
                         if to_send.strip():
