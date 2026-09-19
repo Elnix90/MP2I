@@ -159,14 +159,15 @@ class MP2IBot(discord.Client):
                         make_scope_key(thread_id=channel.id),
                     )
             else:
-                mode = get_channel_mode(channel.id)
+                channel_id = getattr(channel, "id", None)
+                mode = get_channel_mode(channel_id)
                 if mode is None:
                     return
                 if mode == "normal":
                     await self._process(
                         message,
                         channel,
-                        make_scope_key(channel_id=channel.id),
+                        make_scope_key(channel_id=channel_id),
                     )
                 else:  # thread mode -> start a thread conversation
                     thread = await message.create_thread(name=self._thread_name(message.content))
@@ -212,6 +213,8 @@ class MP2IBot(discord.Client):
         channel: discord.abc.Messageable,
         scope: str,
     ) -> None:
+        if message.guild is None:
+            return
         user = message.author
         server_ctx = await get_server_context(message.guild)
         ctx_str = f"Information about the current Discord server '{server_ctx.get('server_name', '?')}':\n- Total member count: {server_ctx.get('member_count', 0)}"
@@ -295,7 +298,7 @@ class MP2IBot(discord.Client):
                 user_content=user_text or message.content,
                 assistant_content=strip_tool_artifacts(full_content),
                 guild_id=message.guild.id if message.guild else None,
-                channel_id=thread.parent_id if thread else channel.id,
+                channel_id=thread.parent_id if thread else getattr(channel, "id", None),
                 thread_id=thread.id if thread else None,
             )
         logger.info("Réponse envoyée à %s (scope=%s)", user.display_name, scope)
