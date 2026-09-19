@@ -24,6 +24,7 @@ from managers.mcp import mcp_manager
 from managers.memory import MemoryManager, make_scope_key
 from managers.needle import needle_router
 from utils.console import get_console
+from utils.debug import DebugWriter, new_turn_id
 from utils.handlers.messages import MessageSender
 from utils.logger import get_logger
 
@@ -236,7 +237,9 @@ class MP2IBot(discord.Client):
         messages.append({"role": "user", "content": f"[{user.display_name}]: {user_text}"})
 
         full_content = ""
-        sender = MessageSender(channel, self)
+        turn_id = new_turn_id()
+        debug: DebugWriter | None = DebugWriter(turn_id, channel, user) if cfg.DEBUG_MODE else None
+        sender = MessageSender(channel, self, debug=debug)
         async with channel.typing():
             tools = get_combined_tools()
             if cfg.AI_NEEDLE_TOOL_CALLING:
@@ -305,7 +308,10 @@ class MP2IBot(discord.Client):
                 guild_id=message.guild.id if message.guild else None,
                 channel_id=thread.parent_id if thread else getattr(channel, "id", None),
                 thread_id=thread.id if thread else None,
+                turn_id=turn_id,
             )
+        if debug:
+            debug.save(user_text or message.content)
         logger.info("Réponse envoyée à %s (scope=%s)", user.display_name, scope)
 
 

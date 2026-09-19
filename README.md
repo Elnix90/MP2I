@@ -185,6 +185,8 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   ├── settings_schema.sql
 │   │   └── settings_upsert.sql
 │   └── sql_requests.py
+├── debug
+│   └── messages
 ├── docs
 │   └── settings_store.md
 ├── .github
@@ -217,11 +219,12 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── tree.py
 ├── utils
 │   ├── console.py
+│   ├── debug.py
 │   ├── handlers
 │   └── logger.py
 └── uv.lock
 
-21 directories, 99 files
+23 directories, 100 files
 ```
 <!-- TREE-END -->
 
