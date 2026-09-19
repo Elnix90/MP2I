@@ -11,8 +11,8 @@ from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.config import cfg
-from db.settings_store import set_setting
 from core.perms import is_bot_admin
+from db.settings_store import set_setting
 from utils.logger import get_logger
 
 logger = get_logger()

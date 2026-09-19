@@ -251,7 +251,9 @@ async def generate_answer(
     for _ in range(MAX_TOOL_ITERATIONS):
         round_outcome = None
         for model in models:
-            message, tool_calls, err = await _run_round(client, model, round_messages, tools)
+            message, tool_calls, err = await _run_round(
+                client, model, round_messages, tools
+            )
             if message is not None:
                 round_outcome = (model, message, tool_calls)
                 break
