@@ -1,0 +1,8 @@
+{
+  statuses: [
+    { name: "Fais son DM de maths", emoji: "📐" },
+    { name: "En khôlle de physique", emoji: "📊" },
+    { name: "Révise le cours de ce matin", emoji: "📑" },
+    { name: "Rajoute des ; dans son programme", emoji: "💻" },
+  ],
+}

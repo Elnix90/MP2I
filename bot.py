@@ -8,12 +8,13 @@ import time
 from pathlib import Path
 
 import discord
+import json5
 from discord import app_commands
 from discord.ext import tasks
 
 from cmds import loader as cmds_loader
 from core.ai import generate_answer, is_allowed_channel
-from core.config import cfg
+from core.config import cfg, perms_cfg
 from utils.console import get_console
 from utils.logger import get_logger
 
@@ -53,12 +54,22 @@ class MP2IBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self._processing = set()
         self._commands_sync_state_path = Path("data") / "command_sync_state.json"
+        self.bot_owners = set(perms_cfg.bot_admins)
+        with open(Path("config/statuses.json5")) as f:
+            self.statuses = json5.load(f).get("statuses")
 
     @tasks.loop(minutes=1.0)
     async def status_task(self) -> None:
         """Setup the game status task of the bot."""
-        statuses = ["with you!", "with Krypton!", "with humans!"]
-        await self.change_presence(activity=discord.Game(random.choice(statuses)))
+        status = random.choice(self.statuses)
+        if isinstance(status, dict):
+            name = status["name"]
+            if status.get("emoji"):
+                name = f'{status["emoji"]} {name}'
+        else:
+            name = status
+        activity = discord.CustomActivity(name=name)
+        await self.change_presence(activity=activity)
 
     @status_task.before_loop
     async def before_status_task(self) -> None:
@@ -130,6 +141,7 @@ class MP2IBot(discord.Client):
         cmds_path = Path(__file__).parent / "cmds"
         await cmds_loader.load_commands(self, self.tree, cmds_path)
         await self._sync_commands_if_needed(cmds_path)
+        self.status_task.start()
 
     async def on_ready(self):
         logger.info(
