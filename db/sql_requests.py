@@ -8,9 +8,12 @@ from enum import Enum
 
 from core.colle import Colle
 from core.config import DB_PATH, cfg
+from db.sql import load
 from utils.logger import get_logger
 
 logger = get_logger()
+
+_COLLES_QUERY = load("colles")
 
 
 class Jours(Enum):
@@ -48,18 +51,7 @@ def get_colles(groupe_id: int) -> list[Colle]:
     magic_week = week - 36
 
     cur.execute(
-        """
-        SELECT c.nom AS colleur_name,
-               m.nom AS matiere,
-               p.jour_id,
-               p.creneau_start,
-               p.salle
-        FROM planning p
-        JOIN colleurs c ON c.id = p.colleur_id
-        JOIN matieres m ON m.id = p.matiere_id
-        WHERE p.groupe = ?
-          AND p.semaine = ?
-    """,
+        _COLLES_QUERY,
         (groupe_id, magic_week),
     )
 

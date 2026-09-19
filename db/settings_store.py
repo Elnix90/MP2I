@@ -9,16 +9,14 @@ import json
 import sqlite3
 
 from core.config import BOT_STATE_DB_PATH
+from db.sql import load
 from utils.logger import get_logger
 
 logger = get_logger()
 
-_SCHEMA = """
-CREATE TABLE IF NOT EXISTS settings (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-)
-"""
+_SCHEMA = load("settings_schema")
+_GET_SETTING = load("settings_get")
+_SET_SETTING = load("settings_upsert")
 
 
 def _connect() -> sqlite3.Connection:
@@ -34,10 +32,7 @@ def get_setting(key: str, default: object = None) -> object:
     """Return the JSON-decoded value for `key`, or `default` if missing/invalid."""
     try:
         with _connect() as conn:
-            row = conn.execute(
-                "SELECT value FROM settings WHERE key = ?",
-                (key,),
-            ).fetchone()
+            row = conn.execute(_GET_SETTING, (key,)).fetchone()
         if row is None:
             return default
         return json.loads(row["value"])
@@ -51,10 +46,6 @@ def set_setting(key: str, value: object) -> None:
     try:
         payload = json.dumps(value)
         with _connect() as conn:
-            conn.execute(
-                "INSERT INTO settings (key, value) VALUES (?, ?) "
-                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-                (key, payload),
-            )
+            conn.execute(_SET_SETTING, (key, payload))
     except Exception:
         logger.warning("Failed to write setting %r", key, exc_info=True)

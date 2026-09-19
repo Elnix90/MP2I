@@ -9,7 +9,13 @@ from core.config import DB_PATH
 from db.init.colleurs import COLLEURS
 from db.init.rows import ROWS
 from db.init.subjects import MATIERES
+from db.sql import load
 from db.sql_requests import get_db_connection
+
+_SCHEMA = load("colloscope_schema")
+_INSERT_COLLEUR = load("colleurs_insert")
+_INSERT_MATIERE = load("matieres_insert")
+_INSERT_PLANNING = load("planning_insert")
 
 
 def main() -> None:
@@ -20,59 +26,17 @@ def main() -> None:
     with get_db_connection() as conn:
         cur = conn.cursor()
 
-        cur.executescript(
-            """
-            CREATE TABLE MATIERES (
-                id       INTEGER PRIMARY KEY,
-                nom      TEXT NOT NULL
-            );
-
-            CREATE TABLE COLLEURS (
-                id       INTEGER PRIMARY KEY,
-                nom      TEXT NOT NULL
-            );
-
-            CREATE TABLE PLANNING (
-                id            INTEGER PRIMARY KEY AUTOINCREMENT,
-                colleur_id    INTEGER NOT NULL REFERENCES COLLEURS(id),
-                matiere_id    INTEGER NOT NULL REFERENCES MATIERES(id),
-                salle         TEXT NOT NULL,
-                jour_id       INTEGER CHECK (jour_id BETWEEN 0 AND 6),
-                creneau_start INTEGER CHECK (creneau_start BETWEEN 0 AND 23),
-                semaine       INTEGER NOT NULL CHECK (semaine BETWEEN 1 AND 52),
-                groupe        INTEGER NOT NULL CHECK (groupe BETWEEN 1 AND 14),
-
-                UNIQUE (colleur_id, semaine, jour_id, creneau_start)
-            );
-
-            CREATE INDEX idx_planning_colleur ON PLANNING(colleur_id);
-            CREATE INDEX idx_planning_matiere ON PLANNING(matiere_id);
-            CREATE INDEX idx_planning_groupe  ON PLANNING(groupe);
-            """,
-        )
+        cur.executescript(_SCHEMA)
 
         for colleur_id, colleur_name in COLLEURS.items():
-            cur.execute(
-                """
-                INSERT INTO COLLEURS (id, nom) VALUES (?, ?)
-                """,
-                (colleur_id, colleur_name),
-            )
+            cur.execute(_INSERT_COLLEUR, (colleur_id, colleur_name))
 
         for matiere_id, matiere_name in MATIERES.items():
-            cur.execute(
-                """
-                INSERT INTO MATIERES (id, nom) VALUES (?, ?)
-                """,
-                (matiere_id, matiere_name),
-            )
+            cur.execute(_INSERT_MATIERE, (matiere_id, matiere_name))
 
         for matiere_id, colleur_id, jour_id, creneau_start, salle, groups in ROWS:
             cur.executemany(
-                """
-                INSERT INTO PLANNING (colleur_id, matiere_id, salle, jour_id, creneau_start, semaine, groupe)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
+                _INSERT_PLANNING,
                 [
                     (
                         colleur_id,
