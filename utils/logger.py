@@ -2,6 +2,7 @@
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from logging import Handler
 
 import colorama
@@ -12,6 +13,11 @@ from core.config import LoggingConfig
 colorama.init(autoreset=True)
 
 LOGGER_NAME = "MP2I"
+
+_WEBHOOK_EXECUTOR = ThreadPoolExecutor(
+    max_workers=2,
+    thread_name_prefix="log-webhook",
+)
 
 
 class BotFilter(logging.Filter):
@@ -151,30 +157,6 @@ class DiscordWebhookHandler(Handler):
         super().__init__(level)
         self.webhook_url = webhook_url
 
-    @staticmethod
-    def _level_color(levelno: int) -> int:
-        """Return a Discord embed color for a logging level.
-
-        Parameters
-        ----------
-        levelno : int
-            Logging level number.
-
-        Returns
-        -------
-        int
-            Discord color integer.
-
-        """
-        palette = {
-            logging.DEBUG: 0x3498DB,
-            logging.INFO: 0x2ECC71,
-            logging.WARNING: 0xF1C40F,
-            logging.ERROR: 0xE74C3C,
-            logging.CRITICAL: 0x992D22,
-        }
-        return palette.get(levelno, 0x95A5A6)
-
     def _build_payload(self, record: logging.LogRecord) -> dict:
         """Build the webhook payload for a log record.
 
@@ -233,6 +215,9 @@ class DiscordWebhookHandler(Handler):
     def emit(self, record: logging.LogRecord) -> None:
         """Emit a log record to the configured Discord webhook.
 
+        The network I/O runs on a background thread so the event loop (or
+        whatever thread is logging) is never blocked by HTTP retries.
+
         Parameters
         ----------
         record : logging.LogRecord
@@ -240,58 +225,42 @@ class DiscordWebhookHandler(Handler):
 
         """
         try:
-            import requests
-
             payload = self._build_payload(record)
-            headers = {"Content-Type": "application/json"}
-            # Retry on transient network/rate-limit failures.
             chunks = self._split_payload_chunks(payload["content"])
             for index, chunk in enumerate(chunks, start=1):
                 chunk_payload = dict(payload)
                 chunk_payload["content"] = chunk
+                chunk_payload["url"] = self.webhook_url
                 if len(chunks) > 1:
                     chunk_payload["content"] = (
                         f"{chunk_payload['content']}\n\n[{index}/{len(chunks)}]"
                     )
+                _WEBHOOK_EXECUTOR.submit(self._deliver, chunk_payload)
+        except Exception:
+            self.handleError(record)
 
-                for attempt in range(3):
-                    response = requests.post(
-                        self.webhook_url,
-                        json=chunk_payload,
-                        headers=headers,
-                        timeout=8,
-                    )
-                    if response.status_code == 429:
-                        retry_after = response.json().get("retry_after", 1)
-                        time.sleep(float(retry_after))
-                        continue
-                    response.raise_for_status()
-                    break
+    @staticmethod
+    def _deliver(payload: dict) -> None:
+        """POST one webhook payload with retries on rate-limits."""
+        try:
+            import requests
+
+            headers = {"Content-Type": "application/json"}
+            for attempt in range(3):
+                response = requests.post(
+                    payload["url"],
+                    json=payload,
+                    headers=headers,
+                    timeout=8,
+                )
+                if response.status_code == 429:
+                    retry_after = response.json().get("retry_after", 1)
+                    time.sleep(float(retry_after))
+                    continue
+                response.raise_for_status()
+                break
         except Exception as exc:
             print(f"Failed to send log to Discord webhook: {exc}")
-            try:
-                # Use discord-webhook package for sending
-                from discord_webhook import DiscordEmbed, DiscordWebhook
-
-                message = self.format(record)
-
-                # If message short enough, send as content; otherwise use embed description
-                if len(message) <= 1900:
-                    webhook = DiscordWebhook(url=self.webhook_url, content=message)
-                    webhook.execute()
-                    return
-
-                embed = DiscordEmbed(
-                    title=f"{record.filename}",
-                    description=message[:4096],
-                    color=self._level_color(record.levelno),
-                )
-                webhook = DiscordWebhook(url=self.webhook_url)
-                webhook.add_embed(embed)
-                webhook.execute()
-            except Exception as exc:
-                # Do not attempt fallback; just print error for debugging
-                print(f"Failed to send log to Discord webhook (discord-webhook): {exc}")
 
 
 def _is_real_webhook_url(url: str | None) -> bool:
