@@ -7,6 +7,7 @@ each configured server and exposes remote tools as local function metadata.
 import asyncio
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,51 @@ from core.config import BASE_DIR
 from utils.logger import get_logger
 
 logger = get_logger()
+
+
+_ENV_TOKEN = re.compile(r"\$\{([A-Z0-9_]+)\}|\$([A-Z0-9_]+)")
+
+
+def _resolve_env_tokens(value: Any) -> Any:
+    """Replace ``$VAR`` / ``${VAR}`` tokens with environment values.
+
+    Values referencing a missing variable are returned as-is so callers can
+    drop them explicitly.
+
+    Returns
+    -------
+    Any
+        The input with tokens substituted.
+    """
+    if not isinstance(value, str):
+        return value
+    return _ENV_TOKEN.sub(
+        lambda m: os.environ.get(m.group(1) or m.group(2), m.group(0)),
+        value,
+    )
+
+
+def _resolve_header_env(headers: dict[str, Any]) -> dict[str, str]:
+    """Resolve env tokens in headers and drop placeholders with no value.
+
+    An ``Authorization`` header referencing an unset key is silently removed
+    so an optional API key does not break unauthenticated usage.
+
+    Returns
+    -------
+    dict[str, str]
+        Headers ready to send.
+    """
+    resolved: dict[str, str] = {}
+    for key, value in headers.items():
+        text = _resolve_env_tokens(value)
+        if not isinstance(text, str) or not text.strip():
+            continue
+        if "$" in text:
+            # token referencing a missing env var -> drop this header
+            continue
+        resolved[key] = text
+    return resolved
 
 
 class MCPManager:
@@ -93,14 +139,14 @@ class MCPManager:
                 client_config: dict[str, Any] = {
                     "mcpServers": {
                         name: {
-                            "url": srv_config["url"],
-                            "headers": srv_config.get("headers", {}),
+                            "url": _resolve_env_tokens(srv_config["url"]),
+                            "headers": _resolve_header_env(srv_config.get("headers", {})),
                         }
                     }
                 }
             else:
                 env = self._prepare_runtime_env(os.environ.copy())
-                env.update(srv_config.get("env", {}))
+                env.update({k: _resolve_env_tokens(v) for k, v in srv_config.get("env", {}).items()})
                 client_config = {
                     "mcpServers": {
                         name: {
@@ -117,11 +163,7 @@ class MCPManager:
             async with client:
                 tools = await client.list_tools()
                 for tool in tools:
-                    params = (
-                        getattr(tool, "input_schema", None)
-                        or getattr(tool, "inputSchema", None)
-                        or {}
-                    )
+                    params = getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None) or {}
                     if hasattr(params, "model_dump"):
                         params = params.model_dump()
                     self.tools_metadata.append(
@@ -138,9 +180,7 @@ class MCPManager:
         except Exception:
             logger.exception("Failed to initialize MCP server %s", name)
 
-    async def call_tool(
-        self, server_name: str, tool_name: str, arguments: dict[str, Any]
-    ) -> str:
+    async def call_tool(self, server_name: str, tool_name: str, arguments: dict[str, Any]) -> str:
         """Call a tool on a remote MCP server and return its result.
 
         Parameters
