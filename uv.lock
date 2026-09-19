@@ -601,12 +601,6 @@ dependencies = [
     { name = "requests" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "pre-commit" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
@@ -619,12 +613,9 @@ requires-dist = [
     { name = "discord-py", specifier = ">=2.3.0" },
     { name = "json5", specifier = ">=0.9.0" },
     { name = "openai", specifier = ">=1.30.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.31.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9.0" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
