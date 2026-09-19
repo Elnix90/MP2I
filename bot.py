@@ -22,6 +22,7 @@ from db.settings_store import get_setting, set_setting
 from managers.context import get_server_context
 from managers.mcp import mcp_manager
 from managers.memory import MemoryManager, make_scope_key
+from managers.needle import needle_router
 from utils.console import get_console
 from utils.handlers.messages import MessageSender
 from utils.logger import get_logger
@@ -229,10 +230,31 @@ class MP2IBot(discord.Client):
         full_content = ""
         sender = MessageSender(channel, self)
         async with channel.typing():
+            tools = get_combined_tools()
+            if cfg.AI_NEEDLE_TOOL_CALLING:
+                full_tool_count = len(tools)
+                selection = await needle_router.select_tools(user_text, tools)
+                tools = selection.tools
+                if not selection.routed:
+                    logger.warning(
+                        "Needle tool filter inactive - sending all %d tools",
+                        full_tool_count,
+                    )
+                else:
+                    logger.info(
+                        "Needle tool filter: kept %d/%d tools (confidence=%s, reasoning=%s)",
+                        len(tools),
+                        full_tool_count,
+                        selection.confidence,
+                        selection.reasoning,
+                    )
+                    if selection.suppressed:
+                        logger.warning("Needle suppressed tools: %s", selection.suppressed)
+
             result = await generate_answer(
                 messages,
                 stream=cfg.AI_STREAMING,
-                tools=get_combined_tools(),
+                tools=tools,
             )
 
             if isinstance(result, Answer):
