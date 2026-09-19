@@ -4,6 +4,7 @@ Provides a `setup` function to register the `/ping` command which
 returns the bot's gateway latency.
 """
 
+import asyncio
 import time
 
 import discord
@@ -63,6 +64,8 @@ async def setup(tree: app_commands.CommandTree, bot):
                     except Exception as e:
                         end_msg = f"Je voulais leur botter le cul, mais j'ai pas réussi pour <@{mate.id}>!"
                         logger.error(f"Error sending DM to {mate.display_name}: {e}")
+                    # Respect Discord DM rate limits between sends.
+                    await asyncio.sleep(0.5)
 
                 await interaction.followup.send(end_msg)
 
