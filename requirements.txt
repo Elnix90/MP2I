@@ -3,3 +3,4 @@ python-dotenv
 colorama
 requests
 openai
+json5
