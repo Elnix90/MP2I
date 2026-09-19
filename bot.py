@@ -14,6 +14,7 @@ from discord.ext import tasks
 from cmds import loader as cmds_loader
 from core.ai import generate_answer, is_allowed_channel
 from core.config import cfg, perms_cfg
+from core.perms import is_blacklisted_user_id
 from db.settings_store import get_setting, set_setting
 from utils.console import get_console
 from utils.logger import get_logger
@@ -152,6 +153,7 @@ class MP2IBot(discord.Client):
             or message.author.bot
             or not cfg.AI_ENABLED
             or not is_allowed_channel(message.channel.id)
+            or is_blacklisted_user_id(message.author.id)
             or self.user.mention not in message.content  # pyright: ignore[reportOptionalMemberAccess]
             or not cfg.AI_API_KEY
             or not cfg.AI_SYSTEM_PROMPT
