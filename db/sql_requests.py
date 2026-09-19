@@ -47,8 +47,12 @@ def get_colles(groupe_id: int) -> list[Colle]:
     dt = datetime.now()  # Fuck timezone we're french  # noqa: DTZ005
     week = int(dt.strftime("%W"))
 
-    # That's the number of weeks of the year formatted to match a starting point the 14/09/2026
+    # Number of weeks since the planning start (14/09/2026). Before that
+    # week, or after the planning horizon, there are no colles to report.
     magic_week = week - 36
+    if magic_week < 1:
+        logger.info("No colles before the planning start (week %d)", magic_week)
+        return []
 
     cur.execute(
         _COLLES_QUERY,
