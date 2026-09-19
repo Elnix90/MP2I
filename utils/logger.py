@@ -15,28 +15,11 @@ LOGGER_NAME = "MP2I"
 
 
 class BotFilter(logging.Filter):
-    """Filter log records to only keep the bot's logger output."""
-
     def filter(self, record: logging.LogRecord) -> bool:
-        """Return True for log records emitted by the bot logger.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            Log record to inspect.
-
-        Returns
-        -------
-        bool
-            True when the record belongs to the MP2I logger.
-
-        """
         return record.name == LOGGER_NAME
 
 
 class ColoredFormatter(logging.Formatter):
-    """Add ANSI color codes to console log messages."""
-
     COLORS = {  # noqa: RUF012
         logging.DEBUG: Fore.CYAN,
         logging.INFO: Fore.GREEN,
@@ -46,55 +29,17 @@ class ColoredFormatter(logging.Formatter):
     }
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format a log record with console color codes.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            Log record to format.
-
-        Returns
-        -------
-        str
-            Colored formatted string.
-
-        """
         color = self.COLORS.get(record.levelno, "")
         message = super().format(record)
         return f"{color}{message}{Style.RESET_ALL}"
 
 
 class ConsoleHandler(Handler):
-    """Route log records to the interactive console renderer.
-
-    The console keeps typed input pinned at the bottom of the terminal while
-    log lines scroll above; when no interactive console is attached the
-    records are printed plainly to stderr.
-    """
-
     def __init__(self, console, level: int = logging.NOTSET):
-        """Initialize a console handler.
-
-        Parameters
-        ----------
-        console : Any
-            Interactive console instance used to render records.
-        level : int
-            Logging level threshold (default: logging.NOTSET).
-
-        """
         super().__init__(level)
         self._console = console
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record through the console renderer.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            Log record to render.
-
-        """
         try:
             message = self.format(record)
             self._console.print_log(message)
@@ -103,8 +48,6 @@ class ConsoleHandler(Handler):
 
 
 class DiscordAnsiFormatter(logging.Formatter):
-    """Wrap log output in a Discord-compatible ANSI code block."""
-
     LEVEL_COLORS = {  # noqa: RUF012
         logging.DEBUG: "\x1b[36m",
         logging.INFO: "\x1b[32m",
@@ -116,56 +59,18 @@ class DiscordAnsiFormatter(logging.Formatter):
     RESET = "\x1b[0m"
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format a log record for Discord ANSI rendering.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            Log record to format.
-
-        Returns
-        -------
-        str
-            ANSI wrapped code block string.
-
-        """
         message = super().format(record)
         color = self.LEVEL_COLORS.get(record.levelno, "\x1b[37m")
         return f"```ansi\n{color}{message}{self.RESET}\n```"
 
 
 class DiscordWebhookHandler(Handler):
-    """Send log records to a Discord webhook."""
-
     def __init__(self, webhook_url: str, level: int = logging.INFO):
-        """Initialize the Discord webhook handler.
-
-        Parameters
-        ----------
-        webhook_url : str
-            Discord webhook URL.
-        level : int
-            Logging level threshold (default: logging.INFO).
-
-        """
         super().__init__(level)
         self.webhook_url = webhook_url
 
     @staticmethod
     def _level_color(levelno: int) -> int:
-        """Return a Discord embed color for a logging level.
-
-        Parameters
-        ----------
-        levelno : int
-            Logging level number.
-
-        Returns
-        -------
-        int
-            Discord color integer.
-
-        """
         palette = {
             logging.DEBUG: 0x3498DB,
             logging.INFO: 0x2ECC71,
@@ -176,19 +81,6 @@ class DiscordWebhookHandler(Handler):
         return palette.get(levelno, 0x95A5A6)
 
     def _build_payload(self, record: logging.LogRecord) -> dict:
-        """Build the webhook payload for a log record.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            Log record to serialize.
-
-        Returns
-        -------
-        dict
-            Discord webhook payload.
-
-        """
         message = self.format(record)
         payload = {
             "username": "MP2I Bot",
@@ -200,21 +92,6 @@ class DiscordWebhookHandler(Handler):
 
     @staticmethod
     def _split_payload_chunks(message: str, limit: int = 1900) -> list[str]:
-        """Split a long Discord message into safe chunks.
-
-        Parameters
-        ----------
-        message : str
-            Message text to split.
-        limit : int
-            Maximum chunk length (default: 1900).
-
-        Returns
-        -------
-        list[str]
-            List of message chunks.
-
-        """
         if len(message) <= limit:
             return [message]
 
@@ -231,14 +108,6 @@ class DiscordWebhookHandler(Handler):
         return chunks
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record to the configured Discord webhook.
-
-        Parameters
-        ----------
-        record : logging.LogRecord
-            Log record to send.
-
-        """
         try:
             import requests
 
@@ -295,33 +164,10 @@ class DiscordWebhookHandler(Handler):
 
 
 def _is_real_webhook_url(url: str | None) -> bool:
-    """Return True when the webhook URL looks like a real value.
-
-    Parameters
-    ----------
-    url : Optional[str]
-        Webhook URL to test.
-
-    Returns
-    -------
-    bool
-        True when the URL is non-empty and not a placeholder.
-
-    """
     return bool(url) and "<URL>" not in url
 
 
 def setup_logging(level: int, config: LoggingConfig):
-    """Configure console, file and Discord webhook logging.
-
-    Parameters
-    ----------
-    level : int
-        Root logging level (default: logging.INFO).
-    config : Any
-        Optional configuration object with logging settings. Default is None.
-
-    """
     console_format = config.console_format
     file_format = config.file_format
     discord_format = config.discord_format
@@ -384,12 +230,4 @@ def setup_logging(level: int, config: LoggingConfig):
 
 
 def get_logger() -> logging.Logger:
-    """Return the bot's logger instance.
-
-    Returns
-    -------
-    logging.Logger
-        Logger configured for bot output.
-
-    """
     return logging.getLogger(LOGGER_NAME)
