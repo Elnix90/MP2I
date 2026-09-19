@@ -4,6 +4,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from logging import Handler
+from pathlib import Path
 
 import colorama
 from colorama import Fore, Style
@@ -176,7 +177,9 @@ def setup_logging(level: int, config: LoggingConfig):
     # optional file handler
     if config is not None and getattr(config, "enable_file_logging", False):
         try:
-            fh = logging.FileHandler(getattr(config, "log_file", "logs/mp2i.log"))
+            log_path = Path(getattr(config, "log_file", "logs/mp2i.log"))
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            fh = logging.FileHandler(log_path)
             fh.setFormatter(logging.Formatter(file_format))
             fh.addFilter(BotFilter())
             handlers.append(fh)
