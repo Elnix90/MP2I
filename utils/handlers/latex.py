@@ -161,6 +161,7 @@ def latex_to_svg(formula: str) -> bytes:
     # both attempts rate-limited
     raise RuntimeError("math.vercel.app rate limited")
 
+
 def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
     """Convert LaTeX to a PNG buffer when possible.
 
