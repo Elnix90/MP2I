@@ -4,20 +4,13 @@ import time
 
 import discord
 
-from cmds._shared import (
-    defer_interaction,
-    log_command_end,
-    log_command_error,
-    log_command_start,
-)
+from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from utils.logger import get_logger
 
 logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    """Register the ``memory-delete`` command."""
-
     @tree.command(
         name="memory-delete",
         description="Supprime un échange précis (son auteur ou un admin)",
@@ -40,11 +33,7 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
                 log_command_end(logger, "memory_delete", start_time, status="not_found")
                 return
 
-            can_manage = (
-                interaction.user.guild_permissions.manage_messages
-                if interaction.guild
-                else False
-            )
+            can_manage = interaction.user.guild_permissions.manage_messages if interaction.guild else False
             if turn.user_id != interaction.user.id and not can_manage:
                 await interaction.followup.send(
                     "Tu n'as pas la permission de supprimer cet échange.",

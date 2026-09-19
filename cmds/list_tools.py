@@ -4,13 +4,7 @@ import time
 
 import discord
 
-from cmds._shared import (
-    defer_interaction,
-    log_command_end,
-    log_command_error,
-    log_command_start,
-    send_interaction,
-)
+from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start, send_interaction
 from core.ai.tools import get_combined_tools
 from utils.logger import get_logger
 
@@ -18,11 +12,7 @@ logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    """Register the ``list-tools`` command."""
-
-    @tree.command(
-        name="list-tools", description="Liste les outils disponibles pour l'IA"
-    )
+    @tree.command(name="list-tools", description="Liste les outils disponibles pour l'IA")
     async def list_tools(interaction: discord.Interaction):
         start_time = time.perf_counter()
         log_command_start(logger, "list-tools", interaction)
@@ -44,21 +34,13 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
             normalized = []
             for t in tools:
                 try:
-                    if (
-                        isinstance(t, dict)
-                        and t.get("type") == "function"
-                        and isinstance(t.get("function"), dict)
-                    ):
+                    if isinstance(t, dict) and t.get("type") == "function" and isinstance(t.get("function"), dict):
                         fn = t["function"]
                         name = fn.get("name")
                         desc = fn.get("description", "Pas de description")
                     else:
                         name = t.get("name") if isinstance(t, dict) else None
-                        desc = (
-                            t.get("description", "Pas de description")
-                            if isinstance(t, dict)
-                            else str(t)
-                        )
+                        desc = t.get("description", "Pas de description") if isinstance(t, dict) else str(t)
                     if name:
                         normalized.append({"name": name, "description": desc})
                 except Exception as exc:

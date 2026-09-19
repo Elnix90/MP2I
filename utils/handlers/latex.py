@@ -108,20 +108,6 @@ def _store(latex: str, buffer: io.BytesIO) -> io.BytesIO:
 
 
 def latex_to_svg(formula: str) -> bytes:
-    """Render a LaTeX formula to SVG bytes via math.vercel.app.
-
-    Uses browser-like headers and retries once when rate-limited.
-
-    Parameters
-    ----------
-    formula : str
-        LaTeX formula to render.
-
-    Returns
-    -------
-    bytes
-        SVG payload bytes.
-    """
     global _last_remote_request
     encoded = urllib.parse.quote(formula, safe="")
     url = f"https://math.vercel.app?color=white&from={encoded}.svg"
@@ -160,18 +146,6 @@ def latex_to_svg(formula: str) -> bytes:
 
 
 def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
-    """Convert LaTeX to a PNG buffer when possible.
-
-    Parameters
-    ----------
-    latex : str
-        LaTeX content to convert.
-
-    Returns
-    -------
-    tuple[io.BytesIO | str, bool]
-        PNG buffer or fallback text, plus success flag.
-    """
     cleaned = latex.strip()
     if cleaned.startswith(r"\(") and cleaned.endswith(r"\)"):
         cleaned = cleaned[2:-2]
@@ -195,16 +169,4 @@ def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
 
 
 def detect_latex(text: str) -> list[str]:
-    """Find LaTeX fragments in text.
-
-    Parameters
-    ----------
-    text : str
-        Text to inspect.
-
-    Returns
-    -------
-    list[str]
-        List of matched LaTeX fragments.
-    """
     return LATEX_PATTERN.findall(text)

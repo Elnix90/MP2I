@@ -20,7 +20,7 @@ run = "uv sync"
 description = "Install project dependencies"
 
 [tasks.lint]
-run = "uv run ruff check ."
+run = "scripts/lint.sh"
 description = "Run linter"
 
 [tasks.format]

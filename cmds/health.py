@@ -8,12 +8,7 @@ import time
 
 import discord
 
-from cmds._shared import (
-    defer_interaction,
-    log_command_end,
-    log_command_error,
-    log_command_start,
-)
+from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.ai.tools import get_combined_tools, tools_loader
 from managers.mcp import mcp_manager
 from utils.logger import get_logger
@@ -22,16 +17,12 @@ logger = get_logger()
 
 
 def _status_label(ok: bool) -> str:
-    """Return a human-readable status label."""
     return "Healthy" if ok else "Degraded"
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    """Register the ``health`` command on the provided command tree."""
-
     @tree.command(name="health", description="Statut de santé des sous-systèmes du bot")
     async def health(interaction: discord.Interaction):
-        """Perform runtime health checks and reply with a summary embed."""
         start_time = time.perf_counter()
         log_command_start(logger, "health", interaction)
 
@@ -54,11 +45,7 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
             native_loaded = len(tools_loader.tools_handlers)
             tools_ok = native_loaded == native_declared
 
-            mcp_tool_count = sum(
-                1
-                for tool in mcp_manager.tools_metadata
-                if tool.get("function", {}).get("name", "").startswith("mcp_")
-            )
+            mcp_tool_count = sum(1 for tool in mcp_manager.tools_metadata if tool.get("function", {}).get("name", "").startswith("mcp_"))
             combined_tools = get_combined_tools()
 
             configured_servers = len(mcp_manager.load_config().get("mcpServers", {}))
@@ -79,42 +66,25 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
             )
             embed.add_field(
                 name="Mémoire",
-                value=(
-                    f"Statut : {_status_label(memory_ok)}\n"
-                    f"Turns en mémoire : {memory_turns}\n"
-                    f"Détail : {memory_note}"
-                ),
+                value=(f"Statut : {_status_label(memory_ok)}\nTurns en mémoire : {memory_turns}\nDétail : {memory_note}"),
                 inline=False,
             )
             embed.add_field(
                 name="Outils",
-                value=(
-                    f"Statut : {_status_label(tools_ok)}\n"
-                    f"Natifs déclarés/chargés : {native_declared}/{native_loaded}\n"
-                    f"Outils MCP : {mcp_tool_count}\n"
-                    f"Total exposés : {len(combined_tools)}"
-                ),
+                value=(f"Statut : {_status_label(tools_ok)}\nNatifs déclarés/chargés : {native_declared}/{native_loaded}\nOutils MCP : {mcp_tool_count}\nTotal exposés : {len(combined_tools)}"),
                 inline=False,
             )
             embed.add_field(
                 name="MCP",
-                value=(
-                    f"Statut : {_status_label(mcp_ok)}\n"
-                    f"Serveurs configurés : {configured_servers}\n"
-                    f"Clients connectés : {connected_servers}"
-                ),
+                value=(f"Statut : {_status_label(mcp_ok)}\nServeurs configurés : {configured_servers}\nClients connectés : {connected_servers}"),
                 inline=False,
             )
 
             await interaction.followup.send(embed=embed, ephemeral=True)
-            log_command_end(
-                logger, "health", start_time, status=_status_label(overall_ok)
-            )
+            log_command_end(logger, "health", start_time, status=_status_label(overall_ok))
         except Exception as exc:
             log_command_error(logger, "health", exc)
             try:
-                await interaction.followup.send(
-                    "Erreur pendant le health check.", ephemeral=True
-                )
+                await interaction.followup.send("Erreur pendant le health check.", ephemeral=True)
             except Exception as send_exc:
                 logger.error("Failed to send error message: %s", send_exc)

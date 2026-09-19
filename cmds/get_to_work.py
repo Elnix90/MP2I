@@ -19,8 +19,6 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    """Mp the other member of the group to kick their ass"""
-
     @tree.command(
         name="get-to-work",
         description="Mp tes mate de groupe pour qu'ils se bougent le cul",

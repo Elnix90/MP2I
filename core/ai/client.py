@@ -31,8 +31,6 @@ DEFAULT_MAX_CONTEXT_CHARS = 128000
 
 @dataclass
 class Answer:
-    """Container for a generated model answer."""
-
     content: str = ""
     model: str | None = None
     response_time: float | None = None
@@ -41,7 +39,6 @@ class Answer:
 
 
 def _model_priority() -> list[str]:
-    """Return the ordered model list, honouring a runtime-persisted override."""
     models = list(cfg.AI_MODELS)
     if not models:
         return []
@@ -64,7 +61,6 @@ def _build_client() -> AsyncOpenAI:
 
 
 def _messages_char_size(msgs: list) -> int:
-    """Return the serialized character size of a messages list."""
     try:
         return len(json.dumps(msgs, ensure_ascii=False))
     except Exception:
@@ -72,7 +68,6 @@ def _messages_char_size(msgs: list) -> int:
 
 
 def _truncate_messages(msgs: list, max_chars: int = DEFAULT_MAX_CONTEXT_CHARS) -> list:
-    """Drop oldest non-system messages until the payload fits under max_chars."""
     if not isinstance(msgs, list):
         return msgs
     size = _messages_char_size(msgs)
@@ -80,9 +75,7 @@ def _truncate_messages(msgs: list, max_chars: int = DEFAULT_MAX_CONTEXT_CHARS) -
         return msgs
     copy = list(msgs)
     removed = 0
-    while _messages_char_size(copy) > max_chars and any(
-        m.get("role") != "system" for m in copy
-    ):
+    while _messages_char_size(copy) > max_chars and any(m.get("role") != "system" for m in copy):
         for idx, m in enumerate(copy):
             if m.get("role") != "system":
                 del copy[idx]
@@ -114,22 +107,6 @@ _ATEM_MARKER = re.compile(r"<\|[^|]*\|>")
 
 
 def strip_tool_artifacts(text: str) -> str:
-    """Remove model-internal tool-call syntax leaking into the reply text.
-
-    Some upstream models (e.g. the Atem-style protocol) emit their function
-    invocations both as structured ``tool_calls`` AND as raw text in the
-    message content. That raw text must never reach Discord.
-
-    Parameters
-    ----------
-    text : str
-        Raw assistant content.
-
-    Returns
-    -------
-    str
-        Cleaned content.
-    """
     if not text:
         return text
     cleaned = _ATEM_BLOCK.sub(" ", text)
@@ -146,14 +123,6 @@ async def _run_round(
     messages: list,
     tools: list | None,
 ) -> tuple[object | None, list, str | None]:
-    """Run one non-streamed round.
-
-    Returns
-    -------
-    tuple[object | None, list, str | None]
-        (message, tool_calls, error). ``message`` is None when the request
-        failed; the error string describes why.
-    """
     try:
         resp = await client.chat.completions.create(
             model=model,
@@ -169,7 +138,6 @@ async def _run_round(
 
 
 def _assistant_tool_message(message: object) -> dict:
-    """Serialize an assistant message that contains tool calls."""
     base = {
         "role": "assistant",
         "content": strip_tool_artifacts(getattr(message, "content", None) or ""),
@@ -189,8 +157,6 @@ def _assistant_tool_message(message: object) -> dict:
 
 
 async def _execute_tool_calls(tool_calls: list) -> list[dict]:
-    """Execute tool calls in parallel and return tool-result messages."""
-
     async def _run(tool_call) -> dict:
         arguments = parse_tool_arguments(tool_call.function.arguments)
         logger.info(
@@ -215,23 +181,6 @@ async def generate_answer(
     stream: bool = False,
     tools: list | None = None,
 ) -> Answer | object:
-    """Generate an answer with model fallback and optional tool calling.
-
-    Parameters
-    ----------
-    messages : list
-        Chat messages to send to the model.
-    stream : bool
-        When True and no tool remains, the final round-trip is streamed and
-        the raw stream object is returned for the caller to consume.
-    tools : list | None
-        Optional list of tool descriptors exposed to the model.
-
-    Returns
-    -------
-    Answer | object
-        Result container, or the raw stream when ``stream`` is True.
-    """
     models = _model_priority()
     if not models:
         return Answer(
@@ -251,9 +200,7 @@ async def generate_answer(
     for _ in range(MAX_TOOL_ITERATIONS):
         round_outcome = None
         for model in models:
-            message, tool_calls, err = await _run_round(
-                client, model, round_messages, tools
-            )
+            message, tool_calls, err = await _run_round(client, model, round_messages, tools)
             if message is not None:
                 round_outcome = (model, message, tool_calls)
                 break
@@ -290,10 +237,7 @@ async def generate_answer(
     )
 
 
-async def _stream_final(
-    client: AsyncOpenAI, model: str, messages: list
-) -> object | None:
-    """Stream one final round for a given model; None on failure."""
+async def _stream_final(client: AsyncOpenAI, model: str, messages: list) -> object | None:
     try:
         return await client.chat.completions.create(
             model=model,
@@ -312,7 +256,6 @@ async def _synthesize(
     *,
     stream: bool,
 ) -> Answer | object | None:
-    """Produce a final plain-text answer without tools (fallback pass)."""
     stream_result = None
     for model in models:
         try:

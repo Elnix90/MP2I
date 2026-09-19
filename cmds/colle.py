@@ -19,8 +19,6 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    """Returns the colles of the week for the user issuing the command"""
-
     @tree.command(
         name="colle",
         description="Renvoie les colles de la semaine pour l'utilisateur",

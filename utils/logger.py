@@ -129,7 +129,6 @@ class DiscordWebhookHandler(Handler):
 
     @staticmethod
     def _deliver(payload: dict) -> None:
-        """POST one webhook payload with retries on rate-limits."""
         try:
             import requests
 

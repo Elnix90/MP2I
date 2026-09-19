@@ -20,34 +20,7 @@ FONT_DIR = BASE_DIR / "assets" / "fonts"
 
 
 def _extract_links_and_sanitize(text: str, current_links: list[str]) -> tuple[str, list[str]]:
-    """Replace raw links with numbered references and collect URLs.
-
-    Parameters
-    ----------
-    text : str
-        Input text to sanitize.
-    current_links : list[str]
-        Previously seen URLs to keep numbering stable.
-
-    Returns
-    -------
-    tuple[str, list[str]]
-        Sanitized text and the updated list of links.
-    """
-
     def replacer(match: re.Match[str]) -> str:
-        """Convert a matched URL into a numbered reference.
-
-        Parameters
-        ----------
-        match : re.Match[str]
-            Regex match object.
-
-        Returns
-        -------
-        str
-            Numbered reference string.
-        """
         _label, url_md, url_plain = match.groups()
         url = url_md or url_plain
         if url in current_links:
@@ -65,22 +38,6 @@ def _extract_links_and_sanitize(text: str, current_links: list[str]) -> tuple[st
 
 
 def _get_font(size: int, bold: bool = False, italic: bool = False):
-    """Load a table font variant by size and style.
-
-    Parameters
-    ----------
-    size : int
-        Font size in points.
-    bold : bool
-        Whether to load the bold font variant (default: False).
-    italic : bool
-        Whether to load the italic font variant (default: False).
-
-    Returns
-    -------
-    ImageFont.FreeTypeFont | ImageFont.ImageFont
-        Loaded font object, or Pillow default font on failure.
-    """
     try:
         if bold and italic:
             path = FONT_DIR / "NotoSans-BoldItalic.ttf"
@@ -101,24 +58,6 @@ def _calc_col_widths(
     font: ImageFont.FreeTypeFont,
     padding: int,
 ) -> list[int]:
-    """Calculate column widths for a rendered table image.
-
-    Parameters
-    ----------
-    headers : list[str]
-        Column headers.
-    rows : list[list[str]]
-        Table rows.
-    font : ImageFont.FreeTypeFont
-        Font used for measurement.
-    padding : int
-        Horizontal padding applied to each cell.
-
-    Returns
-    -------
-    list[int]
-        Calculated column widths in pixels.
-    """
     img = Image.new("RGB", (1, 1))
     widths = []
     with Pilmoji(img) as pilmoji:
@@ -137,22 +76,6 @@ def _calc_col_widths(
 
 
 def _wrap_text(text: str, max_width: int, font: ImageFont.FreeTypeFont) -> list[str]:
-    """Wrap text to fit within a pixel width.
-
-    Parameters
-    ----------
-    text : str
-        Text to wrap.
-    max_width : int
-        Maximum width in pixels.
-    font : ImageFont.FreeTypeFont
-        Font used for measurement.
-
-    Returns
-    -------
-    list[str]
-        Wrapped lines.
-    """
     draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
     words = text.split()
     lines = []
@@ -172,22 +95,6 @@ def _wrap_text(text: str, max_width: int, font: ImageFont.FreeTypeFont) -> list[
 
 
 def _render_table_image(headers: list[str], rows: list[list[str]], alignments: list[str]) -> tuple[io.BytesIO, list[str]]:
-    """Render a markdown table into an image buffer.
-
-    Parameters
-    ----------
-    headers : list[str]
-        Column headers.
-    rows : list[list[str]]
-        Table rows.
-    alignments : list[str]
-        Column alignments.
-
-    Returns
-    -------
-    tuple[io.BytesIO, list[str]]
-        PNG buffer and the table's extracted links.
-    """
     all_links: list[str] = []
     sanitized_headers = []
     for h in headers:
@@ -278,36 +185,12 @@ def _render_table_image(headers: list[str], rows: list[list[str]], alignments: l
 
 
 def detect_and_convert_tables(text: str) -> tuple[str, list[io.BytesIO], list[dict]]:
-    """Detect markdown tables in text and convert them to image buffers.
-
-    Parameters
-    ----------
-    text : str
-        Message text to inspect.
-
-    Returns
-    -------
-    tuple[str, list[io.BytesIO], list[dict]]
-        Rewritten text, PNG buffers and table metadata.
-    """
     table_images: list[io.BytesIO] = []
     table_data_list: list[dict] = []
 
     code_block_pattern = re.compile(r"```(?:markdown|md)?\n((?:\|.*\|(?:\n|$))+)```", re.MULTILINE)
 
     def replace_table(match: re.Match[str]) -> str:
-        """Render one matched table block into an image placeholder.
-
-        Parameters
-        ----------
-        match : re.Match[str]
-            Regex match for a markdown table block.
-
-        Returns
-        -------
-        str
-            Image placeholder or original block on failure.
-        """
         lines = [row_line for row_line in match.group(1).strip().split("\n") if row_line.strip()]
         if len(lines) < 2:
             return match.group(0)

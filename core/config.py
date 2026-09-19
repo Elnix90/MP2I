@@ -7,11 +7,7 @@ from enum import Enum
 from pathlib import Path
 
 from config.ai_conf import load_ai_config
-from config.logging_conf import (
-    LoggingConfig,
-    _normalize_webhook_url,
-    load_logging_config,
-)
+from config.logging_conf import LoggingConfig, _normalize_webhook_url, load_logging_config
 from config.perms_conf import load_perms_config
 
 _ENV_FILE = Path(".env")
@@ -31,7 +27,6 @@ class Env(Enum):
 
 
 def _load_env_files() -> None:
-    """Load the environment file matching the running mode."""
     if os.getenv("ENV", "LOCAL").upper() == "PROD" or not _LOCAL_ENV_FILE.exists():
         load_dotenv(_ENV_FILE)
     else:
@@ -71,7 +66,6 @@ class Config:
 
 
 def load_config() -> tuple[Config, LoggingConfig]:
-    """Load application and logging configuration."""
     logging_conf = load_logging_config()
     ai_conf = load_ai_config()
 

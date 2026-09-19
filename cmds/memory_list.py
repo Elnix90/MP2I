@@ -5,26 +5,15 @@ import time
 import discord
 
 from cmds._memory import interaction_scope
-from cmds._shared import (
-    defer_interaction,
-    log_command_end,
-    log_command_error,
-    log_command_start,
-)
+from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from utils.logger import get_logger
 
 logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    """Register the ``memory-list`` command."""
-
-    @tree.command(
-        name="memory-list", description="Affiche les derniers échanges en mémoire"
-    )
-    @discord.app_commands.describe(
-        limit="Nombre d'échanges à afficher", user="Filtrer par utilisateur (optionnel)"
-    )
+    @tree.command(name="memory-list", description="Affiche les derniers échanges en mémoire")
+    @discord.app_commands.describe(limit="Nombre d'échanges à afficher", user="Filtrer par utilisateur (optionnel)")
     async def memory_list(
         interaction: discord.Interaction,
         limit: int = 10,
@@ -50,13 +39,9 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
                 return
 
             def _format_turn(turn) -> str:
-                created = time.strftime(
-                    "%Y-%m-%d %H:%M:%S", time.localtime(turn.created_at)
-                )
+                created = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(turn.created_at))
                 user_snippet = turn.user_content.replace("\n", " ")[:120]
-                assistant_snippet = (turn.assistant_content or "").replace("\n", " ")[
-                    :120
-                ]
+                assistant_snippet = (turn.assistant_content or "").replace("\n", " ")[:120]
                 lines = [
                     f"{turn.turn_id[:8]} | {created} | {turn.user_name} ({turn.user_id})",
                     f"  user: {user_snippet}",

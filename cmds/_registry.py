@@ -11,8 +11,6 @@ from pathlib import Path
 
 @dataclass
 class CommandInfo:
-    """Metadata about a Discord application command."""
-
     name: str
     description: str
     module_name: str
@@ -20,14 +18,6 @@ class CommandInfo:
 
 
 def get_all_commands() -> list[CommandInfo]:
-    """Discover all commands in the cmds/ directory using static analysis.
-
-    Returns
-    -------
-    List[CommandInfo]
-        A sorted list of discovered commands.
-
-    """
     commands = []
     cmds_dir = Path(__file__).parent
 

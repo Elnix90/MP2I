@@ -41,18 +41,6 @@ ALLOWED_UNARYOPS = (ast.UAdd, ast.USub)
 
 
 def _safe_eval(node: ast.AST) -> float:
-    """Recursively evaluate an AST node against a strict allowlist.
-
-    Returns
-    -------
-    float
-        Numeric result of the expression.
-
-    Raises
-    ------
-    ValueError
-        If the AST contains unsupported syntax, operators or symbols.
-    """
     if isinstance(node, ast.Expression):
         return _safe_eval(node.body)
 
@@ -107,18 +95,6 @@ def _safe_eval(node: ast.AST) -> float:
 
 
 def _try_eval_units(expression: str) -> str:
-    """Try to parse a unit conversion or quantity expression.
-
-    Returns
-    -------
-    str
-        Formatted unit result string.
-
-    Raises
-    ------
-    ValueError
-        If the input is not a unit expression.
-    """
     expr = expression.strip()
 
     for sep in (" to ", " in "):
@@ -136,20 +112,6 @@ def _try_eval_units(expression: str) -> str:
 
 
 async def safe_eval_math(expression: str, precision: int = 10) -> str:
-    """Safely evaluate math expression, with optional unit conversion support.
-
-    Parameters
-    ----------
-    expression : str
-        Math expression or unit conversion to evaluate.
-    precision : int
-        Number of significant digits to return (default: 10).
-
-    Returns
-    -------
-    str
-        Result string or an error message.
-    """
     try:
         precision = max(1, min(int(precision), 16))
         expr = expression.strip()
