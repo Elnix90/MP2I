@@ -51,6 +51,7 @@ class Config:
     GUILD_ID: int
     WEBHOOK_POSTURL: str | None
     WEBHOOK_URL: str | None
+    DEBUG_MODE: bool = False
     CUR: sqlite3.Cursor | None = None
     CONN: sqlite3.Connection | None = None
     AI_API_KEY: str | None = None
@@ -82,6 +83,8 @@ def load_config() -> tuple[Config, LoggingConfig]:
     webhook_post_url = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
     env_webhook_url = _normalize_webhook_url(os.getenv("WEBHOOK_URL"))
 
+    debug_mode = os.getenv("DEBUG_MODE") == "true"
+
     webhook_url = None
     if env_webhook_url:
         webhook_url = env_webhook_url
@@ -94,6 +97,7 @@ def load_config() -> tuple[Config, LoggingConfig]:
         AI_API_KEY=os.getenv("AI_API_KEY"),
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
+        DEBUG_MODE=debug_mode,
         AI_ENABLED=ai_conf.enabled,
         AI_ALLOWED_CHANNELS=ai_conf.allowed_channels,
         AI_MODELS=ai_conf.models,
