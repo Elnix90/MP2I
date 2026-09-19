@@ -1,4 +1,4 @@
-name: Pre-commit Checks
+name: Lint
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint (ruff / isort)
+    name: Lint (ruff)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,20 +22,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
-      - name: Install linters
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff isort removestar
+      - name: Install ruff
+        run: pip install ruff
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y tree cloc curl || true
+      - name: Ruff check
+        run: ruff check .
 
-      - name: Make lint script executable
-        run: chmod +x ./lint.sh || true
-
-      - name: Run lint script
-        run: ./lint.sh
+      - name: Ruff format check
+        run: ruff format --check .
