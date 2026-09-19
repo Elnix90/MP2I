@@ -19,3 +19,5 @@ ROLES_IDS: dict[int, int] = {
     13: 1547631889274118275,
     14: 1547631955615420416,
 }
+
+ROLE_ID_TO_NUMBER: dict[int, int] = {role_id: n for n, role_id in ROLES_IDS.items()}

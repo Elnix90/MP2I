@@ -2,14 +2,14 @@ from discord.member import Member
 from discord.role import Role
 from discord.user import User
 
-from core.roles_ids import ROLES_IDS
+from core.roles_ids import ROLE_ID_TO_NUMBER
 
 
 def get_first_group_role(user: User | Member) -> Role | None:
     roles: list[Role] = user.roles  # pyright: ignore[reportAttributeAccessIssue]
 
     for role in roles:
-        if role.id in ROLES_IDS.values():
+        if role.id in ROLE_ID_TO_NUMBER:
             return role
 
     return None
