@@ -3,7 +3,7 @@
 # MP2I Bot
 
 <div align="center">
-<img src="assets/images/MPI2-server-icon.png" alt="MP2I Icon" width="160" style="border-radius:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin: 20px 0;" />
+<img src="assets/images/bot_profile_picture.png" alt="MP2I Icon" width="160" style="border-radius:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin: 20px 0;" />
 </div>
 
 ---
