@@ -25,17 +25,17 @@
 ## Commands
 
 <!-- COMMANDS-START -->
-| Command | Description |
-| :--- | :--- |
-| `/ai-allow` | Autorise le bot IA à répondre dans ce salon (réservé aux admins) |
-| `/ai-deny` | Empêche le bot IA de répondre dans ce salon (réservé aux admins) |
-| `/colle` | Renvoie les colles de la semaine pour l'utilisateur |
-| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins) |
-| `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul |
-| `/model` | Change le modèle d'IA que le bot utilise |
-| `/ping` | Check bot latency and responsiveness |
-| `/restart` | Redémarre le bot (réservé aux admins) |
-| `/self-update` | Met à jour le bot depuis le dépôt distant |
+| Command | Description | Permissions |
+| :--- | :--- | :--- |
+| `/ai-allow` | Autorise le bot IA à répondre dans ce salon (réservé aux admins) | Admins |
+| `/ai-deny` | Empêche le bot IA de répondre dans ce salon (réservé aux admins) | Admins |
+| `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
+| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins) | Admins |
+| `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | Admins, Tous les membres |
+| `/model` | Change le modèle d'IA que le bot utilise | Admins |
+| `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
+| `/restart` | Redémarre le bot (réservé aux admins) | Admins |
+| `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
 
 <!-- COMMANDS-END -->
 
@@ -144,7 +144,20 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   ├── rows.py
 │   │   └── subjects.py
 │   ├── __init__.py
+│   ├── settings_store.py
+│   ├── sql
+│   │   ├── colles.sql
+│   │   ├── colleurs_insert.sql
+│   │   ├── colloscope_schema.sql
+│   │   ├── __init__.py
+│   │   ├── matieres_insert.sql
+│   │   ├── planning_insert.sql
+│   │   ├── settings_get.sql
+│   │   ├── settings_schema.sql
+│   │   └── settings_upsert.sql
 │   └── sql_requests.py
+├── docs
+│   └── settings_store.md
 ├── .github
 │   └── workflows
 │       └── pre-commit.yml
@@ -168,7 +181,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-13 directories, 59 files
+15 directories, 70 files
 ```
 <!-- TREE-END -->
 

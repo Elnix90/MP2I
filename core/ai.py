@@ -17,6 +17,9 @@ def load_allowed_channels() -> list[int]:
     stored = get_setting("ai.allowed_channels")
     if stored is None:
         return list(cfg.AI_ALLOWED_CHANNELS)
+    if not isinstance(stored, list):
+        logger.warning("Invalid allowed AI channels in store, using config default")
+        return list(cfg.AI_ALLOWED_CHANNELS)
     try:
         return [int(c) for c in stored]
     except (TypeError, ValueError):
