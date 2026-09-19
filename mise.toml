@@ -32,9 +32,9 @@ run = "uv run pre-commit install"
 description = "Install git hooks (pre-commit + commit-msg)"
 
 [tasks.clean]
-run = "echo 'Supprimer logs/ et debug/? (y/N)' && read -r confirm && [ \"$confirm\" = 'y' ] && rm -rf logs debug && echo 'Nettoyé.' || echo 'Annulé.'"
+run = "source scripts/confirm.sh && confirm 'Supprimer logs/ et debug/ ?' && rm -rf logs debug && echo 'Nettoyé.' || echo 'Annulé.'"
 description = "Clean up debug messages and logs"
 
 [tasks.reset]
-run = "echo 'Supprimer .venv/, logs/, debug/, data/? Irréversible! (y/N)' && read -r confirm && [ \"$confirm\" = 'y' ] && rm -rf .venv logs debug data && echo 'Réinitialisé.' || echo 'Annulé.'"
+run = "source scripts/confirm.sh && confirm 'Supprimer .venv/, logs/, debug/, data/ ? Irréversible !' && rm -rf .venv logs debug data && echo 'Réinitialisé.' || echo 'Annulé.'"
 description = "Reset project"
