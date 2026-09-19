@@ -110,9 +110,7 @@ async def setup(tree: app_commands.CommandTree, bot):
                 await interaction.followup.send("Error while executing the command.")
 
 
-def _build_steps(
-    remote: str, branch: str, do_clean: bool = False
-) -> list[tuple[str, str]]:
+def _build_steps(remote: str, branch: str, do_clean: bool = False) -> list[tuple[str, str]]:
     steps: list[tuple[str, str]] = []
 
     steps.append(
@@ -127,13 +125,9 @@ def _build_steps(
             f"git -C {os.getcwd()} remote | while read r; do git -C {os.getcwd()} remote remove $r; done",
         )
     )
-    steps.append(
-        ("Ajout du remote", f"git -C {os.getcwd()} remote add origin {remote}")
-    )
+    steps.append(("Ajout du remote", f"git -C {os.getcwd()} remote add origin {remote}"))
     steps.append(("Fetch", f"git -C {os.getcwd()} fetch origin --depth=1"))
-    steps.append(
-        (f"Checkout de la branche {branch}", f"git -C {os.getcwd()} checkout {branch}")
-    )
+    steps.append((f"Checkout de la branche {branch}", f"git -C {os.getcwd()} checkout {branch}"))
     steps.append(
         (
             f"Reset sur origin/{branch}",
@@ -141,11 +135,7 @@ def _build_steps(
         )
     )
     if do_clean:
-        steps.append(
-            ("Nettoyage des fichiers non suivés", f"git -C {os.getcwd()} clean -fd")
-        )
-    steps.append(
-        ("Vérification de la version", f"git -C {os.getcwd()} rev-parse --short HEAD")
-    )
+        steps.append(("Nettoyage des fichiers non suivés", f"git -C {os.getcwd()} clean -fd"))
+    steps.append(("Vérification de la version", f"git -C {os.getcwd()} rev-parse --short HEAD"))
 
     return steps

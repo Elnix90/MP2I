@@ -11,7 +11,7 @@ from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.get_first_group_role import get_first_group_role
-from core.roles_ids import ROLE_ID_TO_NUMBER
+from core.roles_ids import ROLE_ID_TO_NUMBER, ROLES_IDS
 from db.sql_requests import get_colles
 from utils.logger import get_logger
 
@@ -51,10 +51,18 @@ async def setup(tree: app_commands.CommandTree, bot):
                         else:
                             msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
                     else:
-                        msg = (
-                            f"{user_requested.mention}, aucune colle cette semaine pour le "
-                            f"{group_role.mention} 🎉"
-                        )
+                        msg = f"{user_requested.mention}, aucune colle cette semaine pour le {group_role.mention} 🎉"
+                role_number = list(ROLES_IDS.keys())[list(ROLES_IDS.values()).index(group_role.id)]
+                colles = get_colles(role_number)
+
+                if colles:
+                    colles_str = "\n".join(f"- {colle}" for colle in colles)
+                    if user is not None:
+                        msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                    else:
+                        msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
+                else:
+                    msg = f"{user_requested.mention}, aucune colle cette semaine pour le {group_role.mention} 🎉"
             else:
                 msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
 

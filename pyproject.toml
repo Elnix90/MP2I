@@ -53,3 +53,6 @@ docstring-code-format = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 200
