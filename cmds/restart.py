@@ -31,7 +31,7 @@ async def setup(tree: app_commands.CommandTree, bot):
 
     """
 
-    @tree.command(name="restart", description="Redémarre le bot (réservé aux admins)")
+    @tree.command(name="restart", description="Redémarre le bot")
     @app_commands.check(is_bot_admin)
     async def restart(interaction: discord.Interaction):
         """Acknowledge the request, then stop the bot so it restarts."""

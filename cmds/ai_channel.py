@@ -69,7 +69,7 @@ async def _update_channel(interaction: discord.Interaction, *, allow: bool):
 async def setup(tree: app_commands.CommandTree, bot):
     @tree.command(
         name="ai-allow",
-        description="Autorise le bot IA à répondre dans ce salon (réservé aux admins)",
+        description="Autorise le bot IA à répondre dans ce salon",
     )
     @app_commands.check(is_bot_admin)
     async def ai_allow(interaction: discord.Interaction):
@@ -77,7 +77,7 @@ async def setup(tree: app_commands.CommandTree, bot):
 
     @tree.command(
         name="ai-deny",
-        description="Empêche le bot IA de répondre dans ce salon (réservé aux admins)",
+        description="Empêche le bot IA de répondre dans ce salon",
     )
     @app_commands.check(is_bot_admin)
     async def ai_deny(interaction: discord.Interaction):
