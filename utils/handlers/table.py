@@ -152,10 +152,11 @@ def _render_table_image(headers: list[str], rows: list[list[str]], alignments: l
                 outline=colors["border"],
             )
             pilmoji.text(
-                (x + padding, (header_height - fonts["line_height"]) // 2),
+                (x + padding, header_height // 2),
                 h_text,
                 fill=colors["text"],
                 font=fonts["header"],
+                anchor="lm",
             )
             x += w + 1
 
@@ -166,14 +167,13 @@ def _render_table_image(headers: list[str], rows: list[list[str]], alignments: l
             for cell_lines, w, al in zip(content, col_widths, alignments):
                 draw.rectangle([x, y, x + w, y + h_row], fill=bg, outline=colors["border"])
                 for line_idx, line in enumerate(cell_lines):
+                    line_y = y + padding // 2 + line_idx * fonts["line_height"] + fonts["line_height"] // 2
                     pilmoji.text(
-                        (
-                            x + padding,
-                            y + padding // 2 + line_idx * fonts["line_height"],
-                        ),
+                        (x + padding, line_y),
                         line,
                         fill=colors["text"],
                         font=fonts["reg"],
+                        anchor="lm",
                     )
                 x += w + 1
             y += h_row + 1
