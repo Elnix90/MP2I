@@ -1,6 +1,7 @@
 """Helpers for sending long or formatted Discord messages."""
 
 import re
+from typing import cast
 
 import discord
 
@@ -24,8 +25,13 @@ class MessageSender:
         self.max_length = max_length
 
     def _get_target_channel(self) -> discord.abc.Messageable:
-        if self.bot and hasattr(self.channel, "id"):
-            return self.bot.get_channel(self.channel.id) or self.channel
+        if self.bot:
+            channel_id = getattr(self.channel, "id", None)
+            if isinstance(channel_id, int):
+                return cast(
+                    discord.abc.Messageable,
+                    self.bot.get_channel(channel_id) or self.channel,
+                )
         return self.channel
 
     async def send_text_chunks(self, text: str) -> discord.Message | None:
