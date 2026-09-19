@@ -7,11 +7,8 @@ from enum import Enum
 from pathlib import Path
 
 from config.ai_conf import load_ai_config
-from config.logging_conf import (
-    LoggingConfig,
-    _normalize_webhook_url,
-    load_logging_config,
-)
+from config.logging_conf import (LoggingConfig, _normalize_webhook_url,
+                                 load_logging_config)
 from config.perms_conf import load_perms_config
 
 _ENV_FILE = Path(".env")

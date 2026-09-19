@@ -34,7 +34,7 @@
 | `/model` | Change le modèle d'IA que le bot utilise |
 | `/ping` | Check bot latency and responsiveness |
 | `/restart` | Redémarre le bot (réservé aux admins) |
-| `/self-update` | Automatiquement met à jour le bot depuis son serveur distant |
+| `/self-update` | Met à jour le bot depuis le dépôt distant |
 
 <!-- COMMANDS-END -->
 
@@ -97,7 +97,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 .
 ├── assets
 │   └── images
-│       └── MPI2-server-icon.png
+│       └── bot_profile_picture.png
 ├── bot.py
 ├── cmds
 │   ├── ai_channel.py
@@ -117,16 +117,19 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── ai_conf.py
 │   ├── logging_config.json5
 │   ├── logging_conf.py
-│   └── prompts
-│       └── system.md
+│   ├── perms_conf.py
+│   ├── perms.json5
+│   ├── prompts
+│   │   └── system.md
+│   └── statuses.json5
 ├── core
 │   ├── ai.py
 │   ├── colle.py
 │   ├── config.py
 │   ├── exec_shell_command.py
 │   ├── get_first_group_role.py
-│   ├── is_admin.py
 │   ├── motiver_colle.py
+│   ├── perms.py
 │   └── roles_ids.py
 ├── db
 │   ├── colloscope.db
@@ -164,7 +167,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-13 directories, 56 files
+13 directories, 59 files
 ```
 <!-- TREE-END -->
 

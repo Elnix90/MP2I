@@ -9,13 +9,9 @@ import time
 import discord
 from discord import app_commands
 
-from cmds._shared import (
-    defer_interaction,
-    log_command_end,
-    log_command_error,
-    log_command_start,
-    send_interaction,
-)
+from cmds._shared import (defer_interaction, log_command_end,
+                          log_command_error, log_command_start,
+                          send_interaction)
 from core.exec_shell_command import exec_shell_command
 from core.perms import is_bot_admin
 from utils.logger import get_logger

@@ -65,7 +65,7 @@ class MP2IBot(discord.Client):
         if isinstance(status, dict):
             name = status["name"]
             if status.get("emoji"):
-                name = f'{status["emoji"]} {name}'
+                name = f"{status['emoji']} {name}"
         else:
             name = status
         activity = discord.CustomActivity(name=name)
