@@ -1,9 +1,7 @@
 """Helpers for sending Discord code blocks."""
 
 
-async def send_code_block_with_return(
-    channel, code_block: str, max_length: int = 2000, bot=None
-):
+async def send_code_block_with_return(channel, code_block: str, max_length: int = 2000, bot=None):
     """Send a code block, splitting it when it exceeds Discord limits.
 
     Parameters

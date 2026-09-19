@@ -4,13 +4,12 @@ import re
 
 import discord
 
-from utils.logger import get_logger
-
-logger = get_logger()
-
 from utils.handlers.codeblock import send_code_block_with_return
 from utils.handlers.latex import LATEX_TO_EMOJI, detect_latex
 from utils.handlers.table import TABLE_IMAGE_PLACEHOLDER, detect_and_convert_tables
+from utils.logger import get_logger
+
+logger = get_logger()
 
 
 class MessageSender:
@@ -186,9 +185,7 @@ class MessageSender:
             last_message = await self.send_text_chunks(current_text)
         return last_message
 
-    async def process_and_send(
-        self, response: str
-    ) -> tuple[discord.Message | None, list[dict]]:
+    async def process_and_send(self, response: str) -> tuple[discord.Message | None, list[dict]]:
         """Process a response and send text, tables and code blocks.
 
         Parameters
@@ -226,9 +223,7 @@ class MessageSender:
                     last_message = await self.send_text_with_latex(part)
             elif part.startswith("```") and part.endswith("```"):
                 if TABLE_IMAGE_PLACEHOLDER not in part:
-                    last_message = await send_code_block_with_return(
-                        target, part, self.max_length, bot=self.bot
-                    )
+                    last_message = await send_code_block_with_return(target, part, self.max_length, bot=self.bot)
             else:
                 last_message = await self.send_text_with_latex(part)
         return last_message, table_data
