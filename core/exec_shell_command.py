@@ -20,8 +20,8 @@ async def exec_shell_command(cmd: str, timeout: float = DEFAULT_TIMEOUT) -> str:
     str
         Combined standard output and standard error, or a message if the
         command timed out or produced no output.
-    """
 
+    """
     process = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,

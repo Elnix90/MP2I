@@ -19,7 +19,7 @@ class AIConfig:
 
 def load_ai_config(file: Path | None = None) -> AIConfig:
     path = file or Path("config/ai_config.json5")
-    with open(path, "r") as f:
+    with open(path) as f:
         raw = json5.load(f)
 
     ai_raw = raw.get("ai", raw)

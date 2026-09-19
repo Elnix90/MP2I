@@ -14,7 +14,7 @@ def update_readme(commands):
         print("README.md not found")
         return
 
-    with open(readme_path, "r", encoding="utf-8") as f:
+    with open(readme_path, encoding="utf-8") as f:
         content = f.read()
 
     commands_table = "| Command | Description |\n| :--- | :--- |\n"

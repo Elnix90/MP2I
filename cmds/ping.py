@@ -24,6 +24,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         Command tree to register the command on.
     bot : Any
         Bot instance used to read gateway latency.
+
     """
 
     @tree.command(name="ping", description="Check bot latency and responsiveness")
@@ -34,8 +35,8 @@ async def setup(tree: app_commands.CommandTree, bot):
         ----------
         interaction : discord.Interaction
             The interaction that triggered the command.
-        """
 
+        """
         start_time = time.perf_counter()
         log_command_start(logger, "ping", interaction)
 
@@ -47,7 +48,11 @@ async def setup(tree: app_commands.CommandTree, bot):
                 color=discord.Color.blurple(),
                 description="Bot is responsive.",
             )
-            embed.add_field(name="Gateway Latency", value=f"{gateway_ms} ms", inline=True)
+            embed.add_field(
+                name="Gateway Latency",
+                value=f"{gateway_ms} ms",
+                inline=True,
+            )
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -55,6 +60,12 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "ping", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message("Error while checking latency.", ephemeral=True)
+                await interaction.response.send_message(
+                    "Error while checking latency.",
+                    ephemeral=True,
+                )
             else:
-                await interaction.followup.send("Error while checking latency.", ephemeral=True)
+                await interaction.followup.send(
+                    "Error while checking latency.",
+                    ephemeral=True,
+                )

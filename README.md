@@ -31,6 +31,7 @@
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur |
 | `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins) |
 | `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul |
+| `/model` | Change le modèle d'IA que le bot utilise |
 | `/ping` | Check bot latency and responsiveness |
 | `/restart` | Redémarre le bot (réservé aux admins) |
 | `/self-update` | Automatiquement met à jour le bot depuis son serveur distant |
@@ -71,7 +72,6 @@
 ```env
 BOT_TOKEN=
 GUILD_ID=
-BOT_ID=
 WEBHOOK_URL=
 AI_API_KEY=
 ```
@@ -106,12 +106,19 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── get_to_work.py
 │   ├── __init__.py
 │   ├── loader.py
+│   ├── model.py
 │   ├── ping.py
 │   ├── _registry.py
 │   ├── restart.py
 │   ├── self_update.py
 │   └── _shared.py
-├── config.toml
+├── config
+│   ├── ai_config.json5
+│   ├── ai_conf.py
+│   ├── logging_config.json5
+│   ├── logging_conf.py
+│   └── prompts
+│       └── system.md
 ├── core
 │   ├── ai.py
 │   ├── colle.py
@@ -152,12 +159,12 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── lint.sh
 │   ├── strip_metadata.sh
 │   └── tree.py
-└── utils
-    ├── console.py
-    ├── handlers
-    └── logger.py
+├── utils
+│   ├── console.py
+│   └── logger.py
+└── uv.lock
 
-12 directories, 50 files
+13 directories, 56 files
 ```
 <!-- TREE-END -->
 
@@ -171,7 +178,8 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 - `python-dotenv` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
 - `colorama` - Cross-platform colored terminal text. (latest: 0.4.6)
 - `requests` - Python HTTP for Humans. (latest: 2.34.2)
-- `openai` - The official Python library for the openai API (latest: 3.15.0)
+- `openai` - The official Python library for the openai API (latest: 3.16.2)
+- `json5` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
 ```
 <!--DEPS-END-->
 

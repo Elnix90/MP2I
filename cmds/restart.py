@@ -28,12 +28,12 @@ async def setup(tree: app_commands.CommandTree, bot):
         Command tree to register the command on.
     bot : Any
         Bot instance passed to command modules' setup functions.
+
     """
 
     @tree.command(name="restart", description="Redémarre le bot (réservé aux admins)")
     async def restart(interaction: discord.Interaction):
         """Acknowledge the request, then stop the bot so it restarts."""
-
         start_time = time.perf_counter()
         log_command_start(logger, "restart", interaction)
 
@@ -55,6 +55,12 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "restart", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message("Error while restarting.", ephemeral=True)
+                await interaction.response.send_message(
+                    "Error while restarting.",
+                    ephemeral=True,
+                )
             else:
-                await interaction.followup.send("Error while restarting.", ephemeral=True)
+                await interaction.followup.send(
+                    "Error while restarting.",
+                    ephemeral=True,
+                )

@@ -24,7 +24,11 @@ intents.message_content = True
 intents.members = True
 
 
-async def send_text_chunks(channel: discord.abc.Messageable, text: str, max_length: int = 2000) -> None:
+async def send_text_chunks(
+    channel: discord.abc.Messageable,
+    text: str,
+    max_length: int = 2000,
+) -> None:
     """Send `text` to `channel`, splitting it into Discord-sized chunks."""
     current = ""
     for line in text.splitlines():
@@ -77,7 +81,7 @@ class MP2IBot(discord.Client):
         try:
             if not self._commands_sync_state_path.exists():
                 return None
-            with open(self._commands_sync_state_path, "r", encoding="utf-8") as f:
+            with open(self._commands_sync_state_path, encoding="utf-8") as f:
                 payload = json.load(f)
             return payload.get("fingerprint")
         except Exception:
@@ -143,7 +147,7 @@ class MP2IBot(discord.Client):
             or message.author.bot
             or not cfg.AI_ENABLED
             or not is_allowed_channel(message.channel.id)
-            or not self.user.mention in message.content  # pyright: ignore[reportOptionalMemberAccess]
+            or self.user.mention not in message.content  # pyright: ignore[reportOptionalMemberAccess]
             or not cfg.AI_API_KEY
             or not cfg.AI_SYSTEM_PROMPT
             or not cfg.AI_API_URL

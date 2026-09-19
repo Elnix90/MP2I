@@ -26,15 +26,17 @@ MAX_OUTPUT_LEN = 1900
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    """
-    Execs the given shell command in the server the bot is hosted in
-    """
+    """Execs the given shell command in the server the bot is hosted in"""
 
     @tree.command(
         name="exec",
         description="Execute la commande SH donnée en argument sur le server ou le bot est host. (réservé aux admins)",
     )
-    async def exec(interaction: discord.Interaction, command: str, ephemeral: bool = True):
+    async def exec(
+        interaction: discord.Interaction,
+        command: str,
+        ephemeral: bool = True,
+    ):
         start_time = time.perf_counter()
         log_command_start(logger, "exec", interaction)
 
@@ -61,6 +63,8 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "exec", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message("Error while executing the command.")
+                await interaction.response.send_message(
+                    "Error while executing the command.",
+                )
             else:
                 await interaction.followup.send("Error while executing the command.")

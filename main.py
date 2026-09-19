@@ -35,6 +35,6 @@ if __name__ == "__main__":
         print("\n")  # New line for cleaner exit
         logger.info("Arrêt demandé par l'utilisateur (Ctrl+C).")
         sys.exit(0)
-    except Exception as e:
-        logger.error("Erreur fatale: %s", e, exc_info=True)
+    except Exception:
+        logger.exception("Erreur fatale")
         sys.exit(1)

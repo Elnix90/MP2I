@@ -27,11 +27,17 @@ async def _update_channel(interaction: discord.Interaction, *, allow: bool):
 
         channel = interaction.channel
         if channel is None:
-            return await interaction.response.send_message("Cette commande doit être utilisée dans un salon.", ephemeral=True)
+            return await interaction.response.send_message(
+                "Cette commande doit être utilisée dans un salon.",
+                ephemeral=True,
+            )
 
         channels = load_allowed_channels()
         if allow and channel.id in channels:
-            return await interaction.followup.send(f"Le bot répond déjà dans <#{channel.id}>.", ephemeral=True)
+            return await interaction.followup.send(
+                f"Le bot répond déjà dans <#{channel.id}>.",
+                ephemeral=True,
+            )
         if not allow and channel.id not in channels:
             return await interaction.followup.send(
                 f"Le bot ne répondait déjà pas dans <#{channel.id}>.",
@@ -41,19 +47,29 @@ async def _update_channel(interaction: discord.Interaction, *, allow: bool):
         if allow:
             channels.append(channel.id)
             save_allowed_channels(channels)
-            await interaction.response.send_message(f"Le bot répondra maintenant dans <#{channel.id}>.")
+            await interaction.response.send_message(
+                f"Le bot répondra maintenant dans <#{channel.id}>.",
+            )
         else:
             channels.remove(channel.id)
             save_allowed_channels(channels)
-            await interaction.response.send_message(f"Le bot ne répondra plus dans <#{channel.id}>.")
+            await interaction.response.send_message(
+                f"Le bot ne répondra plus dans <#{channel.id}>.",
+            )
 
         log_command_end(logger, command_name, start_time)
     except Exception as exc:
         log_command_error(logger, command_name, exc)
         if not interaction.response.is_done():
-            await interaction.response.send_message(f"Error while running /{command_name}.", ephemeral=True)
+            await interaction.response.send_message(
+                f"Error while running /{command_name}.",
+                ephemeral=True,
+            )
         else:
-            await interaction.followup.send(f"Error while running /{command_name}.", ephemeral=True)
+            await interaction.followup.send(
+                f"Error while running /{command_name}.",
+                ephemeral=True,
+            )
 
 
 async def setup(tree: app_commands.CommandTree, bot):

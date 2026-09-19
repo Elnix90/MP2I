@@ -48,7 +48,7 @@ def main() -> None:
             CREATE INDEX idx_planning_colleur ON PLANNING(colleur_id);
             CREATE INDEX idx_planning_matiere ON PLANNING(matiere_id);
             CREATE INDEX idx_planning_groupe  ON PLANNING(groupe);
-            """
+            """,
         )
 
         for colleur_id, colleur_name in COLLEURS.items():

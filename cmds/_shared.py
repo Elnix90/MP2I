@@ -21,6 +21,7 @@ def interaction_context(interaction: Any) -> str:
     -------
     str
         Human-readable context including user, guild and channel.
+
     """
     guild_name = interaction.guild.name if interaction.guild is not None else "DM"
     channel_name = getattr(interaction.channel, "name", None)
@@ -31,7 +32,12 @@ def interaction_context(interaction: Any) -> str:
     return f"user={interaction.user} (id={interaction.user.id}), guild={guild_name}, channel={channel_name}"
 
 
-def log_command_start(logger: Any, command_name: str, interaction: Any, **extra) -> None:
+def log_command_start(
+    logger: Any,
+    command_name: str,
+    interaction: Any,
+    **extra,
+) -> None:
     """Log the start of a command invocation.
 
     Parameters
@@ -44,6 +50,7 @@ def log_command_start(logger: Any, command_name: str, interaction: Any, **extra)
         The Discord interaction that triggered the command.
     **extra : dict
         Optional additional context to include in the log.
+
     """
     details = interaction_context(interaction)
     if extra:
@@ -51,7 +58,12 @@ def log_command_start(logger: Any, command_name: str, interaction: Any, **extra)
     logger.info("Command /%s invoked (%s)", command_name, details)
 
 
-def log_command_end(logger: Any, command_name: str, start_time: float, status: str = "ok") -> None:
+def log_command_end(
+    logger: Any,
+    command_name: str,
+    start_time: float,
+    status: str = "ok",
+) -> None:
     """Log the end of a command and its duration.
 
     Parameters
@@ -64,6 +76,7 @@ def log_command_end(logger: Any, command_name: str, start_time: float, status: s
         Perf-counter timestamp when the command started.
     status : str
         Optional status string to include in the log (default: "ok").
+
     """
     duration = time.perf_counter() - start_time
     logger.info("Command /%s completed in %.2fs (%s)", command_name, duration, status)
@@ -80,8 +93,9 @@ def log_command_error(logger: Any, command_name: str, exc: Exception) -> None:
         Name of the command where the error occurred.
     exc : Exception
         The exception instance caught.
+
     """
-    logger.error("Error in /%s: %s", command_name, exc, exc_info=True)
+    logger.exception("Error in /%s: %s", command_name, exc)
 
 
 async def defer_interaction(interaction: Any) -> bool:
@@ -100,6 +114,7 @@ async def defer_interaction(interaction: Any) -> bool:
     bool
         True if the call deferred the response, False if the response was
         already done.
+
     """
     if interaction.response.is_done():
         return False
@@ -139,6 +154,7 @@ async def send_interaction(
     -------
     Any
         The message object returned by the Discord API.
+
     """
     kwargs = {}
     if content is not None:

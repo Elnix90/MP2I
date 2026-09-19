@@ -1,5 +1,4 @@
-"""
-A dictionry that associate a group number to a discord role id.
+"""A dictionry that associate a group number to a discord role id.
 
 The bot uses them to determinate the group in which the user that requests the command is.
 """

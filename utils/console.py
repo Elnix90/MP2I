@@ -59,6 +59,7 @@ class Console:
         Background stdin reader used in line mode.
     _closing : bool
         True once the console has been shut down.
+
     """
 
     def __init__(self) -> None:
@@ -83,6 +84,7 @@ class Console:
         -------
         Any
             The bot client, or None when none was provided.
+
         """
         return self._client
 
@@ -99,6 +101,7 @@ class Console:
             Running event loop used to schedule stdin reads.
         client : Any
             Bot client to expose to console commands (default: None).
+
         """
         if self._enabled or self._closing:
             return
@@ -129,6 +132,7 @@ class Console:
         Returns
         -------
         None
+
         """
         self._closing = True
         try:
@@ -154,6 +158,7 @@ class Console:
         ----------
         message : str
             Pre-formatted log entry to display.
+
         """
         if not self._tui:
             self._write(message + _LF)
@@ -172,6 +177,7 @@ class Console:
         ----------
         message : str
             Message to display.
+
         """
         self.print_log(message)
 
@@ -393,5 +399,6 @@ def get_console() -> Console:
     -------
     Console
         The global console singleton.
+
     """
     return _console

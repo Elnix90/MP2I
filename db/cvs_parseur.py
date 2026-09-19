@@ -1,6 +1,4 @@
-"""
-csv parseur
-"""
+"""csv parseur"""
 
 from db.init.rows import ROWS
 
@@ -57,9 +55,11 @@ def csv_parse(name: str) -> list[tuple[int, int, int, int, str, dict]]:
         + [
             {
                 k + 1: int(l_lignes[i].split(",")[5 : len(l_lignes[i].split(","))][k])
-                for k in range(len(l_lignes[i].split(",")[5 : len(l_lignes[i].split(","))]))
+                for k in range(
+                    len(l_lignes[i].split(",")[5 : len(l_lignes[i].split(","))]),
+                )
                 if l_lignes[i].split(",")[5 : len(l_lignes[i].split(","))][k] != ""
-            }
+            },
         ]
         for i in range(n)
         if l_lignes[i] != ",,,,,,,,,,,,,,,,,,,"

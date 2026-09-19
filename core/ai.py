@@ -21,7 +21,7 @@ def load_allowed_channels() -> list[int]:
     if not AI_STATE_PATH.exists():
         return list(cfg.AI_ALLOWED_CHANNELS)
     try:
-        with open(AI_STATE_PATH, "r", encoding="utf-8") as f:
+        with open(AI_STATE_PATH, encoding="utf-8") as f:
             payload = json.load(f)
         return [int(c) for c in payload.get("allowed_channels", [])]
     except Exception:

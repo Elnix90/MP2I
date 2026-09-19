@@ -29,6 +29,7 @@ class BotFilter(logging.Filter):
         -------
         bool
             True when the record belongs to the MP2I logger.
+
         """
         return record.name == LOGGER_NAME
 
@@ -56,6 +57,7 @@ class ColoredFormatter(logging.Formatter):
         -------
         str
             Colored formatted string.
+
         """
         color = self.COLORS.get(record.levelno, "")
         message = super().format(record)
@@ -79,6 +81,7 @@ class ConsoleHandler(Handler):
             Interactive console instance used to render records.
         level : int
             Logging level threshold (default: logging.NOTSET).
+
         """
         super().__init__(level)
         self._console = console
@@ -90,6 +93,7 @@ class ConsoleHandler(Handler):
         ----------
         record : logging.LogRecord
             Log record to render.
+
         """
         try:
             message = self.format(record)
@@ -123,6 +127,7 @@ class DiscordAnsiFormatter(logging.Formatter):
         -------
         str
             ANSI wrapped code block string.
+
         """
         message = super().format(record)
         color = self.LEVEL_COLORS.get(record.levelno, "\x1b[37m")
@@ -141,6 +146,7 @@ class DiscordWebhookHandler(Handler):
             Discord webhook URL.
         level : int
             Logging level threshold (default: logging.INFO).
+
         """
         super().__init__(level)
         self.webhook_url = webhook_url
@@ -158,6 +164,7 @@ class DiscordWebhookHandler(Handler):
         -------
         int
             Discord color integer.
+
         """
         palette = {
             logging.DEBUG: 0x3498DB,
@@ -180,6 +187,7 @@ class DiscordWebhookHandler(Handler):
         -------
         dict
             Discord webhook payload.
+
         """
         message = self.format(record)
         payload = {
@@ -205,6 +213,7 @@ class DiscordWebhookHandler(Handler):
         -------
         list[str]
             List of message chunks.
+
         """
         if len(message) <= limit:
             return [message]
@@ -228,6 +237,7 @@ class DiscordWebhookHandler(Handler):
         ----------
         record : logging.LogRecord
             Log record to send.
+
         """
         try:
             import requests
@@ -240,7 +250,9 @@ class DiscordWebhookHandler(Handler):
                 chunk_payload = dict(payload)
                 chunk_payload["content"] = chunk
                 if len(chunks) > 1:
-                    chunk_payload["content"] = f"{chunk_payload['content']}\n\n[{index}/{len(chunks)}]"
+                    chunk_payload["content"] = (
+                        f"{chunk_payload['content']}\n\n[{index}/{len(chunks)}]"
+                    )
 
                 for attempt in range(3):
                     response = requests.post(
@@ -294,6 +306,7 @@ def _is_real_webhook_url(url: str | None) -> bool:
     -------
     bool
         True when the URL is non-empty and not a placeholder.
+
     """
     return bool(url) and "<URL>" not in url
 
@@ -307,6 +320,7 @@ def setup_logging(level: int, config: LoggingConfig):
         Root logging level (default: logging.INFO).
     config : Any
         Optional configuration object with logging settings. Default is None.
+
     """
     console_format = config.console_format
     file_format = config.file_format
@@ -315,7 +329,11 @@ def setup_logging(level: int, config: LoggingConfig):
     handlers = []
 
     # stream handler (interactive console when a TTY is available)
-    if config is None or getattr(config, "console", None) is None or getattr(config.console, "enable", True):
+    if (
+        config is None
+        or getattr(config, "console", None) is None
+        or getattr(config.console, "enable", True)
+    ):
         # Deferred import to avoid a circular dependency between
         # utils.logger (imports the console renderer) and utils.console
         # (imports utils.logger).
@@ -338,7 +356,11 @@ def setup_logging(level: int, config: LoggingConfig):
 
     webhook = config.discord_webhook
     # optional discord webhook
-    if webhook is not None and config.discord.enable_discord_logging and _is_real_webhook_url(webhook):
+    if (
+        webhook is not None
+        and config.discord.enable_discord_logging
+        and _is_real_webhook_url(webhook)
+    ):
         try:
             dh = DiscordWebhookHandler(webhook)
             dh.setFormatter(DiscordAnsiFormatter(discord_format))
@@ -368,5 +390,6 @@ def get_logger() -> logging.Logger:
     -------
     logging.Logger
         Logger configured for bot output.
+
     """
     return logging.getLogger(LOGGER_NAME)

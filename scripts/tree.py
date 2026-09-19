@@ -16,10 +16,17 @@ if GITIGNORE.exists():
 pattern = "|".join(excludes) or ".git"
 
 if subprocess.run(["which", "tree"], capture_output=True, check=True).returncode != 0:
-    print("'tree' not installed. Install with: apt-get install tree / brew install tree")
+    print(
+        "'tree' not installed. Install with: apt-get install tree / brew install tree",
+    )
     sys.exit(0)
 
-tree_output = subprocess.run(["tree", "-a", "-I", pattern], capture_output=True, text=True, check=True).stdout
+tree_output = subprocess.run(
+    ["tree", "-a", "-I", pattern],
+    capture_output=True,
+    text=True,
+    check=True,
+).stdout
 
 if not README.exists():
     sys.exit(0)

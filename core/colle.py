@@ -1,5 +1,12 @@
 class Colle:
-    def __init__(self, colleur_name: str, matiere: str, jour: str, creneau: str, salle: str) -> None:
+    def __init__(
+        self,
+        colleur_name: str,
+        matiere: str,
+        jour: str,
+        creneau: str,
+        salle: str,
+    ) -> None:
         self.colleur_name = colleur_name
         self.matiere = matiere
         self.jour = jour

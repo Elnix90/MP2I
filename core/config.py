@@ -23,7 +23,9 @@ class Env(Enum):
     PROD = True
     LOCAL = False
 
+
 ENV = Env.LOCAL
+
 
 def _load_env_files() -> None:
     """Load the environment file matching the running mode."""
@@ -38,7 +40,10 @@ try:
 
     _load_env_files()
 except Exception:
-    print("Warning: python-dotenv not installed, environment variables from .env files will not be loaded.")
+    print(
+        "Warning: python-dotenv not installed, environment variables from .env files will not be loaded.",
+    )
+
 
 @dataclass
 class Config:

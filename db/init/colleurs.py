@@ -1,6 +1,4 @@
-"""
-The names of the colleurs, associated by id, to easily add some
-"""
+"""The names of the colleurs, associated by id, to easily add some"""
 
 COLLEURS = {
     0: "Vinsu",
