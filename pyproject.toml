@@ -8,10 +8,47 @@ authors = [
     { name = "Elnix90", email = "elnix9@proton.me" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "discord.py>=2.3.0",
+    "python-dotenv>=1.0.0",
+    "colorama>=0.4.6",
+    "requests>=2.31.0",
+    "openai>=1.30.0",
+    "json5>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.9.0",
+    "pre-commit>=4.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "bot"]
+
+[tool.setuptools.packages.find]
+exclude = ["assets*", "data*", "scripts*"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.0",
+    "pre-commit>=4.0.0",
+]
 
 [tool.ruff.lint]
 ignore = ["BLE001", "S110"]
+select = ["ALL"]
 
-[tool.ruff]
-line-length = 200
+[tool.ruff.lint.per-file-ignores]
+"scripts/**/*.py" = ["INP001"]
+"**/__init__.py" = ["I001"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

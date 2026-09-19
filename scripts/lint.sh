@@ -2,46 +2,48 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# 1. Format code (run only if available)
+# 1. Format & lint
 # ---------------------------------------------------------------------------
-echo "Running formatters if available..."
-if command -v ruff >/dev/null 2>&1; then
-    echo "1️⃣  Running ruff format..."
-    ruff format . || true
-else
-    echo " ⛔ Skipping ruff (not installed)"
-    echo "Install it with `uv tool install ruff`"
-fi
+echo "Running formatters and linter..."
+uv run ruff format . || true
+uv run ruff check --fix . || true
+
 if command -v isort >/dev/null 2>&1; then
-    echo "2️⃣  Running isort..."
-    isort **/*.py || true
+    echo "Running isort..."
+    uv run isort **/*.py || true
 else
-    echo " ⛔ Skipping isort (not installed)"
-    echo "Install it with `uv tool install isort`"
+    echo "⛔ Skipping isort (not installed)"
 fi
+
 if command -v removestar >/dev/null 2>&1; then
-    echo "3️⃣  Running removestar..."
-    removestar . || true
+    echo "Running removestar..."
+    uv run removestar . || true
 else
-    echo " ⛔ Skipping removestar (not installed)"
-    echo "Install it with `uv tool install removestar`"
+    echo "⛔ Skipping removestar (not installed)"
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Project tree → stdout + README (between <!-- TREE-START --> / <!-- TREE-END -->)
+# 2. Project tree → README
 # ---------------------------------------------------------------------------
-python3 scripts/tree.py
+echo "Updating project tree in README..."
+uv run python3 scripts/tree.py
+
 # ---------------------------------------------------------------------------
-# 3. PyPI dependencies → README (between <!--DEPS-START--> / <!--DEPS-END-->)
+# 3. PyPI dependencies → README
 # ---------------------------------------------------------------------------
-python3 scripts/deps.py
+echo "Updating dependencies in README..."
+uv run python3 scripts/deps.py
+
 # ---------------------------------------------------------------------------
-# 4. Env var names → README (between <!--ENV-START--> / <!--ENV-END-->)
+# 4. Env var names → README
 # ---------------------------------------------------------------------------
-python3 scripts/env.py
+echo "Updating env vars in README..."
+uv run python3 scripts/env.py
+
 # ---------------------------------------------------------------------------
-# 5. Command documentation → README (between <!-- COMMANDS-START --> / <!-- COMMANDS-END -->)
+# 5. Command documentation → README
 # ---------------------------------------------------------------------------
-python3 scripts/gen_cmds.py
+echo "Updating commands in README..."
+uv run python3 scripts/gen_cmds.py
 
 echo "✅ All updates completed!"
