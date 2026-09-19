@@ -13,20 +13,6 @@ logger = get_logger()
 
 
 def _build_tesseract_config(psm: int | None, oem: int | None) -> str:
-    """Build a Tesseract command-line config string.
-
-    Parameters
-    ----------
-    psm : int | None
-        Page segmentation mode value.
-    oem : int | None
-        OCR engine mode value.
-
-    Returns
-    -------
-    str
-        Combined Tesseract config string.
-    """
     parts = []
     if psm is not None:
         parts.append(f"--psm {psm}")
@@ -35,30 +21,7 @@ def _build_tesseract_config(psm: int | None, oem: int | None) -> str:
     return " ".join(parts)
 
 
-def _load_image_bytes(
-    image_path: str | None, image_url: str | None, image_base64: str | None
-) -> bytes:
-    """Load raw image bytes from a path, URL or base64 payload.
-
-    Parameters
-    ----------
-    image_path : str | None
-        Local filesystem path.
-    image_url : str | None
-        Remote URL to fetch.
-    image_base64 : str | None
-        Base64-encoded image payload.
-
-    Returns
-    -------
-    bytes
-        Raw image bytes.
-
-    Raises
-    ------
-    ValueError
-        If none of the image sources are provided.
-    """
+def _load_image_bytes(image_path: str | None, image_url: str | None, image_base64: str | None) -> bytes:
     if image_path:
         with open(image_path, "rb") as f:
             return f.read()
@@ -82,28 +45,6 @@ async def image_ocr(
     psm: int | None = None,
     oem: int | None = None,
 ) -> str:
-    """Extract text from image with Tesseract OCR.
-
-    Parameters
-    ----------
-    image_path : str
-        Local image path to read (default: '').
-    image_url : str
-        Image URL to fetch (default: '').
-    image_base64 : str
-        Base64 image payload (default: '').
-    lang : str
-        Tesseract language code (default: 'eng').
-    psm : int | None
-        Page segmentation mode (default: None).
-    oem : int | None
-        OCR engine mode (default: None).
-
-    Returns
-    -------
-    str
-        Detected text or an error message.
-    """
     try:
         raw = _load_image_bytes(image_path, image_url, image_base64)
         image = Image.open(io.BytesIO(raw))
@@ -118,9 +59,7 @@ async def image_ocr(
         return cleaned
     except pytesseract.TesseractNotFoundError:
         logger.error("Tesseract binary not found")
-        return (
-            "Error: Tesseract OCR is not installed on host (install `tesseract-ocr`)."
-        )
+        return "Error: Tesseract OCR is not installed on host (install `tesseract-ocr`)."
     except Exception as exc:
         logger.error("image_ocr failed: %s", exc)
         return f"Error: {exc!s}"

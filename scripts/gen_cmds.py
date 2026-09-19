@@ -16,7 +16,6 @@ PERM_LABELS = {
 
 
 def load_permissions() -> dict[str, str]:
-    """Load the per-command permission groups from config/perms.json5."""
     perms_path = Path("config/perms.json5")
     if not perms_path.exists():
         return {}

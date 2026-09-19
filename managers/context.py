@@ -12,59 +12,11 @@ logger = get_logger()
 
 
 async def get_server_context(guild: discord.Guild) -> dict:
-    """Gather context about the given Discord guild.
-
-    Parameters
-    ----------
-    guild : discord.Guild
-        Guild object to inspect.
-
-    Returns
-    -------
-    dict
-        A dictionary containing summarized server metadata suitable for
-        inclusion in prompts (name, member count, online members, roles).
-    """
-    if not guild.chunked and guild.member_count < 1000:
+    if not guild.chunked:
         try:
             await guild.chunk()
         except Exception:
             pass
 
-    online_members = [
-        m.display_name for m in guild.members if m.status != discord.Status.offline
-    ]
-
-    context = {
-        "server_name": guild.name,
-        "member_count": guild.member_count,
-        "online_members": online_members[:30],
-    }
+    context = {"server_name": guild.name, "member_count": guild.member_count}
     return context
-
-
-def format_context_for_prompt(context: dict) -> str:
-    """Convert the server context dict into a human-readable string.
-
-    Parameters
-    ----------
-    context : dict
-        Context dictionary returned by ``get_server_context``.
-
-    Returns
-    -------
-    str
-        Multi-line string summarizing the server for model prompts.
-    """
-    lines = [
-        f"Information about the current Discord server '{context['server_name']}':"
-    ]
-    if context.get("online_members"):
-        lines.append(
-            f"- Online members ({len(context['online_members'])}): "
-            f"{', '.join(context['online_members'])}"
-        )
-    else:
-        lines.append(f"- Total member count: {context['member_count']}")
-
-    return "\n".join(lines)

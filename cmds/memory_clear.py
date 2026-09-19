@@ -5,12 +5,7 @@ import time
 import discord
 
 from cmds._memory import interaction_scope
-from cmds._shared import (
-    defer_interaction,
-    log_command_end,
-    log_command_error,
-    log_command_start,
-)
+from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
 from utils.logger import get_logger
 
@@ -18,8 +13,6 @@ logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    """Register the ``memory-clear`` command."""
-
     @tree.command(
         name="memory-clear",
         description="Efface la mémoire de la conversation actuelle (admin)",

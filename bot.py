@@ -19,7 +19,7 @@ from core.ai.tools import get_combined_tools
 from core.config import cfg, perms_cfg
 from core.perms import is_blacklisted_user_id
 from db.settings_store import get_setting, set_setting
-from managers.context import format_context_for_prompt, get_server_context
+from managers.context import get_server_context
 from managers.mcp import mcp_manager
 from managers.memory import MemoryManager, make_scope_key
 from utils.console import get_console
@@ -47,7 +47,6 @@ class MP2IBot(discord.Client):
 
     @tasks.loop(minutes=1.0)
     async def status_task(self) -> None:
-        """Setup the game status task of the bot."""
         status = random.choice(self.statuses)
         if isinstance(status, dict):
             name = status["name"]
@@ -60,12 +59,10 @@ class MP2IBot(discord.Client):
 
     @status_task.before_loop
     async def before_status_task(self) -> None:
-        """Before starting the status changing task, we make sure the bot is ready."""
         await self.wait_until_ready()
 
     @staticmethod
     def _compute_commands_fingerprint(cmds_path: Path) -> str:
-        """Fingerprint command sources to avoid unnecessary global sync at startup."""
         hasher = hashlib.sha256()
         for py_file in sorted(cmds_path.glob("*.py")):
             if py_file.name.startswith("__"):
@@ -171,9 +168,7 @@ class MP2IBot(discord.Client):
                         make_scope_key(channel_id=channel.id),
                     )
                 else:  # thread mode -> start a thread conversation
-                    thread = await message.create_thread(
-                        name=self._thread_name(message.content)
-                    )
+                    thread = await message.create_thread(name=self._thread_name(message.content))
                     await self._process(
                         message,
                         thread,
@@ -190,21 +185,6 @@ class MP2IBot(discord.Client):
 
     @staticmethod
     def _flushable(buffer: str) -> bool:
-        """True when the stream buffer ends at a safe block boundary.
-
-        Prevents flushing in the middle of a code fence or a LaTeX fragment,
-        which would break block detection and rendering.
-
-        Parameters
-        ----------
-        buffer : str
-            Pending streamed content.
-
-        Returns
-        -------
-        bool
-            True when the buffer can be sent as-is.
-        """
         if buffer.count("```") % 2 != 0:
             return False
         for delimiter in ("$", r"\[", r"\]", r"\(", r"\)"):
@@ -214,7 +194,6 @@ class MP2IBot(discord.Client):
 
     @staticmethod
     def _thread_name(content: str, max_length: int = 100) -> str:
-        """Build a thread name from the message content."""
         topic = content.strip().replace("\n", " ")
         if len(topic) > max_length:
             topic = topic[:max_length].rstrip() + "…"
@@ -222,7 +201,6 @@ class MP2IBot(discord.Client):
 
     @staticmethod
     def _strip_mention(content: str, bot_user: discord.ClientUser) -> str:
-        """Remove the bot mention from the message content."""
         text = content
         text = text.replace(f"<@{bot_user.id}>", "").replace(f"<@!{bot_user.id}>", "")
         return text.strip()
@@ -233,11 +211,11 @@ class MP2IBot(discord.Client):
         channel: discord.abc.Messageable,
         scope: str,
     ) -> None:
-        """Answer a mention in `channel`, using the memory scope `scope`."""
         user = message.author
         server_ctx = await get_server_context(message.guild)
+        ctx_str = f"Information about the current Discord server '{server_ctx.get('server_name', '?')}':\n- Total member count: {server_ctx.get('member_count', 0)}"
         system_prompt = build_system_prompt(
-            format_context_for_prompt(server_ctx),
+            ctx_str,
             include_tools=True,
         )
 
@@ -246,9 +224,7 @@ class MP2IBot(discord.Client):
 
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(history)
-        messages.append(
-            {"role": "user", "content": f"[{user.display_name}]: {user_text}"}
-        )
+        messages.append({"role": "user", "content": f"[{user.display_name}]: {user_text}"})
 
         full_content = ""
         sender = MessageSender(channel, self)
@@ -277,9 +253,7 @@ class MP2IBot(discord.Client):
                         continue
                     full_content += delta
                     buffer += delta
-                    if ("\n\n" in buffer or len(buffer) > 1500) and self._flushable(
-                        buffer
-                    ):
+                    if ("\n\n" in buffer or len(buffer) > 1500) and self._flushable(buffer):
                         to_send = strip_tool_artifacts(buffer)
                         buffer = ""
                         if to_send.strip():

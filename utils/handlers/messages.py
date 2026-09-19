@@ -13,64 +13,22 @@ logger = get_logger()
 
 
 class MessageSender:
-    """Send text, LaTeX and table-rich responses to Discord channels.
-
-    Attributes
-    ----------
-    channel : discord.abc.Messageable
-        Target channel-like object used for sending messages.
-    bot : discord.Client | None
-        Optional bot instance used to resolve the live channel object.
-    max_length : int
-        Maximum number of characters per message chunk.
-    """
-
     def __init__(
         self,
         channel: discord.abc.Messageable,
         bot: discord.Client | None = None,
         max_length: int = 2000,
     ):
-        """Initialize a message sender.
-
-        Parameters
-        ----------
-        channel : discord.abc.Messageable
-            Channel-like object to send messages to.
-        bot : discord.Client | None
-            Optional bot instance used to resolve the current channel. Default is None.
-        max_length : int
-            Maximum message chunk size (default: 2000).
-        """
         self.channel = channel
         self.bot = bot
         self.max_length = max_length
 
     def _get_target_channel(self) -> discord.abc.Messageable:
-        """Return the most up-to-date channel object available.
-
-        Returns
-        -------
-        discord.abc.Messageable
-            Resolved channel object.
-        """
         if self.bot and hasattr(self.channel, "id"):
             return self.bot.get_channel(self.channel.id) or self.channel
         return self.channel
 
     async def send_text_chunks(self, text: str) -> discord.Message | None:
-        """Send plain text as one or more Discord messages.
-
-        Parameters
-        ----------
-        text : str
-            Text to send.
-
-        Returns
-        -------
-        discord.Message | None
-            Last message sent, or None if text was empty.
-        """
         if not text.strip():
             return None
         target = self._get_target_channel()
@@ -96,18 +54,6 @@ class MessageSender:
         return last_message
 
     async def send_latex_image(self, latex_match: str) -> discord.Message | None:
-        """Render and send a LaTeX expression as an image when possible.
-
-        Parameters
-        ----------
-        latex_match : str
-            Raw LaTeX text or match content.
-
-        Returns
-        -------
-        discord.Message | None
-            Message created by Discord, or None on failure.
-        """
         from utils.handlers.latex import convert_latex_to_png
 
         latex = self._clean_latex(latex_match)
@@ -122,18 +68,6 @@ class MessageSender:
         return await target.send(f"Failed to render LaTeX: {latex_display}")
 
     def _clean_latex(self, latex: str) -> str:
-        """Strip wrappers such as code fences and `$...$` from LaTeX text.
-
-        Parameters
-        ----------
-        latex : str
-            Raw LaTeX string.
-
-        Returns
-        -------
-        str
-            Cleaned LaTeX content.
-        """
         latex = latex.strip()
         if latex.startswith("```") and latex.endswith("```"):
             lines = latex.split("\n")
@@ -148,18 +82,6 @@ class MessageSender:
         return latex
 
     async def send_text_with_latex(self, text: str) -> discord.Message | None:
-        """Send text while converting LaTeX fragments to emoji or images.
-
-        Parameters
-        ----------
-        text : str
-            Text containing optional LaTeX fragments.
-
-        Returns
-        -------
-        discord.Message | None
-            Last Discord message sent, or None.
-        """
         matches = detect_latex(text)
         if not matches:
             return await self.send_text_chunks(text)
@@ -186,18 +108,6 @@ class MessageSender:
         return last_message
 
     async def process_and_send(self, response: str) -> tuple[discord.Message | None, list[dict]]:
-        """Process a response and send text, tables and code blocks.
-
-        Parameters
-        ----------
-        response : str
-            Full model response to send.
-
-        Returns
-        -------
-        tuple[discord.Message | None, list[dict]]
-            Last message sent and table metadata extracted from the response.
-        """
         response, table_images, table_data = detect_and_convert_tables(response)
         placeholder_escaped = re.escape(TABLE_IMAGE_PLACEHOLDER)
         pattern = re.compile(f"({placeholder_escaped}_\\d+__)|(```[\\s\\S]*?```)")

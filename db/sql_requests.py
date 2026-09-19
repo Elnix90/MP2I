@@ -30,7 +30,6 @@ JOURS = {index: jour.value for index, jour in enumerate(Jours)}
 
 
 def get_db_connection() -> sqlite3.Connection:
-    """Connect to the SQLite database. If the DB file does not exist, create it."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     logger.debug("[Get DB conn] Successfully connected")
@@ -38,7 +37,6 @@ def get_db_connection() -> sqlite3.Connection:
 
 
 def get_colles(groupe_id: int) -> list[Colle]:
-    """Fetch the DB and return a Colle class with the extracted data from the database"""
     cur = cfg.CUR
     if cur is None:
         logger.error("Failed to get colles: database cursor is not initialised")

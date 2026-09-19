@@ -72,11 +72,7 @@ async def _deny_channel(
             )
 
         removed = remove_channel(target.id)
-        message = (
-            f"Le bot n'interagira plus dans <#{target.id}>."
-            if removed
-            else f"Le bot n'était déjà pas configuré dans <#{target.id}>."
-        )
+        message = f"Le bot n'interagira plus dans <#{target.id}>." if removed else f"Le bot n'était déjà pas configuré dans <#{target.id}>."
         await interaction.response.send_message(message, ephemeral=True)
         log_command_end(logger, command_name, start_time)
     except Exception as exc:
@@ -105,9 +101,7 @@ async def _list_channels(interaction: discord.Interaction):
         if not modes:
             content = "Aucun salon configuré pour l'IA."
         else:
-            lines = [
-                f"`{channel_id}` → **{mode}**" for channel_id, mode in modes.items()
-            ]
+            lines = [f"`{channel_id}` → **{mode}**" for channel_id, mode in modes.items()]
             content = "Salons configurés pour l'IA :\n" + "\n".join(lines)
 
         await interaction.response.send_message(content, ephemeral=True)

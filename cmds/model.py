@@ -19,12 +19,9 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    """Register the ``model`` command on the given command tree."""
-
     @tree.command(name="model", description="Change le modèle d'IA que le bot utilise")
     @app_commands.check(is_bot_admin)
     async def model(interaction: discord.Interaction, model: str):
-        """Change the active AI model and persist the choice."""
         start_time = time.perf_counter()
         log_command_start(logger, "model", interaction)
 
@@ -42,6 +39,4 @@ async def setup(tree: app_commands.CommandTree, bot):
                     "Erreur : je n'ai pas réussi à changer de modèle",
                 )
             else:
-                await interaction.followup.send(
-                    "Erreur pendant le changement de modèle"
-                )
+                await interaction.followup.send("Erreur pendant le changement de modèle")

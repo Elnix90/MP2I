@@ -31,37 +31,6 @@ _CLEAR_SCREEN = "\x1b[2J\x1b[H"
 
 
 class Console:
-    """Read stdin asynchronously and keep input separated from log output.
-
-    Attributes
-    ----------
-    _loop : Optional[asyncio.AbstractEventLoop]
-        Event loop the console is attached to.
-    _client : Optional[Any]
-        Bot client exposed to console commands.
-    _started_at : Optional[float]
-        Monotonic timestamp of the console boot.
-    _enabled : bool
-        True once the console accepts input.
-    _tui : bool
-        True when the raw-mode bottom-bar interface is active.
-    _fd : int
-        File descriptor of stdin.
-    _saved_attrs : Any
-        Termios attributes restored on close.
-    _buffer : str
-        Currently typed line.
-    _esc : int
-        Base counter used to skip terminal escape sequences.
-    _pending : bytes
-        Partial UTF-8 bytes waiting for the next read.
-    _read_task : Optional[asyncio.Task]
-        Background stdin reader used in line mode.
-    _closing : bool
-        True once the console has been shut down.
-
-    """
-
     def __init__(self) -> None:
         self._loop: asyncio.AbstractEventLoop | None = None
         self._client: Any = None
@@ -78,14 +47,6 @@ class Console:
 
     @property
     def client(self) -> Any:
-        """Return the bot client attached to the console.
-
-        Returns
-        -------
-        Any
-            The bot client, or None when none was provided.
-
-        """
         return self._client
 
     # -------------------------------------------------------------
@@ -93,16 +54,6 @@ class Console:
     # -------------------------------------------------------------
 
     def attach(self, loop: asyncio.AbstractEventLoop, client: Any = None) -> None:
-        """Activate the interactive console on the given event loop.
-
-        Parameters
-        ----------
-        loop : asyncio.AbstractEventLoop
-            Running event loop used to schedule stdin reads.
-        client : Any
-            Bot client to expose to console commands (default: None).
-
-        """
         if self._enabled or self._closing:
             return
         self._loop = loop
@@ -127,13 +78,6 @@ class Console:
             logger.info("Console interactive active (mode ligne) - tapez 'help'.")
 
     async def aclose(self) -> None:
-        """Stop reading input, restore terminal settings and free the console.
-
-        Returns
-        -------
-        None
-
-        """
         self._closing = True
         try:
             if self._loop is not None and self._tui:
@@ -152,14 +96,6 @@ class Console:
         self._enabled = False
 
     def print_log(self, message: str) -> None:
-        """Write a log line while keeping the input bar pinned at the bottom.
-
-        Parameters
-        ----------
-        message : str
-            Pre-formatted log entry to display.
-
-        """
         if not self._tui:
             self._write(message + _LF)
             return
@@ -171,14 +107,6 @@ class Console:
         self._write(out)
 
     def say(self, message: str) -> None:
-        """Print an operator-facing message through the console renderer.
-
-        Parameters
-        ----------
-        message : str
-            Message to display.
-
-        """
         self.print_log(message)
 
     # -------------------------------------------------------------
@@ -273,7 +201,6 @@ class Console:
             self._dispatch(command)
 
     async def _read_loop(self) -> None:
-        """Fallback line-based reader used when raw mode is unavailable."""
         while not self._closing:
             line = (await asyncio.to_thread(sys.stdin.readline)).strip()
             if line:
@@ -393,12 +320,4 @@ _console = Console()
 
 
 def get_console() -> Console:
-    """Return the shared interactive console instance.
-
-    Returns
-    -------
-    Console
-        The global console singleton.
-
-    """
     return _console

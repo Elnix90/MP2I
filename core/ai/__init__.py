@@ -23,7 +23,6 @@ logger = get_logger()
 
 
 async def generate_answer(message: str) -> str:
-    """Legacy single-message helper: build messages and return plain text."""
     messages = [
         {"role": "system", "content": cfg.AI_SYSTEM_PROMPT},
         {"role": "user", "content": message},
