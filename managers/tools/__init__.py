@@ -92,7 +92,11 @@ class ToolsLoader:
             return f"Error: {exc!s}"
 
 
+_TOOLS_LOADER_INSTANCE: ToolsLoader | None = None
+
+
 def get_tools_loader(tools_dir: Path | str = DEFAULT_TOOLS_DIR) -> ToolsLoader:
-    if not hasattr(get_tools_loader, "_instance"):
-        get_tools_loader._instance = ToolsLoader(tools_dir)
-    return get_tools_loader._instance
+    global _TOOLS_LOADER_INSTANCE
+    if _TOOLS_LOADER_INSTANCE is None:
+        _TOOLS_LOADER_INSTANCE = ToolsLoader(tools_dir)
+    return _TOOLS_LOADER_INSTANCE
