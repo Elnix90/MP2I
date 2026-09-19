@@ -1,8 +1,10 @@
 """Logging helpers and Discord webhook handlers for the MP2I bot."""
 
+import glob
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 from logging import Handler
 from pathlib import Path
 
@@ -155,6 +157,42 @@ def _is_real_webhook_url(url: str | None) -> bool:
     return bool(url) and "<URL>" not in url
 
 
+def _rotate_log_files(filename_format: str) -> str:
+    """Rotate previous current-*.log and return the new log file path.
+
+    1. Find any existing ``current-*.log`` file and rename it by stripping
+       the ``current-`` prefix (e.g. ``current-19-09-2026-19:31:00.log``
+       becomes ``19-09-2026-19:31:00.log``).
+    2. Generate the new filename from *filename_format* with ``{date}``
+       replaced by the current timestamp.
+    """
+    if "{date}" not in filename_format:
+        return filename_format
+
+    now = datetime.now(UTC)
+    date_str = now.strftime("%d-%m-%Y-%H-%M-%S")
+    new_path_str = filename_format.replace("{date}", date_str)
+    new_path = Path(new_path_str)
+
+    new_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Rename previous current-*.log files
+    pattern = str(new_path.parent / "current-*.log")
+    for old_path_str in glob.glob(pattern):
+        old_path = Path(old_path_str)
+        # Strip "current-" prefix: "current-19-09-2026-..." -> "19-09-2026-..."
+        old_name = old_path.name
+        if old_name.startswith("current-"):
+            archived_name = old_name[len("current-") :]
+            archived_path = old_path.parent / archived_name
+            try:
+                old_path.rename(archived_path)
+            except OSError:
+                pass
+
+    return str(new_path)
+
+
 def setup_logging(level: int, config: LoggingConfig):
     console_format = config.console_format
     file_format = config.file_format
@@ -177,9 +215,8 @@ def setup_logging(level: int, config: LoggingConfig):
     # optional file handler
     if config is not None and getattr(config, "enable_file_logging", False):
         try:
-            log_path = Path(getattr(config, "log_file", "logs/mp2i.log"))
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            fh = logging.FileHandler(log_path)
+            log_file_path = _rotate_log_files(config.log_file)
+            fh = logging.FileHandler(log_file_path)
             fh.setFormatter(logging.Formatter(file_format))
             fh.addFilter(BotFilter())
             handlers.append(fh)

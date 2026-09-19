@@ -28,7 +28,7 @@ class ConsoleLoggingConfig:
 @dataclass
 class FileLoggingConfig:
     enable_file_logging: bool = True
-    log_file: str = "logs/bot.log"
+    filename_format: str = "logs/current-{date}.log"
     level: str = "DEBUG"
     file_format: str = "%(asctime)s - %(filename)s - %(message)s"
 
@@ -56,7 +56,7 @@ class LoggingConfig:
 
     @property
     def log_file(self) -> str:
-        return self.file.log_file
+        return self.file.filename_format
 
     @property
     def enable_discord_logging(self) -> bool:
@@ -99,7 +99,7 @@ def load_logging_config(file: Path | None = None) -> LoggingConfig:
     file_raw = logging_raw.get("file", {})
     file_conf = FileLoggingConfig(
         enable_file_logging=file_raw.get("enable", True),
-        log_file=file_raw.get("file", "logs/bot.log"),
+        filename_format=file_raw.get("filename_format", file_raw.get("file", "logs/current-{date}.log")),
         level=file_raw.get("level", "DEBUG"),
         file_format=file_raw.get(
             "format",
