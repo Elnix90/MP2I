@@ -38,7 +38,7 @@
 | `/memory-list` | Affiche les derniers échanges en mémoire | — |
 | `/model` | Change le modèle d'IA que le bot utilise | Admins |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
-| `/restart` | Redémarre le bot | Admins |
+| `/restart` | Redémarre le bot (réservé aux admins) | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
 
 <!-- COMMANDS-END -->
@@ -79,9 +79,8 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 <!--ENV-START-->
 ```env
 BOT_TOKEN=
-WEBHOOK_URL=
 GUILD_ID=
-BOT_ID=
+WEBHOOK_URL=
 AI_API_KEY=
 PARALLEL_API_KEY=
 ```
