@@ -27,6 +27,8 @@ from utils.logger import get_logger
 
 logger = get_logger()
 
+FINGERPRINT_TTL = 7 * 24 * 3600
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -77,7 +79,7 @@ class MP2IBot(discord.Client):
         updated_at = get_setting("commands.updatedAt")
         if not isinstance(fingerprint, str) or not isinstance(updated_at, int):
             return None
-        if updated_at < int(time.time()):
+        if int(time.time()) - updated_at > FINGERPRINT_TTL:
             return None
         return fingerprint
 
