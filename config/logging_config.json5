@@ -7,7 +7,7 @@
     },
     "file": {
       "enable": true,
-      "file": "logs/mp2i.log",
+      filename_format: "logs/current-{date}.log",
       "level": "DEBUG",
       "format": "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
     },
