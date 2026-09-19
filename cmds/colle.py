@@ -10,8 +10,8 @@ import discord
 from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
+from core.config import cfg
 from core.get_first_group_role import get_first_group_role
-from core.roles_ids import ROLE_ID_TO_NUMBER, ROLES_IDS
 from db.sql_requests import get_colles
 from utils.logger import get_logger
 
@@ -25,7 +25,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         name="colle",
         description="Renvoie les colles de la semaine pour l'utilisateur",
     )
-    async def colle(interaction: discord.Interaction, user: discord.User | None = None):
+    async def colle(interaction: discord.Interaction, user: discord.User | None = None, semaine_id: int | None = None):
         start_time = time.perf_counter()
         log_command_start(logger, "colle", interaction)
 
@@ -37,34 +37,26 @@ async def setup(tree: app_commands.CommandTree, bot):
 
             group_role = get_first_group_role(user_requested)
 
+            msg = "Bruh, j'ai pas trouvé ton groupe, tu es un **INTRUS**, ***BANNISEMMENT EN COURS***!!!"
+
             if group_role is not None:
-                role_number = ROLE_ID_TO_NUMBER.get(group_role.id)
-                if role_number is None:
-                    msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
-                else:
-                    colles = get_colles(role_number)
+                role_number = cfg.GROUPS_CONFIG.role_id_to_number.get(group_role.id)
+                if role_number is not None:
+                    colle_result = get_colles(role_number, semaine_id)
 
-                    if colles:
-                        colles_str = "\n".join(f"- {colle}" for colle in colles)
+                    if colle_result:
+                        colles_str = "\n".join(f"- {colle}" for colle in colle_result.colles)
+
                         if user is not None:
-                            msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                            user_str = f"{user_requested.mention} du **{group_role.name}** aura"
+                            user_suffix = "\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
                         else:
-                            msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
-                    else:
-                        msg = f"{user_requested.mention}, aucune colle cette semaine pour le {group_role.mention} 🎉"
-                role_number = list(ROLES_IDS.keys())[list(ROLES_IDS.values()).index(group_role.id)]
-                colles = get_colles(role_number)
+                            user_str = "tu auras"
+                            user_suffix = ""
 
-                if colles:
-                    colles_str = "\n".join(f"- {colle}" for colle in colles)
-                    if user is not None:
-                        msg = f"{user_requested.mention} du groupe {group_role.mention} aura ces colles cette semaine: {colles_str}\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
+                        msg = f"{colle_result.week_str()}, {user_str} ces colles:\n{colles_str}{user_suffix}"
                     else:
-                        msg = f"Hello {user_requested.mention}, tu fais partie du {group_role.mention}\nTes colles sont:{colles_str}"
-                else:
-                    msg = f"{user_requested.mention}, aucune colle cette semaine pour le {group_role.mention} 🎉"
-            else:
-                msg = "Bruh j'ai pas trouvé ton groupe, tu es un **INTRUS**, **BANNISEMMENT EN COURS**!!!"
+                        msg = f"Aucune colle cette semaine pour le **{group_role.name}**"
 
             await interaction.response.send_message(content=msg)
 
@@ -72,8 +64,6 @@ async def setup(tree: app_commands.CommandTree, bot):
         except Exception as exc:
             log_command_error(logger, "colle", exc)
             if not interaction.response.is_done():
-                await interaction.response.send_message(
-                    "Error while checking your colles.",
-                )
+                await interaction.response.send_message(f"Je n'ai pas réussi à obtenir les colles: {exc}")
             else:
                 await interaction.followup.send("Error while checking colles.")

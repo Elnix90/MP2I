@@ -117,6 +117,8 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── config
 │   ├── ai_config.json5
 │   ├── ai_conf.py
+│   ├── group_ids.json5
+│   ├── groups_conf.py
 │   ├── logging_config.json5
 │   ├── logging_conf.py
 │   ├── perms_conf.py
@@ -131,10 +133,8 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── exec_shell_command.py
 │   ├── get_first_group_role.py
 │   ├── motiver_colle.py
-│   ├── perms.py
-│   └── roles_ids.py
+│   └── perms.py
 ├── db
-│   ├── colloscope.db
 │   ├── cvs_parseur.py
 │   ├── generate_colloscope_db.py
 │   ├── init
