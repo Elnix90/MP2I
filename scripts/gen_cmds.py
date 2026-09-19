@@ -22,10 +22,7 @@ def load_permissions() -> dict[str, str]:
         return {}
     raw = json5.loads(perms_path.read_text(encoding="utf-8"))
     command_permissions = raw.get("command_permissions", {})
-    return {
-        name: ", ".join(str(PERM_LABELS.get(group, group)) for group in groups)
-        for name, groups in command_permissions.items()
-    }
+    return {name: ", ".join(str(PERM_LABELS.get(group, group)) for group in groups) for name, groups in command_permissions.items()}
 
 
 def update_readme(commands):

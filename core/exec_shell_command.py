@@ -40,9 +40,7 @@ _READERS = frozenset(
         "type",
     },
 )
-_INTERPRETERS = frozenset(
-    {"python", "python2", "python3", "pypy", "perl", "ruby", "php", "node"}
-)
+_INTERPRETERS = frozenset({"python", "python2", "python3", "pypy", "perl", "ruby", "php", "node"})
 _DOWNLOADERS = frozenset({"curl", "wget"})
 _REVERSE_SHELLS = frozenset({"nc", "ncat", "socat"})
 _SYSTEM_STOP = frozenset({"shutdown", "reboot", "halt", "poweroff"})
@@ -143,23 +141,17 @@ def _blocked_reason(cmd: str) -> str | None:
             return "system shutdown/reboot"
         if lowered.startswith("mkfs"):
             return "filesystem formatting"
-        if lowered == "dd" and any(
-            arg.startswith("of=") and arg[3:].startswith("/dev/") for arg in args
-        ):
+        if lowered == "dd" and any(arg.startswith("of=") and arg[3:].startswith("/dev/") for arg in args):
             return "raw device write"
         if lowered == "rm":
-            flags = [
-                arg for arg in args if arg.startswith("-") and not arg.startswith("--")
-            ]
+            flags = [arg for arg in args if arg.startswith("-") and not arg.startswith("--")]
             if any("r" in flag and "f" in flag for flag in flags):
                 return "recursive/forced delete"
             if any(arg in _RM_AT_ROOT for arg in args):
                 return "delete at filesystem root"
         if lowered in _REVERSE_SHELLS and "-e" in args:
             return "reverse shell (-e backdoor)"
-        if lowered in _INTERPRETERS and any(
-            arg.lower() in _INLINE_FLAGS for arg in args
-        ):
+        if lowered in _INTERPRETERS and any(arg.lower() in _INLINE_FLAGS for arg in args):
             return "inline script execution"
         if lowered in _READERS and any(_is_private(arg) for arg in args):
             return "lecture d'un fichier privé (clés, tokens, .env)"

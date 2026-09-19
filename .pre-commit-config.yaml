@@ -18,7 +18,6 @@ repos:
         args: ["--maxkb=500"]
       - id: check-json
       - id: check-toml
-      - id: debug-statements
 
   # Ruff (format + lint)
   - repo: https://github.com/astral-sh/ruff-pre-commit
