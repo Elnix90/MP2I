@@ -11,6 +11,7 @@ from discord import app_commands
 
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.config import cfg
+from core.perms import is_bot_admin
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -20,6 +21,7 @@ async def setup(tree: app_commands.CommandTree, bot):
     """Changes the model of the AI"""
 
     @tree.command(name="model", description="Change le modèle d'IA que le bot utilise")
+    @app_commands.check(is_bot_admin)
     async def model(interaction: discord.Interaction, model: str):
         start_time = time.perf_counter()
         log_command_start(logger, "model", interaction)
