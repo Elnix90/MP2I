@@ -33,3 +33,10 @@ description = "Run tests"
 [tasks.setup-hooks]
 run = "uv run pre-commit install"
 description = "Install git hooks (pre-commit + commit-msg)"
+
+[tasks.reset-colloscope]
+run = "python3 -m db.generate_colloscope_db"
+description = "Regenerate the colloscope database from the data we have"
+
+[hooks]
+postinstall = "python3 -m db.generate_colloscope_db && mise setup-hooks"
