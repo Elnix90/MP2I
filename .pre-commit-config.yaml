@@ -19,7 +19,6 @@ repos:
       - id: check-json
       - id: check-toml
       - id: debug-statements
-      - id: fix-encoding-pragma
         args: ["--auto"]
 
   # Ruff (format + lint)
