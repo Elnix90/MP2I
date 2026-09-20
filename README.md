@@ -173,7 +173,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── motiver_colle.py
 │   └── perms.py
 ├── db
-│   ├── cvs_parseur.py
+│   ├── csv_parseur.py
 │   ├── generate_colloscope_db.py
 │   ├── init
 │   │   ├── colleurs.py
