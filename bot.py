@@ -232,9 +232,8 @@ class MP2IBot(discord.Client):
 
         set_guild(message.guild)
         server_ctx = await get_server_context(message.guild)
-        ctx_str = f"Information about the current Discord server '{server_ctx.get('server_name', '?')}':\n- Total member count: {server_ctx.get('member_count', 0)}"
         system_prompt = build_system_prompt(
-            ctx_str,
+            server_context=str(server_ctx),
             include_tools=True,
         )
 

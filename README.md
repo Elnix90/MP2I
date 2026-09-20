@@ -31,6 +31,7 @@
 | `/ai-deny` | Empêche le bot IA de répondre dans ce salon | Admins |
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
 | `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
+| `/get-emojis` | Prints all the server's emojis | — |
 | `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | Admins, Tous les membres |
 | `/health` | Statut de santé des sous-systèmes du bot | — |
 | `/list-tools` | Liste les outils disponibles pour l'IA | — |
@@ -81,10 +82,10 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 <!--ENV-START-->
 ```env
 BOT_TOKEN=
-GUILD_ID=
 WEBHOOK_URL=
+GUILD_ID=
+BOT_ID=
 AI_API_KEY=
-PARALLEL_API_KEY=
 ```
 <!--ENV-END-->
 
@@ -123,6 +124,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── ai_channel.py
 │   ├── colle.py
 │   ├── exec.py
+│   ├── get_emojis.py
 │   ├── get_to_work.py
 │   ├── health.py
 │   ├── __init__.py
@@ -235,7 +237,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-22 directories, 111 files
+22 directories, 108 files
 ```
 <!-- TREE-END -->
 
