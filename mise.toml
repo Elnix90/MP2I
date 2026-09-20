@@ -40,8 +40,8 @@ run = "source scripts/confirm.sh && confirm 'Supprimer .venv/, logs/, debug/, da
 description = "Reset project"
 
 [tasks.reset-colloscope]
-run = "python3 -m db.generate_colloscope_db"
+run = "uv run python3 -m db.generate_colloscope_db"
 description = "Regenerate the colloscope database from the data we have"
 
 [hooks]
-postinstall = "python3 -m db.generate_colloscope_db && mise setup-hooks"
+postinstall = "mise reset-colloscope && mise setup-hooks"

@@ -40,7 +40,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         log_command_start(logger, "exec", interaction)
 
         try:
-            await defer_interaction(interaction)
+            await defer_interaction(interaction, ephemeral=ephemeral)
 
             output = await exec_shell_command(command)
             if len(output) > MAX_OUTPUT_LEN:

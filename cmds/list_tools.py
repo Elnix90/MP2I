@@ -17,7 +17,7 @@ async def setup(tree: discord.app_commands.CommandTree, bot):
         start_time = time.perf_counter()
         log_command_start(logger, "list-tools", interaction)
 
-        await defer_interaction(interaction)
+        await defer_interaction(interaction, ephemeral=True)
 
         try:
             tools = get_combined_tools()

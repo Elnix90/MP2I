@@ -25,7 +25,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         log_command_start(logger, "get-emojis", interaction)
 
         try:
-            await defer_interaction(interaction)
+            await defer_interaction(interaction, ephemeral=True)
 
             guild = interaction.guild
             if guild is None:

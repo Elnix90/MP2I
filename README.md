@@ -42,6 +42,7 @@
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
 | `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
+| `/send` | Envoie un message custom dans le salon actuel (ou un autre passé en argument), avec mention optionnelle d'un utilisateur. | Admins |
 
 <!-- COMMANDS-END -->
 
@@ -139,6 +140,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── _registry.py
 │   ├── restart.py
 │   ├── self_update.py
+│   ├── send.py
 │   └── _shared.py
 ├── config
 │   ├── ai_config.json5
@@ -151,7 +153,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── perms_conf.py
 │   ├── perms.json5
 │   ├── prompts
-│   │   ├── system_fr.md
 │   │   └── system.md
 │   ├── statuses.json5
 │   └── tools
@@ -235,6 +236,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── .pre-commit-config.yaml
 ├── pyproject.toml
 ├── README.md
+├── requirements.txt
 ├── scripts
 │   ├── confirm.sh
 │   ├── deps.py
@@ -256,7 +258,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-23 directories, 127 files
+23 directories, 128 files
 ```
 <!-- TREE-END -->
 

@@ -54,16 +54,16 @@ def log_command_error(logger: Any, command_name: str, exc: Exception) -> None:
         logger.exception("Error in /%s: %s", command_name, exc)
 
 
-async def defer_interaction(interaction: Any) -> bool:
+async def defer_interaction(interaction: Any, *, ephemeral: bool = False) -> bool:
     if interaction.response.is_done():
         return False
 
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=ephemeral)
     return True
 
 
 async def send_interaction(
-    interaction: Any,
+    interaction: discord.Interaction,
     *,
     content: str | None = None,
     embed: Any = None,
