@@ -25,6 +25,7 @@ dependencies = [
     "pint>=0.24.0",
     "cactus-needle>=1.0.0",
     "sqlite-vec>=0.1.0",
+    "asyncio>=3.13.0",
 ]
 
 [build-system]

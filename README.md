@@ -27,8 +27,7 @@
 <!-- COMMANDS-START -->
 | Command | Description | Permissions |
 | :--- | :--- | :--- |
-| `/ai-allow` | Autorise le bot IA à répondre dans ce salon | Admins |
-| `/ai-deny` | Empêche le bot IA de répondre dans ce salon | Admins |
+| `/ai` | Configure le comportement du bot IA dans ce salon | Admins |
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
 | `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
 | `/get-emojis` | Prints all the server's emojis | — |
@@ -41,7 +40,7 @@
 | `/model` | Change le modèle d'IA que le bot utilise | Admins |
 | `/namestyle` | Change le style d'affichage du bot dans ce serveur | Admins |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
-| `/restart` | Redémarre le bot (réservé aux admins) | Admins |
+| `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
 
 <!-- COMMANDS-END -->
@@ -82,10 +81,10 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 <!--ENV-START-->
 ```env
 BOT_TOKEN=
-WEBHOOK_URL=
 GUILD_ID=
-BOT_ID=
+WEBHOOK_URL=
 AI_API_KEY=
+PARALLEL_API_KEY=
 ```
 <!--ENV-END-->
 
@@ -150,6 +149,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── perms_conf.py
 │   ├── perms.json5
 │   ├── prompts
+│   │   ├── system_fr.md
 │   │   └── system.md
 │   ├── statuses.json5
 │   └── tools
@@ -190,19 +190,32 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   ├── colloscope_schema.sql
 │   │   ├── __init__.py
 │   │   ├── matieres_insert.sql
+│   │   ├── memory_clear_channel_facts.sql
+│   │   ├── memory_clear_scope.sql
+│   │   ├── memory_clear_user_facts.sql
+│   │   ├── memory_delete_turn.sql
+│   │   ├── memory_get_channel_facts.sql
+│   │   ├── memory_get_turn.sql
+│   │   ├── memory_get_user_facts.sql
+│   │   ├── memory_list_by_scope.sql
+│   │   ├── memory_schema.sql
+│   │   ├── memory_upsert_channel_fact.sql
+│   │   ├── memory_upsert.sql
+│   │   ├── memory_upsert_user_fact.sql
 │   │   ├── planning_insert.sql
 │   │   ├── settings_get.sql
 │   │   ├── settings_schema.sql
 │   │   └── settings_upsert.sql
 │   └── sql_requests.py
 ├── docs
+│   ├── handlers.md
+│   ├── memory.md
 │   └── settings_store.md
 ├── .github
 │   └── workflows
 │       └── pre-commit.yml
 ├── .gitignore
 ├── LICENSE
-├── logs
 ├── main.py
 ├── managers
 │   ├── context.py
@@ -221,7 +234,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── .pre-commit-config.yaml
 ├── pyproject.toml
 ├── README.md
-├── requirements.txt
 ├── scripts
 │   ├── confirm.sh
 │   ├── deps.py
@@ -230,14 +242,20 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── lint.sh
 │   ├── strip_metadata.sh
 │   └── tree.py
+├── tests
+│   └── test_handlers_pipeline.py
 ├── utils
 │   ├── console.py
 │   ├── debug.py
 │   ├── handlers
+│   │   ├── codeblock.py
+│   │   ├── latex.py
+│   │   ├── messages.py
+│   │   └── table.py
 │   └── logger.py
 └── uv.lock
 
-22 directories, 108 files
+22 directories, 127 files
 ```
 <!-- TREE-END -->
 

@@ -11,7 +11,8 @@ import re
 import time
 import urllib.parse
 
-import requests
+import aiohttp
+from aiohttp.client import ClientTimeout
 
 from utils.logger import get_logger
 
@@ -121,21 +122,21 @@ async def latex_to_svg(formula: str) -> bytes:
         _last_remote_request = time.monotonic()
 
         try:
-            response = requests.get(
-                url,
-                headers=BROWSER_HEADERS,
-                timeout=10,
-            )
-            if response.status_code == RATE_LIMIT_STATUS:
+            async with aiohttp.ClientSession() as session:
+                response = await session.get(
+                    url,
+                    headers=BROWSER_HEADERS,
+                    timeout=ClientTimeout(10),
+                )
+            if response.status == RATE_LIMIT_STATUS:
                 logger.warning(
                     "math.vercel.app rate-limited (attempt %d), backing off",
                     attempt + 1,
                 )
                 await asyncio.sleep(1.0 + attempt)
                 continue
-            response.raise_for_status()
-            return response.content
-        except requests.RequestException as exc:
+            return await response.read()
+        except aiohttp.ClientError as exc:
             if attempt == 0:
                 logger.warning("math.vercel.app request failed, retrying: %s", exc)
                 await asyncio.sleep(1.0)
