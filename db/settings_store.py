@@ -22,6 +22,7 @@ logger = get_logger()
 _SCHEMA = load("settings_schema")
 _GET_SETTING = load("settings_get")
 _SET_SETTING = load("settings_upsert")
+_PRAGMA_BUSY = load("settings_pragma_busy")
 
 _conn: sqlite3.Connection | None = None
 _lock = threading.Lock()
@@ -33,7 +34,7 @@ def _connection() -> sqlite3.Connection:
         BOT_STATE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         _conn = sqlite3.connect(BOT_STATE_DB_PATH, check_same_thread=False)
         _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA busy_timeout = 5000")
+        _conn.execute(_PRAGMA_BUSY)
         _conn.execute(_SCHEMA)
         _conn.commit()
     return _conn

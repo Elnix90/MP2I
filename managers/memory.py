@@ -41,6 +41,27 @@ _CLEAR_USER_FACTS = load("memory_clear_user_facts")
 _UPSERT_CHANNEL_FACT = load("memory_upsert_channel_fact")
 _GET_CHANNEL_FACTS = load("memory_get_channel_facts")
 _CLEAR_CHANNEL_FACTS = load("memory_clear_channel_facts")
+_PRAGMA_BUSY = load("memory_pragma_busy")
+_PRAGMA_WAL = load("memory_pragma_wal")
+_TABLE_INFO = load("memory_table_info")
+_ALTER_ADD_SCOPE_KEY = load("memory_alter_add_scope_key")
+_BACKFILL_SCOPE_KEY = load("memory_backfill_scope_key")
+_CREATE_VEC_TABLE = load("memory_create_vec_table")
+_VEC_DELETE = load("memory_vec_delete")
+_VEC_INSERT = load("memory_vec_insert")
+_VEC_SEARCH_ALL = load("memory_vec_search_all")
+_VEC_SEARCH_SCOPE = load("memory_vec_search_scope")
+_GET_ROWID = load("memory_get_rowid")
+_GET_TURN_BY_PREFIX = load("memory_get_turn_by_prefix")
+_LIST_RECENT_ALL = load("memory_list_recent_all")
+_ITERATE_ALL = load("memory_iterate_all")
+_COUNT_ALL = load("memory_count_all")
+_DELETE_ALL = load("memory_delete_all")
+_COUNT_SCOPE = load("memory_count_scope")
+_COUNT_USER_FACT = load("memory_count_user_fact")
+_FTS_SEARCH_SCOPE = load("memory_fts_search_scope")
+_FTS_SEARCH_ALL = load("memory_fts_search_all")
+_BACKFILL_SELECT = load("memory_backfill_select")
 
 
 def make_scope_key(*, channel_id: int | None = None, thread_id: int | None = None) -> str:
@@ -118,8 +139,8 @@ class MemoryManager:
         if self._conn is None:
             self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
             self._conn.row_factory = sqlite3.Row
-            self._conn.execute("PRAGMA busy_timeout = 5000")
-            self._conn.execute("PRAGMA journal_mode = WAL")
+            self._conn.execute(_PRAGMA_BUSY)
+            self._conn.execute(_PRAGMA_WAL)
             self._migrate_schema(self._conn)
             self._conn.executescript(_SCHEMA)
             self._init_vec_table()
@@ -132,17 +153,12 @@ class MemoryManager:
     def _migrate_schema(self, conn: sqlite3.Connection) -> None:
         """Migrate old schema to new: add scope_key column if missing."""
         try:
-            columns = {row[1] for row in conn.execute("PRAGMA table_info(memory_turns)").fetchall()}
+            columns = {row[1] for row in conn.execute(_TABLE_INFO).fetchall()}
             if "scope_key" not in columns:
                 logger.info("Migrating memory_turns: adding scope_key column")
-                conn.execute("ALTER TABLE memory_turns ADD COLUMN scope_key TEXT NOT NULL DEFAULT ''")
+                conn.execute(_ALTER_ADD_SCOPE_KEY)
                 # Backfill scope_key from existing channel_id/thread_id
-                conn.execute("""
-                    UPDATE memory_turns SET scope_key = CASE
-                        WHEN thread_id IS NOT NULL THEN 'thread:' || thread_id
-                        ELSE 'channel:' || channel_id
-                    END WHERE scope_key = ''
-                """)
+                conn.execute(_BACKFILL_SCOPE_KEY)
         except Exception as exc:
             logger.warning("Schema migration failed (may be fresh DB): %s", exc)
 
@@ -154,11 +170,7 @@ class MemoryManager:
             conn.enable_load_extension(True)
             sqlite_vec.load(conn)
             conn.enable_load_extension(False)
-            conn.execute(f"""
-                CREATE VIRTUAL TABLE IF NOT EXISTS vec_turns USING vec0(
-                    embedding float[{EMBEDDING_DIM}]
-                )
-            """)
+            conn.execute(_CREATE_VEC_TABLE.format(dim=EMBEDDING_DIM))
             logger.info("sqlite-vec loaded, vec_turns table ready")
         except Exception as exc:
             logger.warning("Failed to load sqlite-vec, semantic search disabled: %s", exc)
@@ -223,11 +235,8 @@ class MemoryManager:
         return struct.pack(f"{len(vec)}f", *vec)
 
     def _upsert_vector(self, conn: sqlite3.Connection, rowid: int, embedding: list[float]) -> None:
-        conn.execute("DELETE FROM vec_turns WHERE rowid = ?", (rowid,))
-        conn.execute(
-            "INSERT INTO vec_turns(rowid, embedding) VALUES (?, ?)",
-            (rowid, self._embedding_to_bytes(embedding)),
-        )
+        conn.execute(_VEC_DELETE, (rowid,))
+        conn.execute(_VEC_INSERT, (rowid, self._embedding_to_bytes(embedding)))
 
     def _bytes_to_embedding(self, data: bytes) -> list[float]:
         return list(struct.unpack(f"{len(data) // 4}f", data))
@@ -282,7 +291,7 @@ class MemoryManager:
         if embedding is not None:
             # Get the auto-assigned rowid from the INSERT above
             rowid = conn.execute(
-                "SELECT rowid FROM memory_turns WHERE turn_id = ?",
+                _GET_ROWID,
                 (turn.turn_id,),
             ).fetchone()
             if rowid is not None:
@@ -309,7 +318,7 @@ class MemoryManager:
             return _row_to_turn(row)
         # Try prefix match
         rows = conn.execute(
-            "SELECT turn_id FROM memory_turns WHERE turn_id LIKE ?",
+            _GET_TURN_BY_PREFIX,
             (f"{turn_id}%",),
         ).fetchall()
         if not rows:
@@ -325,10 +334,7 @@ class MemoryManager:
         if scope_key is not None:
             rows = conn.execute(_LIST_BY_SCOPE, (scope_key, limit)).fetchall()
         else:
-            rows = conn.execute(
-                "SELECT * FROM memory_turns ORDER BY created_at DESC LIMIT ?",
-                (limit,),
-            ).fetchall()
+            rows = conn.execute(_LIST_RECENT_ALL, (limit,)).fetchall()
         return [_row_to_turn(r) for r in reversed(rows)]
 
     def delete_turn(self, turn_id: str) -> MemoryTurn:
@@ -341,12 +347,12 @@ class MemoryManager:
     def clear_history(self, scope_key: str | None = None) -> int:
         conn = self._get_conn()
         if scope_key is None:
-            count = conn.execute("SELECT COUNT(*) FROM memory_turns").fetchone()[0]
-            conn.execute("DELETE FROM memory_turns")
+            count = conn.execute(_COUNT_ALL).fetchone()[0]
+            conn.execute(_DELETE_ALL)
             conn.commit()
             return count
         count = conn.execute(
-            "SELECT COUNT(*) FROM memory_turns WHERE scope_key = ?",
+            _COUNT_SCOPE,
             (scope_key,),
         ).fetchone()[0]
         conn.execute(_CLEAR_SCOPE, (scope_key,))
@@ -357,7 +363,7 @@ class MemoryManager:
 
     def iter_turns(self) -> Iterable[MemoryTurn]:
         conn = self._get_conn()
-        rows = conn.execute("SELECT * FROM memory_turns ORDER BY created_at ASC").fetchall()
+        rows = conn.execute(_ITERATE_ALL).fetchall()
         return [_row_to_turn(r) for r in rows]
 
     def get_history(self, scope_key: str, limit: int | None = None) -> list[dict[str, str]]:
@@ -383,21 +389,12 @@ class MemoryManager:
         try:
             if scope_key:
                 rows = conn.execute(
-                    """
-                    SELECT v.rowid, v.distance, t.turn_id
-                    FROM (SELECT rowid, distance FROM vec_turns WHERE embedding MATCH ? LIMIT ?) v
-                    JOIN memory_turns t ON t.rowid = v.rowid
-                    WHERE t.scope_key = ?
-                    """,
+                    _VEC_SEARCH_SCOPE,
                     (query_bytes, top_k, scope_key),
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    """
-                    SELECT v.rowid, v.distance, t.turn_id
-                    FROM (SELECT rowid, distance FROM vec_turns WHERE embedding MATCH ? LIMIT ?) v
-                    JOIN memory_turns t ON t.rowid = v.rowid
-                    """,
+                    _VEC_SEARCH_ALL,
                     (query_bytes, top_k),
                 ).fetchall()
             return [(r["turn_id"], r["distance"]) for r in rows]
@@ -415,23 +412,12 @@ class MemoryManager:
         try:
             if scope_key:
                 rows = conn.execute(
-                    """
-                    SELECT turn_id FROM memory_turns
-                    WHERE scope_key = ?
-                    AND (user_content LIKE ? OR assistant_content LIKE ?)
-                    ORDER BY created_at DESC
-                    LIMIT ?
-                    """,
+                    _FTS_SEARCH_SCOPE,
                     (scope_key, f"%{query}%", f"%{query}%", limit),
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    """
-                    SELECT turn_id FROM memory_turns
-                    WHERE user_content LIKE ? OR assistant_content LIKE ?
-                    ORDER BY created_at DESC
-                    LIMIT ?
-                    """,
+                    _FTS_SEARCH_ALL,
                     (f"%{query}%", f"%{query}%", limit),
                 ).fetchall()
             return [r["turn_id"] for r in rows]
@@ -570,7 +556,7 @@ class MemoryManager:
     def clear_user_facts(self, user_id: int) -> int:
         conn = self._get_conn()
         count = conn.execute(
-            "SELECT COUNT(*) FROM user_facts WHERE user_id = ?",
+            _COUNT_USER_FACT,
             (user_id,),
         ).fetchone()[0]
         conn.execute(_CLEAR_USER_FACTS, (user_id,))
@@ -590,12 +576,7 @@ class MemoryManager:
     async def _backfill_embeddings(self) -> None:
         """Generate embeddings for existing turns that don't have one yet."""
         conn = self._get_conn()
-        rows = conn.execute("""
-            SELECT t.rowid, t.turn_id, t.user_name, t.user_content, t.assistant_content
-            FROM memory_turns t
-            LEFT JOIN vec_turns v ON v.rowid = t.rowid
-            WHERE v.rowid IS NULL
-        """).fetchall()
+        rows = conn.execute(_BACKFILL_SELECT).fetchall()
         if not rows:
             return
         logger.info("Backfilling embeddings for %d existing turns", len(rows))

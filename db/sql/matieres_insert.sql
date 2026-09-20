@@ -1,1 +1,0 @@
-INSERT INTO MATIERES (id, nom) VALUES (?, ?)

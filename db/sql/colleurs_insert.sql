@@ -1,1 +1,0 @@
-INSERT INTO COLLEURS (id, nom) VALUES (?, ?)

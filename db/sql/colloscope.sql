@@ -1,3 +1,4 @@
+-- colloscope_schema
 CREATE TABLE MATIERES (
     id       INTEGER PRIMARY KEY,
     nom      TEXT NOT NULL
@@ -24,3 +25,25 @@ CREATE TABLE PLANNING (
 CREATE INDEX idx_planning_colleur ON PLANNING(colleur_id);
 CREATE INDEX idx_planning_matiere ON PLANNING(matiere_id);
 CREATE INDEX idx_planning_groupe  ON PLANNING(groupe);
+
+-- colleurs_insert
+INSERT INTO COLLEURS (id, nom) VALUES (?, ?)
+
+-- matieres_insert
+INSERT INTO MATIERES (id, nom) VALUES (?, ?)
+
+-- planning_insert
+INSERT INTO PLANNING (colleur_id, matiere_id, salle, jour_id, creneau_start, semaine, groupe)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+
+-- colles
+SELECT c.nom AS colleur_name,
+       m.nom AS matiere,
+       p.jour_id,
+       p.creneau_start,
+       p.salle
+FROM planning p
+JOIN colleurs c ON c.id = p.colleur_id
+JOIN matieres m ON m.id = p.matiere_id
+WHERE p.groupe = ?
+  AND p.semaine = ?
