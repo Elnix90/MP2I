@@ -1,38 +1,46 @@
 """Memory management for conversation turns.
 
-An in-memory manager for user-assistant conversation turns, scoped per
-conversation container (channel for normal-mode channels, thread for
-thread-mode channels), with per-user author tagging. Persistence is handled
-by CocoIndex (SQLite), not by hand-rolled storage.
+SQLite-backed memory with semantic search via sqlite-vec and needle embeddings.
+Provides both legacy get_history() (last N turns) and intelligent get_context()
+that selects relevant past turns based on the current query.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import sqlite3
+import struct
 import time
 import uuid
-from collections.abc import AsyncIterator, Iterable
-from dataclasses import asdict, dataclass, field
+from collections.abc import Iterable
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, cast
 
-import cocoindex as coco
-from cocoindex.connectors import sqlite as coco_sqlite
+import sqlite_vec
 
 from core.config import BASE_DIR
+from db.sql import load
 from utils.logger import get_logger
 
 logger = get_logger()
 
-STATE_PATH = BASE_DIR / "data" / "memory_state.json"
-SQLITE_PATH = BASE_DIR / "data" / "memory.sqlite"
-COCOINDEX_DB_PATH = BASE_DIR / "data" / "cocoindex_memory.db"
+MEMORY_DB_PATH = BASE_DIR / "data" / "memory.sqlite"
+EMBEDDING_DIM = 3072  # needle v3 embedding dimension
 
-MEMORY_STORE_KEY = coco.ContextKey["MemoryManager"]("mp2i_memory_store")
-MEMORY_DB_KEY = coco.ContextKey[coco_sqlite.ManagedConnection]("mp2i_memory_db")
-
-_ACTIVE_MEMORY_MANAGER: MemoryManager | None = None
+# SQL queries
+_SCHEMA = load("memory_schema")
+_UPSERT_TURN = load("memory_upsert")
+_LIST_BY_SCOPE = load("memory_list_by_scope")
+_GET_TURN = load("memory_get_turn")
+_DELETE_TURN = load("memory_delete_turn")
+_CLEAR_SCOPE = load("memory_clear_scope")
+_UPSERT_USER_FACT = load("memory_upsert_user_fact")
+_GET_USER_FACTS = load("memory_get_user_facts")
+_CLEAR_USER_FACTS = load("memory_clear_user_facts")
+_UPSERT_CHANNEL_FACT = load("memory_upsert_channel_fact")
+_GET_CHANNEL_FACTS = load("memory_get_channel_facts")
+_CLEAR_CHANNEL_FACTS = load("memory_clear_channel_facts")
 
 
 def make_scope_key(*, channel_id: int | None = None, thread_id: int | None = None) -> str:
@@ -51,45 +59,43 @@ class MemoryTurn:
     user_content: str
     assistant_content: str | None = None
     thread_id: int | None = None
+    scope_key: str = ""
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
 
-    def scope_key(self) -> str:
-        return make_scope_key(channel_id=self.channel_id, thread_id=self.thread_id)
+    def __post_init__(self) -> None:
+        if not self.scope_key:
+            self.scope_key = make_scope_key(channel_id=self.channel_id, thread_id=self.thread_id)
 
 
 def _ensure_parent_dir(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-@coco.lifespan
-async def memory_lifespan(builder: coco.EnvironmentBuilder) -> AsyncIterator[None]:
-    manager = _ACTIVE_MEMORY_MANAGER
-    if manager is None:
-        raise RuntimeError("MemoryManager is not initialized.")
-
-    builder.settings.db_path = manager.cocoindex_db_path
-
-    with coco_sqlite.managed_connection(manager.sqlite_path, load_vec=False) as conn:
-        builder.provide(MEMORY_STORE_KEY, manager)
-        builder.provide(MEMORY_DB_KEY, conn)
-        yield
-
-
-@coco.fn
-async def memory_app_main() -> None:
-    store = coco.use_context(MEMORY_STORE_KEY)
-
-    # cocoindex's RowT TypeVar defaults to dict[str, Any], but dataclasses are
-    # supported at runtime; cast to satisfy the stub.
-    turn_schema = await coco_sqlite.TableSchema.from_class(
-        cast("type[dict[str, Any]]", MemoryTurn),
-        primary_key=["turn_id"],
+def _row_to_turn(row: sqlite3.Row) -> MemoryTurn:
+    return MemoryTurn(
+        turn_id=row["turn_id"],
+        user_id=row["user_id"],
+        user_name=row["user_name"],
+        guild_id=row["guild_id"],
+        channel_id=row["channel_id"],
+        thread_id=row["thread_id"],
+        user_content=row["user_content"],
+        assistant_content=row["assistant_content"],
+        scope_key=row["scope_key"],
+        created_at=row["created_at"],
+        updated_at=row["updated_at"],
     )
-    turn_table = await coco_sqlite.mount_table_target(MEMORY_DB_KEY, "memory_turns", turn_schema)
 
-    for turn in store.iter_turns():
-        turn_table.declare_row(row=asdict(turn))
+
+def _fact_row_to_dict(row: sqlite3.Row) -> dict:
+    return {
+        "fact_id": row["fact_id"],
+        "fact": row["fact"],
+        "source_turn_ids": json.loads(row["source_turn_ids"]) if row["source_turn_ids"] else [],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
 
 
 class MemoryManager:
@@ -97,78 +103,129 @@ class MemoryManager:
         self,
         max_history: int = 15,
         *,
-        state_path: Path | str = STATE_PATH,
-        sqlite_path: Path | str = SQLITE_PATH,
-        cocoindex_db_path: Path | str = COCOINDEX_DB_PATH,
+        db_path: Path | str = MEMORY_DB_PATH,
     ) -> None:
-        global _ACTIVE_MEMORY_MANAGER
-
-        _ACTIVE_MEMORY_MANAGER = self
         self.max_history = max_history
-        self.state_path = Path(state_path)
-        self.sqlite_path = Path(sqlite_path)
-        self.cocoindex_db_path = Path(cocoindex_db_path)
-        self._turns: dict[str, MemoryTurn] = {}
+        self.db_path = Path(db_path)
         self._sync_lock = asyncio.Lock()
-        self._app = coco.App(coco.AppConfig(name="MP2IMemory"), memory_app_main)
+        self._needle_agent = None
+        self._conn: sqlite3.Connection | None = None
 
-        _ensure_parent_dir(self.state_path)
-        _ensure_parent_dir(self.sqlite_path)
-        _ensure_parent_dir(self.cocoindex_db_path)
-        self._load_state()
+        _ensure_parent_dir(self.db_path)
+        self._init_db()
 
-    def _load_state(self) -> None:
-        if not self.state_path.exists():
+    def _get_conn(self) -> sqlite3.Connection:
+        if self._conn is None:
+            self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA busy_timeout = 5000")
+            self._conn.execute("PRAGMA journal_mode = WAL")
+            self._migrate_schema(self._conn)
+            self._conn.executescript(_SCHEMA)
+            self._init_vec_table()
+            self._conn.commit()
+        return self._conn
+
+    def _init_db(self) -> None:
+        self._get_conn()
+
+    def _migrate_schema(self, conn: sqlite3.Connection) -> None:
+        """Migrate old schema to new: add scope_key column if missing."""
+        try:
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(memory_turns)").fetchall()}
+            if "scope_key" not in columns:
+                logger.info("Migrating memory_turns: adding scope_key column")
+                conn.execute("ALTER TABLE memory_turns ADD COLUMN scope_key TEXT NOT NULL DEFAULT ''")
+                # Backfill scope_key from existing channel_id/thread_id
+                conn.execute("""
+                    UPDATE memory_turns SET scope_key = CASE
+                        WHEN thread_id IS NOT NULL THEN 'thread:' || thread_id
+                        ELSE 'channel:' || channel_id
+                    END WHERE scope_key = ''
+                """)
+        except Exception as exc:
+            logger.warning("Schema migration failed (may be fresh DB): %s", exc)
+
+    def _init_vec_table(self) -> None:
+        conn = self._conn
+        if conn is None:
             return
         try:
-            with self.state_path.open("r", encoding="utf-8") as handle:
-                payload = json.load(handle)
-        except Exception:
-            return
+            conn.enable_load_extension(True)
+            sqlite_vec.load(conn)
+            conn.enable_load_extension(False)
+            conn.execute(f"""
+                CREATE VIRTUAL TABLE IF NOT EXISTS vec_turns USING vec0(
+                    embedding float[{EMBEDDING_DIM}]
+                )
+            """)
+            logger.info("sqlite-vec loaded, vec_turns table ready")
+        except Exception as exc:
+            logger.warning("Failed to load sqlite-vec, semantic search disabled: %s", exc)
 
-        for item in payload.get("turns", []) if isinstance(payload, dict) else []:
+    def _get_needle(self):
+        if self._needle_agent is None:
             try:
-                turn = MemoryTurn(**item)
-                self._turns[turn.turn_id] = turn
+                import needle
+
+                self._needle_agent = needle.Needle(tools=[], generation=3)
             except Exception as exc:
-                logger.warning("Skipping invalid memory turn: %s", exc)
+                logger.warning("Failed to load needle for embeddings: %s", exc)
+                return None
+        return self._needle_agent
 
-    def _save_state(self) -> None:
-        payload = {"turns": [asdict(turn) for turn in self.iter_turns()]}
-        tmp_path = self.state_path.with_suffix(".json.tmp")
-        with tmp_path.open("w", encoding="utf-8") as handle:
-            json.dump(payload, handle, ensure_ascii=True, indent=2)
-        tmp_path.replace(self.state_path)
+    def _embed(self, text: str) -> list[float] | None:
+        agent = self._get_needle()
+        if agent is None:
+            return None
+        try:
+            return agent.embed(text)
+        except Exception as exc:
+            logger.warning("Embedding failed: %s", exc)
+            return None
 
-    def iter_turns(self) -> Iterable[MemoryTurn]:
-        return sorted(self._turns.values(), key=lambda t: (t.created_at, t.turn_id))
+    def _extract_facts(self, user_name: str, user_content: str, assistant_content: str) -> list[str]:
+        agent = self._get_needle()
+        if agent is None:
+            return []
+        try:
+            from pydantic import BaseModel
 
-    def get_turn(self, turn_id: str) -> MemoryTurn:
-        if turn_id in self._turns:
-            return self._turns[turn_id]
-        matches = [tid for tid in self._turns if tid.startswith(turn_id)]
-        if not matches:
-            raise KeyError(turn_id)
-        if len(matches) > 1:
-            raise ValueError(f"Turn ID '{turn_id}' is ambiguous.")
-        return self._turns[matches[0]]
+            class ExtractedFacts(BaseModel):
+                facts: list[str]
 
-    def list_turns(self, scope_key: str | None = None, limit: int = 10) -> list[MemoryTurn]:
-        turns = list(self.iter_turns())
-        if scope_key is not None:
-            turns = [t for t in turns if t.scope_key() == scope_key]
-        return turns[-max(0, limit) :]
+            prompt = (
+                f"Extract factual information about the user from this conversation. "
+                f"Only extract complete, meaningful sentences. Ignore math expressions, "
+                f"single words, or incomplete thoughts.\n\n"
+                f"User ({user_name}): {user_content}\n"
+                f"Assistant: {assistant_content}\n\n"
+                "Return 0-2 facts. Examples of good facts:\n"
+                "- Alice is a student in MP2I prep class\n"
+                "- Bob prefers using Python for programming\n"
+                "- Charlie asked about derivatives of polynomials\n\n"
+                "If nothing meaningful can be extracted, return an empty list."
+            )
+            result = agent.extract(prompt, ExtractedFacts)
+            if isinstance(result, ExtractedFacts):
+                facts = result.facts
+            elif isinstance(result, dict) and "facts" in result:
+                facts = result["facts"]
+            else:
+                return []
+            # Filter: keep only facts that are complete sentences (min 10 chars, contain spaces)
+            return [f for f in facts if len(f) >= 10 and " " in f]
+        except Exception as exc:
+            logger.debug("Fact extraction failed: %s", exc)
+            return []
 
-    def get_history(self, scope_key: str, limit: int | None = None) -> list[dict[str, str]]:
-        limit = self.max_history if limit is None else limit
-        turns = self.list_turns(scope_key, limit=limit)
+    def _embedding_to_bytes(self, vec: list[float]) -> bytes:
+        return struct.pack(f"{len(vec)}f", *vec)
 
-        messages: list[dict[str, str]] = []
-        for turn in turns:
-            messages.append({"role": "user", "content": f"[{turn.user_name}]: {turn.user_content}"})
-            if turn.assistant_content:
-                messages.append({"role": "assistant", "content": turn.assistant_content})
-        return messages
+    def _bytes_to_embedding(self, data: bytes) -> list[float]:
+        return list(struct.unpack(f"{len(data) // 4}f", data))
+
+    # --- Core CRUD (SQLite-backed) ---
 
     def record_exchange(
         self,
@@ -192,41 +249,367 @@ class MemoryManager:
             user_content=user_content,
             assistant_content=assistant_content,
         )
-        self._turns[turn.turn_id] = turn
+        conn = self._get_conn()
+        now = time.time()
+        conn.execute(
+            _UPSERT_TURN,
+            (
+                turn.turn_id,
+                turn.user_id,
+                turn.user_name,
+                turn.guild_id,
+                turn.channel_id,
+                turn.thread_id,
+                turn.user_content,
+                turn.assistant_content,
+                turn.scope_key,
+                now,
+                now,
+            ),
+        )
+        # Store embedding for the combined text
+        combined = f"{user_name}: {user_content}"
+        if turn.assistant_content:
+            combined += f"\n{turn.assistant_content}"
+        embedding = self._embed(combined)
+        if embedding is not None:
+            # Get the auto-assigned rowid from the INSERT above
+            rowid = conn.execute(
+                "SELECT rowid FROM memory_turns WHERE turn_id = ?",
+                (turn.turn_id,),
+            ).fetchone()
+            if rowid is not None:
+                try:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO vec_turns(rowid, embedding) VALUES (?, ?)",
+                        (rowid[0], self._embedding_to_bytes(embedding)),
+                    )
+                except Exception as exc:
+                    logger.debug("Failed to store embedding for turn %s: %s", turn.turn_id[:8], exc)
+
+        # Extract and store user facts asynchronously (fire-and-forget)
+        try:
+            facts = self._extract_facts(user_name, user_content, assistant_content or "")
+            for fact in facts[:3]:  # limit to 3 facts per exchange
+                self.add_user_fact(user_id, fact, source_turn_ids=[turn.turn_id])
+        except Exception as exc:
+            logger.debug("Fact extraction skipped: %s", exc)
+
         return turn.turn_id
 
-    def delete_turn(self, turn_id: str) -> MemoryTurn:
-        resolved = self._resolve_turn_id(turn_id)
-        return self._turns.pop(resolved)
-
-    def _resolve_turn_id(self, turn_id: str) -> str:
-        if turn_id in self._turns:
-            return turn_id
-        matches = [tid for tid in self._turns if tid.startswith(turn_id)]
-        if not matches:
+    def get_turn(self, turn_id: str) -> MemoryTurn:
+        conn = self._get_conn()
+        # Try exact match first
+        row = conn.execute(_GET_TURN, (turn_id,)).fetchone()
+        if row is not None:
+            return _row_to_turn(row)
+        # Try prefix match
+        rows = conn.execute(
+            "SELECT turn_id FROM memory_turns WHERE turn_id LIKE ?",
+            (f"{turn_id}%",),
+        ).fetchall()
+        if not rows:
             raise KeyError(turn_id)
-        if len(matches) > 1:
+        if len(rows) > 1:
             raise ValueError(f"Turn ID '{turn_id}' is ambiguous.")
-        return matches[0]
+        full_id = rows[0]["turn_id"]
+        row = conn.execute(_GET_TURN, (full_id,)).fetchone()
+        return _row_to_turn(row)
+
+    def list_turns(self, scope_key: str | None = None, limit: int = 10) -> list[MemoryTurn]:
+        conn = self._get_conn()
+        if scope_key is not None:
+            rows = conn.execute(_LIST_BY_SCOPE, (scope_key, limit)).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM memory_turns ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [_row_to_turn(r) for r in reversed(rows)]
+
+    def delete_turn(self, turn_id: str) -> MemoryTurn:
+        turn = self.get_turn(turn_id)
+        conn = self._get_conn()
+        conn.execute(_DELETE_TURN, (turn.turn_id,))
+        conn.commit()
+        return turn
 
     def clear_history(self, scope_key: str | None = None) -> int:
+        conn = self._get_conn()
         if scope_key is None:
-            removed = len(self._turns)
-            self._turns.clear()
-            return removed
+            count = conn.execute("SELECT COUNT(*) FROM memory_turns").fetchone()[0]
+            conn.execute("DELETE FROM memory_turns")
+            conn.commit()
+            return count
+        count = conn.execute(
+            "SELECT COUNT(*) FROM memory_turns WHERE scope_key = ?",
+            (scope_key,),
+        ).fetchone()[0]
+        conn.execute(_CLEAR_SCOPE, (scope_key,))
+        conn.commit()
+        return count
 
-        removed_ids = [tid for tid, t in self._turns.items() if t.scope_key() == scope_key]
-        for tid in removed_ids:
-            self._turns.pop(tid, None)
-        return len(removed_ids)
+    # --- History (legacy API, backward compat) ---
+
+    def iter_turns(self) -> Iterable[MemoryTurn]:
+        conn = self._get_conn()
+        rows = conn.execute("SELECT * FROM memory_turns ORDER BY created_at ASC").fetchall()
+        return [_row_to_turn(r) for r in rows]
+
+    def get_history(self, scope_key: str, limit: int | None = None) -> list[dict[str, str]]:
+        limit = self.max_history if limit is None else limit
+        turns = self.list_turns(scope_key, limit=limit)
+        messages: list[dict[str, str]] = []
+        for turn in turns:
+            messages.append({"role": "user", "content": f"[{turn.user_name}]: {turn.user_content}"})
+            if turn.assistant_content:
+                messages.append({"role": "assistant", "content": turn.assistant_content})
+        return messages
+
+    # --- Semantic search (new) ---
+
+    def _search_vec(
+        self,
+        query_embedding: list[float],
+        scope_key: str | None = None,
+        top_k: int = 10,
+    ) -> list[tuple[str, float]]:
+        conn = self._get_conn()
+        query_bytes = self._embedding_to_bytes(query_embedding)
+        try:
+            if scope_key:
+                rows = conn.execute(
+                    """
+                    SELECT v.rowid, v.distance, t.turn_id
+                    FROM (SELECT rowid, distance FROM vec_turns WHERE embedding MATCH ? LIMIT ?) v
+                    JOIN memory_turns t ON t.rowid = v.rowid
+                    WHERE t.scope_key = ?
+                    """,
+                    (query_bytes, top_k, scope_key),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT v.rowid, v.distance, t.turn_id
+                    FROM (SELECT rowid, distance FROM vec_turns WHERE embedding MATCH ? LIMIT ?) v
+                    JOIN memory_turns t ON t.rowid = v.rowid
+                    """,
+                    (query_bytes, top_k),
+                ).fetchall()
+            return [(r["turn_id"], r["distance"]) for r in rows]
+        except Exception as exc:
+            logger.warning("Vector search failed: %s", exc)
+            return []
+
+    def _fts_search(
+        self,
+        query: str,
+        scope_key: str | None = None,
+        limit: int = 10,
+    ) -> list[str]:
+        conn = self._get_conn()
+        try:
+            if scope_key:
+                rows = conn.execute(
+                    """
+                    SELECT turn_id FROM memory_turns
+                    WHERE scope_key = ?
+                    AND (user_content LIKE ? OR assistant_content LIKE ?)
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                    """,
+                    (scope_key, f"%{query}%", f"%{query}%", limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT turn_id FROM memory_turns
+                    WHERE user_content LIKE ? OR assistant_content LIKE ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                    """,
+                    (f"%{query}%", f"%{query}%", limit),
+                ).fetchall()
+            return [r["turn_id"] for r in rows]
+        except Exception as exc:
+            logger.warning("FTS search failed: %s", exc)
+            return []
+
+    def get_context(
+        self,
+        scope_key: str,
+        user_id: int | None = None,
+        current_query: str = "",
+        max_tokens: int = 4000,
+    ) -> list[dict[str, str]]:
+        """Intelligent context selection: semantic search + session memory + user facts.
+
+        Returns messages in optimal order for the LLM:
+        1. User facts (if user_id provided)
+        2. Semantically relevant past turns
+        3. Last N session turns
+        """
+        messages: list[dict[str, str]] = []
+        used_turn_ids: set[str] = set()
+
+        # 1. User facts (cross-session context)
+        if user_id is not None:
+            facts = self.get_user_facts(user_id, limit=10)
+            if facts:
+                facts_text = "\n".join(f"- {f['fact']}" for f in facts)
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": f"Ce que tu sais sur cet utilisateur:\n{facts_text}",
+                    }
+                )
+
+        # 2. Semantic search for relevant past turns
+        if current_query.strip():
+            embedding = self._embed(current_query)
+            if embedding is not None:
+                semantic_hits = self._search_vec(embedding, scope_key=scope_key, top_k=10)
+                for turn_id, distance in semantic_hits[:5]:
+                    turn = self.get_turn(turn_id)
+                    if turn.turn_id not in used_turn_ids:
+                        messages.append(
+                            {
+                                "role": "user",
+                                "content": f"[{turn.user_name}]: {turn.user_content}",
+                            }
+                        )
+                        if turn.assistant_content:
+                            messages.append(
+                                {
+                                    "role": "assistant",
+                                    "content": turn.assistant_content,
+                                }
+                            )
+                        used_turn_ids.add(turn.turn_id)
+
+            # Fallback: keyword search if not enough semantic results
+            if len(messages) < 3:
+                fts_hits = self._fts_search(current_query, scope_key=scope_key, limit=5)
+                for turn_id in fts_hits:
+                    if turn_id not in used_turn_ids:
+                        turn = self.get_turn(turn_id)
+                        messages.append(
+                            {
+                                "role": "user",
+                                "content": f"[{turn.user_name}]: {turn.user_content}",
+                            }
+                        )
+                        if turn.assistant_content:
+                            messages.append(
+                                {
+                                    "role": "assistant",
+                                    "content": turn.assistant_content,
+                                }
+                            )
+                        used_turn_ids.add(turn.turn_id)
+
+        # 3. Last N session turns (most recent context)
+        session_turns = self.list_turns(scope_key, limit=self.max_history)
+        for turn in reversed(session_turns):
+            if turn.turn_id not in used_turn_ids:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": f"[{turn.user_name}]: {turn.user_content}",
+                    }
+                )
+                if turn.assistant_content:
+                    messages.append(
+                        {
+                            "role": "assistant",
+                            "content": turn.assistant_content,
+                        }
+                    )
+                used_turn_ids.add(turn.turn_id)
+
+        # Budget truncation: keep system messages + most recent if over limit
+        if len(messages) > max_tokens // 100:  # rough estimate
+            messages = messages[-(max_tokens // 100) :]
+
+        return messages
+
+    # --- User facts ---
+
+    def get_user_facts(self, user_id: int, limit: int = 10) -> list[dict]:
+        conn = self._get_conn()
+        rows = conn.execute(_GET_USER_FACTS, (user_id, limit)).fetchall()
+        return [_fact_row_to_dict(r) for r in rows]
+
+    def add_user_fact(
+        self,
+        user_id: int,
+        fact: str,
+        source_turn_ids: list[str] | None = None,
+    ) -> str:
+        fact_id = uuid.uuid4().hex
+        conn = self._get_conn()
+        now = time.time()
+        conn.execute(
+            _UPSERT_USER_FACT,
+            (
+                fact_id,
+                user_id,
+                fact,
+                json.dumps(source_turn_ids or []),
+                now,
+                now,
+            ),
+        )
+        conn.commit()
+        return fact_id
+
+    def clear_user_facts(self, user_id: int) -> int:
+        conn = self._get_conn()
+        count = conn.execute(
+            "SELECT COUNT(*) FROM user_facts WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()[0]
+        conn.execute(_CLEAR_USER_FACTS, (user_id,))
+        conn.commit()
+        return count
+
+    # --- Sync (no-op for SQLite, kept for backward compat) ---
 
     async def sync(self) -> None:
-        async with self._sync_lock:
-            self._save_state()
-            await self._app.update()
+        conn = self._get_conn()
+        conn.commit()
 
     async def bootstrap(self) -> None:
-        await self.sync()
+        self._get_conn()
+        await self._backfill_embeddings()
+
+    async def _backfill_embeddings(self) -> None:
+        """Generate embeddings for existing turns that don't have one yet."""
+        conn = self._get_conn()
+        rows = conn.execute("""
+            SELECT t.rowid, t.turn_id, t.user_name, t.user_content, t.assistant_content
+            FROM memory_turns t
+            LEFT JOIN vec_turns v ON v.rowid = t.rowid
+            WHERE v.rowid IS NULL
+        """).fetchall()
+        if not rows:
+            return
+        logger.info("Backfilling embeddings for %d existing turns", len(rows))
+        for row in rows:
+            combined = f"{row['user_name']}: {row['user_content']}"
+            if row["assistant_content"]:
+                combined += f"\n{row['assistant_content']}"
+            embedding = self._embed(combined)
+            if embedding is not None:
+                try:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO vec_turns(rowid, embedding) VALUES (?, ?)",
+                        (row["rowid"], self._embedding_to_bytes(embedding)),
+                    )
+                except Exception as exc:
+                    logger.debug("Backfill failed for %s: %s", row["turn_id"][:8], exc)
+        conn.commit()
+        logger.info("Backfill complete: %d turns embedded", len(rows))
 
     async def record_and_sync(
         self,
@@ -241,7 +624,7 @@ class MemoryManager:
         turn_id: str | None = None,
     ) -> str:
         async with self._sync_lock:
-            turn_id = self.record_exchange(
+            return self.record_exchange(
                 user_id=user_id,
                 user_name=user_name,
                 user_content=user_content,
@@ -251,23 +634,14 @@ class MemoryManager:
                 thread_id=thread_id,
                 turn_id=turn_id,
             )
-            self._save_state()
-            await self._app.update()
-            return turn_id
 
     async def delete_turn_and_sync(self, turn_id: str) -> MemoryTurn:
         async with self._sync_lock:
-            turn = self.delete_turn(turn_id)
-            self._save_state()
-            await self._app.update()
-            return turn
+            return self.delete_turn(turn_id)
 
     async def clear_history_and_sync(self, scope_key: str | None = None) -> int:
         async with self._sync_lock:
-            removed = self.clear_history(scope_key)
-            self._save_state()
-            await self._app.update()
-            return removed
+            return self.clear_history(scope_key)
 
 
 active_memory: MemoryManager | None = None
