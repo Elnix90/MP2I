@@ -261,7 +261,7 @@ class MP2IBot(discord.Client):
                         full_tool_count,
                     )
                 else:
-                    logger.info(
+                    logger.debug(
                         "Needle tool filter: kept %d/%d tools (confidence=%s, reasoning=%s)",
                         len(tools),
                         full_tool_count,
@@ -295,7 +295,7 @@ class MP2IBot(discord.Client):
                         continue
                     full_content += delta
                     buffer += delta
-                    if ("\n\n" in buffer or len(buffer) > 1500) and self._flushable(buffer) and not self._inside_table(buffer):
+                    if (len(buffer) > 1500 or ("\n\n" in buffer and len(buffer) > 500)) and self._flushable(buffer) and not self._inside_table(buffer):
                         to_send = strip_tool_artifacts(buffer)
                         buffer = ""
                         if to_send.strip():

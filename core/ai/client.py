@@ -25,7 +25,7 @@ from utils.logger import get_logger
 
 logger = get_logger()
 
-REQUEST_TIMEOUT = 60.0
+REQUEST_TIMEOUT = 30.0
 MAX_RETRIES = 1
 MAX_TOOL_ITERATIONS = 6
 DEFAULT_MAX_CONTEXT_CHARS = 128000
@@ -99,6 +99,31 @@ def _payload_kwargs(tools: list | None) -> dict:
     return kwargs
 
 
+def _sanitize_messages(messages: list) -> list:
+    """Convert tool-role messages to user-role for models that don't support tool calling."""
+    sanitized = []
+    for msg in messages:
+        role = msg.get("role", "")
+        if role == "tool":
+            sanitized.append(
+                {
+                    "role": "user",
+                    "content": f"[Tool result: {msg.get('name', 'unknown')}]\n{msg.get('content', '')}",
+                }
+            )
+        elif role == "assistant" and msg.get("tool_calls"):
+            # strip tool_calls, keep only the text content
+            sanitized.append(
+                {
+                    "role": "assistant",
+                    "content": msg.get("content", ""),
+                }
+            )
+        else:
+            sanitized.append(msg)
+    return sanitized
+
+
 _ATEM_BLOCK = re.compile(
     r"<atem:function_calls\b.*?</atem:function_calls>",
     re.DOTALL | re.IGNORECASE,
@@ -161,7 +186,7 @@ def _assistant_tool_message(message: object) -> dict[str, Any]:
 async def _execute_tool_calls(tool_calls: list) -> list[dict]:
     async def _run(tool_call) -> dict:
         arguments = parse_tool_arguments(tool_call.function.arguments)
-        logger.info(
+        logger.debug(
             "Tool call: %s args=%s",
             tool_call.function.name,
             {k: str(v)[:80] for k, v in arguments.items()},
@@ -243,7 +268,7 @@ async def _stream_final(client: AsyncOpenAI, model: str, messages: list) -> Asyn
     try:
         return await client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=_sanitize_messages(messages),
             stream=True,
         )
     except Exception:
@@ -258,18 +283,19 @@ async def _synthesize(
     *,
     stream: bool,
 ) -> Answer | AsyncIterator[Any] | None:
+    sanitized = _sanitize_messages(messages)
     stream_result = None
     for model in models:
         try:
             if stream:
-                final = await _stream_final(client, model, messages)
+                final = await _stream_final(client, model, sanitized)
                 if final is not None:
                     stream_result = final
                     continue
             else:
                 resp = await client.chat.completions.create(
                     model=model,
-                    messages=messages,
+                    messages=sanitized,
                     stream=False,
                 )
                 content = resp.choices[0].message.content
