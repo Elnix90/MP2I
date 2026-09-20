@@ -186,27 +186,13 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── __init__.py
 │   ├── settings_store.py
 │   ├── sql
-│   │   ├── colles.sql
-│   │   ├── colleurs_insert.sql
-│   │   ├── colloscope_schema.sql
+│   │   ├── colloscope.sql
 │   │   ├── __init__.py
-│   │   ├── matieres_insert.sql
-│   │   ├── memory_clear_channel_facts.sql
-│   │   ├── memory_clear_scope.sql
-│   │   ├── memory_clear_user_facts.sql
-│   │   ├── memory_delete_turn.sql
-│   │   ├── memory_get_channel_facts.sql
-│   │   ├── memory_get_turn.sql
-│   │   ├── memory_get_user_facts.sql
-│   │   ├── memory_list_by_scope.sql
+│   │   ├── memory_facts.sql
 │   │   ├── memory_schema.sql
-│   │   ├── memory_upsert_channel_fact.sql
-│   │   ├── memory_upsert.sql
-│   │   ├── memory_upsert_user_fact.sql
-│   │   ├── planning_insert.sql
-│   │   ├── settings_get.sql
-│   │   ├── settings_schema.sql
-│   │   └── settings_upsert.sql
+│   │   ├── memory_turns.sql
+│   │   ├── memory_vec.sql
+│   │   └── settings.sql
 │   └── sql_requests.py
 ├── docs
 │   ├── handlers.md
@@ -258,7 +244,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-23 directories, 128 files
+23 directories, 114 files
 ```
 <!-- TREE-END -->
 
