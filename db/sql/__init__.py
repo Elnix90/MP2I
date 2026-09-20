@@ -10,5 +10,4 @@ _SQL_DIR = Path(__file__).parent
 
 
 def load(name: str) -> str:
-    """Return the stripped contents of the `name.sql` file."""
     return (_SQL_DIR / f"{name}.sql").read_text(encoding="utf-8").strip()

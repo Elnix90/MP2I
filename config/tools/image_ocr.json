@@ -1,0 +1,35 @@
+{
+  "name": "image_ocr",
+  "description": "Extract text from an image using OCR. Use THIS TOOL when the user wants to read, analyze, or extract text from an image, photo, screenshot, or any image file. Accepts a local path, public URL, or base64-encoded image.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "image_path": {
+        "type": "string",
+        "description": "Local path to the image file, e.g. /tmp/image.png"
+      },
+      "image_url": {
+        "type": "string",
+        "description": "Public URL of the image to analyze"
+      },
+      "image_base64": {
+        "type": "string",
+        "description": "Base64-encoded image bytes (without the data: prefix)"
+      },
+      "lang": {
+        "type": "string",
+        "description": "Tesseract language code for OCR. E.g. 'fra' for French, 'eng' for English. Default: eng",
+        "default": "eng"
+      },
+      "psm": {
+        "type": "integer",
+        "description": "Tesseract page segmentation mode (optional, advanced)"
+      },
+      "oem": {
+        "type": "integer",
+        "description": "Tesseract OCR engine mode (optional, advanced)"
+      }
+    },
+    "required": []
+  }
+}

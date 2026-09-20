@@ -1,5 +1,7 @@
 """csv parseur"""
 
+from typing import Any
+
 from db.init.rows import ROWS
 
 MATIERES = {"MATHS": 0, "ANGLAIS": 1, "PHYSIQUE": 2, "INFO": 3}
@@ -50,7 +52,8 @@ def csv_parse(name: str) -> list[tuple[int, int, int, int, str, dict]]:
 
     l_matiere = iter([MATIERES[st.split(",")[1]] for st in l_lignes if st[1] != ","])
 
-    ROWS = [
+    matiere = 0
+    rows: list[Any] = [
         [l_lignes[i].split(",")[j] for j in range(1, 5)]
         + [
             {
@@ -65,17 +68,17 @@ def csv_parse(name: str) -> list[tuple[int, int, int, int, str, dict]]:
         if l_lignes[i] != ",,,,,,,,,,,,,,,,,,,"
     ]
 
-    n1 = len(ROWS)
+    n1 = len(rows)
     for i in range(n1):
-        if ROWS[i][0] != "":
+        if rows[i][0] != "":
             matiere = next(l_matiere)
-        ROWS[i][0] = matiere
-        ROWS[i][1] = COLLEURS[ROWS[i][1]]
-        ROWS[i].insert(3, int(ROWS[i][2][-5:-3]))
-        ROWS[i][2] = JOURS[ROWS[i][2][0:-5]]
-        ROWS[i] = tuple(ROWS[i])
+        rows[i][0] = matiere
+        rows[i][1] = COLLEURS[rows[i][1]]
+        rows[i].insert(3, int(rows[i][2][-5:-3]))
+        rows[i][2] = JOURS[rows[i][2][0:-5]]
+        rows[i] = tuple(rows[i])
 
-    return ROWS
+    return rows  # type: ignore[return-value]
 
 
 if __name__ == "__main__":

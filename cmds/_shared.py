@@ -8,21 +8,10 @@ sending interaction responses.
 import time
 from typing import Any
 
+import discord
+
 
 def interaction_context(interaction: Any) -> str:
-    """Build a short textual context string for an interaction.
-
-    Parameters
-    ----------
-    interaction : Any
-        Discord interaction object.
-
-    Returns
-    -------
-    str
-        Human-readable context including user, guild and channel.
-
-    """
     guild_name = interaction.guild.name if interaction.guild is not None else "DM"
     channel_name = getattr(interaction.channel, "name", None)
     channel_id = getattr(interaction.channel, "id", None)
@@ -38,20 +27,6 @@ def log_command_start(
     interaction: Any,
     **extra,
 ) -> None:
-    """Log the start of a command invocation.
-
-    Parameters
-    ----------
-    logger : Any
-        Logger instance to use for logging.
-    command_name : str
-        Name of the invoked command.
-    interaction : Any
-        The Discord interaction that triggered the command.
-    **extra : dict
-        Optional additional context to include in the log.
-
-    """
     details = interaction_context(interaction)
     if extra:
         details = f"{details}, extra={extra}"
@@ -64,58 +39,22 @@ def log_command_end(
     start_time: float,
     status: str = "ok",
 ) -> None:
-    """Log the end of a command and its duration.
-
-    Parameters
-    ----------
-    logger : Any
-        Logger instance to use for logging.
-    command_name : str
-        Name of the command that completed.
-    start_time : float
-        Perf-counter timestamp when the command started.
-    status : str
-        Optional status string to include in the log (default: "ok").
-
-    """
     duration = time.perf_counter() - start_time
     logger.info("Command /%s completed in %.2fs (%s)", command_name, duration, status)
 
 
+def _is_already_acknowledged(exc: Exception) -> bool:
+    return isinstance(exc, discord.HTTPException) and getattr(exc, "code", None) == 40060
+
+
 def log_command_error(logger: Any, command_name: str, exc: Exception) -> None:
-    """Log an exception raised while handling a command.
-
-    Parameters
-    ----------
-    logger : Any
-        Logger instance to use for logging.
-    command_name : str
-        Name of the command where the error occurred.
-    exc : Exception
-        The exception instance caught.
-
-    """
-    logger.exception("Error in /%s: %s", command_name, exc)
+    if _is_already_acknowledged(exc):
+        logger.warning("Command /%s: interaction already acknowledged (40060)", command_name)
+    else:
+        logger.exception("Error in /%s: %s", command_name, exc)
 
 
 async def defer_interaction(interaction: Any) -> bool:
-    """Defer an interaction response if it has not already been deferred.
-
-    Parameters
-    ----------
-    interaction : Any
-        Discord interaction object.
-    ephemeral : bool
-        Whether the deferred response (and eventual reply) should be
-        ephemeral (default: True).
-
-    Returns
-    -------
-    bool
-        True if the call deferred the response, False if the response was
-        already done.
-
-    """
     if interaction.response.is_done():
         return False
 
@@ -131,31 +70,6 @@ async def send_interaction(
     embeds: Any = None,
     ephemeral: bool = True,
 ) -> Any:
-    """Send a message in response to an interaction handling both response and followup.
-
-    This helper avoids passing both `embed` and `embeds` to Discord (which
-    is not allowed) and uses `interaction.response` when available, otherwise
-    falls back to `interaction.followup`.
-
-    Parameters
-    ----------
-    interaction : Any
-        Discord interaction object.
-    content : Optional[str]
-        Optional content string for the message. (Default value = None)
-    embed : Any
-        Optional single embed. (Default value = None)
-    embeds : Any
-        Optional list of embeds. (Default value = None)
-    ephemeral : bool
-        Whether the reply should be ephemeral (default: True).
-
-    Returns
-    -------
-    Any
-        The message object returned by the Discord API.
-
-    """
     kwargs = {}
     if content is not None:
         kwargs["content"] = content

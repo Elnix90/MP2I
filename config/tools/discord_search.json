@@ -1,0 +1,78 @@
+{
+  "name": "discord_search",
+  "description": "Search the Discord server internally — messages, members, channels, threads, roles. Use THIS TOOL when the user wants to find messages, look up a member, list channels/threads/roles, or retrieve conversation history on the server. NOT a web search — this searches the server itself.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": ["messages", "members", "channels", "threads", "roles", "history"],
+        "description": "What to search for: 'messages' to search message content, 'members' to find server members, 'channels' to list channels, 'threads' to list threads, 'roles' to list roles, 'history' to retrieve a channel's message history"
+      },
+      "query": {
+        "type": "string",
+        "description": "Text to search for (required for action 'messages'). E.g. 'how to install python'"
+      },
+      "channel_id": {
+        "type": "string",
+        "description": "Discord channel ID to restrict the search to that channel only"
+      },
+      "author_id": {
+        "type": "string",
+        "description": "User ID to only return messages from that author"
+      },
+      "has": {
+        "type": "string",
+        "enum": ["link", "embed", "file", "video", "image", "sound"],
+        "description": "Filter messages that contain this type of attachment"
+      },
+      "pinned": {
+        "type": "boolean",
+        "description": "If true, only return pinned messages"
+      },
+      "sort_order": {
+        "type": "string",
+        "enum": ["desc", "asc"],
+        "description": "'desc' = newest first (default), 'asc' = oldest first"
+      },
+      "top_n": {
+        "type": "integer",
+        "description": "Maximum number of results to return (1-25, default 5)"
+      },
+      "user_id": {
+        "type": "string",
+        "description": "User ID for the 'members' search action"
+      },
+      "role_id": {
+        "type": "string",
+        "description": "Role ID to filter members or search for roles"
+      },
+      "channel_type": {
+        "type": "string",
+        "enum": ["text", "voice", "forum", "category"],
+        "description": "Channel type filter for the 'channels' search action"
+      },
+      "include_archived": {
+        "type": "boolean",
+        "description": "Include archived threads in results (default true)"
+      },
+      "include_members": {
+        "type": "boolean",
+        "description": "Include the member list for roles (default false)"
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Max results for the 'history' action (1-100, default 25)"
+      },
+      "before": {
+        "type": "string",
+        "description": "Message ID to paginate results before that message"
+      },
+      "after": {
+        "type": "string",
+        "description": "Message ID to paginate results after that message"
+      }
+    },
+    "required": ["action"]
+  }
+}

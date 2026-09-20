@@ -7,11 +7,7 @@ from enum import Enum
 from pathlib import Path
 
 from config.ai_conf import load_ai_config
-from config.logging_conf import (
-    LoggingConfig,
-    _normalize_webhook_url,
-    load_logging_config,
-)
+from config.logging_conf import LoggingConfig, _normalize_webhook_url, load_logging_config
 from config.perms_conf import load_perms_config
 
 _ENV_FILE = Path(".env")
@@ -31,7 +27,6 @@ class Env(Enum):
 
 
 def _load_env_files() -> None:
-    """Load the environment file matching the running mode."""
     if os.getenv("ENV", "LOCAL").upper() == "PROD" or not _LOCAL_ENV_FILE.exists():
         load_dotenv(_ENV_FILE)
     else:
@@ -56,18 +51,23 @@ class Config:
     GUILD_ID: int
     WEBHOOK_POSTURL: str | None
     WEBHOOK_URL: str | None
+    DEBUG_MODE: bool = False
     CUR: sqlite3.Cursor | None = None
     CONN: sqlite3.Connection | None = None
     AI_API_KEY: str | None = None
     AI_ENABLED: bool = True
     AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
     AI_MODEL: str = ""
+    AI_MODELS: list[str] = field(default_factory=list)
     AI_API_URL: str = ""
     AI_SYSTEM_PROMPT: str = ""
+    AI_STREAMING: bool = False
+    AI_MEMORY_MAX_HISTORY: int = 15
+    AI_TOOLS: list[str] = field(default_factory=list)
+    AI_NEEDLE_TOOL_CALLING: bool = False
 
 
 def load_config() -> tuple[Config, LoggingConfig]:
-    """Load application and logging configuration."""
     logging_conf = load_logging_config()
     ai_conf = load_ai_config()
 
@@ -83,6 +83,8 @@ def load_config() -> tuple[Config, LoggingConfig]:
     webhook_post_url = os.getenv("WEBHOOK_URL") or os.getenv("WEBHOOK_POSTURL")
     env_webhook_url = _normalize_webhook_url(os.getenv("WEBHOOK_URL"))
 
+    debug_mode = os.getenv("DEBUG_MODE") == "true"
+
     webhook_url = None
     if env_webhook_url:
         webhook_url = env_webhook_url
@@ -95,11 +97,17 @@ def load_config() -> tuple[Config, LoggingConfig]:
         AI_API_KEY=os.getenv("AI_API_KEY"),
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
+        DEBUG_MODE=debug_mode,
         AI_ENABLED=ai_conf.enabled,
         AI_ALLOWED_CHANNELS=ai_conf.allowed_channels,
+        AI_MODELS=ai_conf.models,
         AI_MODEL=ai_conf.model,
         AI_API_URL=ai_conf.api_url,
         AI_SYSTEM_PROMPT=ai_conf.system_prompt,
+        AI_STREAMING=ai_conf.streaming,
+        AI_MEMORY_MAX_HISTORY=ai_conf.memory_max_history,
+        AI_TOOLS=ai_conf.tools,
+        AI_NEEDLE_TOOL_CALLING=ai_conf.needle_tool_calling,
     ), logging_conf
 
 

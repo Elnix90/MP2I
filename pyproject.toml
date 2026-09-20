@@ -15,6 +15,17 @@ dependencies = [
     "requests>=2.31.0",
     "openai>=1.30.0",
     "json5>=0.9.0",
+    "aiohttp>=3.9.0",
+    "Pillow>=10.0.0",
+    "pilmoji>=2.0.0",
+    "cairosvg>=2.7.0",
+    "pytesseract>=0.3.10",
+    "fastmcp>=2.0.0",
+    "cocoindex>=1.0.0",
+    "pint>=0.24.0",
+    "cactus-needle>=1.0.0",
+    "sqlite-vec>=0.1.0",
+    "asyncio>=3.13.0",
 ]
 
 [build-system]
@@ -31,7 +42,14 @@ exclude = ["assets*", "data*", "scripts*"]
 dev = [
     "ruff>=0.9.0",
     "pre-commit>=4.0.0",
+    "isort==9.0.1",
+    "removestar==1.5.2",
+    "pyright>=1.1.414",
 ]
+
+[tool.isort]
+profile = "black"
+line_length = 200
 
 [tool.ruff.lint]
 ignore = ["BLE001", "S110"]
@@ -42,9 +60,6 @@ exclude = ["**/*.json5"]
 
 [tool.ruff.format]
 docstring-code-format = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 200

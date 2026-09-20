@@ -26,8 +26,6 @@ MAX_OUTPUT_LEN = 1900
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    """Execs the given shell command in the server the bot is hosted in"""
-
     @tree.command(
         name="exec",
         description="Execute la commande SH donnée en argument sur le server ou le bot est host.",
