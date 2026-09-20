@@ -8,14 +8,12 @@ cloud model then receives that subset instead of the full catalogue.
 Contract:
 - A request no tool can serve yields an empty call list, so the cloud model
   gets no tools at all (pure chat).
-- ``suppressed_calls`` (below the confidence floor) are logged, not exposed.
 - Any failure degrades to the full, unfiltered tool list.
 - The package stays optional: imported lazily, so the bot boots and runs
   without it installed.
 """
 
 import asyncio
-import copy
 import os
 import threading
 from dataclasses import dataclass, field
@@ -54,32 +52,7 @@ class NeedleRouter:
     def _build_agent(self, tools_meta: list[dict]) -> Any:
         import needle
 
-        return needle.Needle(tools=self._tools_with_triggers(tools_meta), system=self.SYSTEM_FACTS)
-
-    def _tools_with_triggers(self, tools_meta: list[dict]) -> list[dict]:
-        """Merge tool ``triggers`` from the native loader into the Needle schemas.
-
-        The cloud-facing metadata must stay free of ``triggers`` (OpenAI rejects
-        unknown keys), so they only ride along into the local Needle toolset.
-        """
-        try:
-            from managers.tools import get_tools_loader
-
-            triggers = get_tools_loader().tools_triggers
-        except Exception:
-            triggers = {}
-
-        merged = []
-        for tool in tools_meta:
-            name = tool.get("function", {}).get("name")
-            extra = triggers.get(name)
-            if not extra:
-                merged.append(tool)
-                continue
-            tool = copy.deepcopy(tool)
-            tool["function"]["triggers"] = extra
-            merged.append(tool)
-        return merged
+        return needle.Needle(tools=tools_meta, system=self.SYSTEM_FACTS)
 
     def _sync_select(self, user_text: str, tools_meta: list[dict]) -> ToolSelection:
         fingerprint = self._fingerprint_of(tools_meta)

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 import discord
 
 from utils.handlers.codeblock import send_code_block_with_return
-from utils.handlers.latex import LATEX_TO_EMOJI, detect_latex
+from utils.handlers.latex import LATEX_PATTERN, LATEX_TO_EMOJI
 from utils.handlers.table import TABLE_IMAGE_PLACEHOLDER, detect_and_convert_tables
 from utils.logger import get_logger
 
@@ -72,7 +72,7 @@ class MessageSender:
         from utils.handlers.latex import convert_latex_to_png
 
         latex = self._clean_latex(latex_match)
-        result, success = convert_latex_to_png(latex)
+        result, success = await convert_latex_to_png(latex)
         target = self._get_target_channel()
         if success:
             if isinstance(result, str):
@@ -81,7 +81,6 @@ class MessageSender:
                 result.seek(0)
                 rel_path = self.debug.save_image(result, f"latex_{self.debug._image_counter}.png")
                 self.debug.add_content(f"![latex]({rel_path})")
-                result.seek(0)
             file = discord.File(result, filename="formula.png")
             return await target.send(file=file)
         latex_display = latex[:100] + "..." if len(latex) > 100 else latex
@@ -93,35 +92,37 @@ class MessageSender:
             lines = latex.split("\n")
             if len(lines) >= 3 and lines[-1] == "```":
                 latex = "\n".join(lines[1:-1])
-        if latex.startswith("$") and latex.endswith("$"):
+        if latex.startswith("$$") and latex.endswith("$$"):
+            latex = latex[2:-2]
+        elif latex.startswith("$") and latex.endswith("$"):
             latex = latex[1:-1]
         if latex.startswith(r"\[") and latex.endswith(r"\]"):
             latex = latex[2:-2]
         if latex.startswith(r"\(") and latex.endswith(r"\)"):
             latex = latex[2:-2]
-        return latex
+        return latex.strip()
 
     async def send_text_with_latex(self, text: str) -> discord.Message | None:
-        matches = detect_latex(text)
+        matches = list(LATEX_PATTERN.finditer(text))
         if not matches:
             return await self.send_text_chunks(text)
         current_text = ""
         last_end = 0
         last_message = None
         for match in matches:
-            start = text.find(match, last_end)
-            if start == -1:
-                continue
+            start = match.start()
+            end = match.end()
+            match_text = match.group()
             current_text += text[last_end:start]
-            latex = self._clean_latex(match)
+            latex = self._clean_latex(match_text)
             if latex in LATEX_TO_EMOJI:
                 current_text += LATEX_TO_EMOJI[latex]
             else:
                 if current_text:
                     last_message = await self.send_text_chunks(current_text)
                     current_text = ""
-                last_message = await self.send_latex_image(match)
-            last_end = start + len(match)
+                last_message = await self.send_latex_image(match_text)
+            last_end = end
         current_text += text[last_end:]
         if current_text:
             last_message = await self.send_text_chunks(current_text)

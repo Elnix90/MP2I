@@ -5,6 +5,7 @@ Requests carry browser-like headers and retry once on rate limits to dodge
 aggressive throttling; a small cache avoids re-rendering the same formula.
 """
 
+import asyncio
 import io
 import re
 import time
@@ -82,8 +83,7 @@ LATEX_PATTERN = re.compile(
     r"\$\$[\s\S]*?\$\$|"
     r"\\\[[\s\S]*?\\\]|"
     r"\\\([\s\S]*?\\\)|"
-    r"\$[^$][\s\S]*?\$",
-    flags=re.DOTALL,
+    r"\$[^$]+?\$",
 )
 
 # simple render cache keyed by cleaned latex -> BytesIO
@@ -102,12 +102,13 @@ def _cached(latex: str) -> io.BytesIO | None:
 
 def _store(latex: str, buffer: io.BytesIO) -> io.BytesIO:
     if len(_LATEX_CACHE) >= _LATEX_CACHE_MAX:
-        _LATEX_CACHE.clear()
+        oldest_key = next(iter(_LATEX_CACHE))
+        del _LATEX_CACHE[oldest_key]
     _LATEX_CACHE[_cache_key(latex)] = buffer
     return buffer
 
 
-def latex_to_svg(formula: str) -> bytes:
+async def latex_to_svg(formula: str) -> bytes:
     global _last_remote_request
     encoded = urllib.parse.quote(formula, safe="")
     url = f"https://math.vercel.app?color=white&from={encoded}.svg"
@@ -116,7 +117,7 @@ def latex_to_svg(formula: str) -> bytes:
         # throttle: keep a minimum gap between remote requests
         elapsed = time.monotonic() - _last_remote_request
         if elapsed < REMOTE_MIN_INTERVAL:
-            time.sleep(REMOTE_MIN_INTERVAL - elapsed)
+            await asyncio.sleep(REMOTE_MIN_INTERVAL - elapsed)
         _last_remote_request = time.monotonic()
 
         try:
@@ -130,14 +131,14 @@ def latex_to_svg(formula: str) -> bytes:
                     "math.vercel.app rate-limited (attempt %d), backing off",
                     attempt + 1,
                 )
-                time.sleep(1.0 + attempt)
+                await asyncio.sleep(1.0 + attempt)
                 continue
             response.raise_for_status()
             return response.content
         except requests.RequestException as exc:
             if attempt == 0:
                 logger.warning("math.vercel.app request failed, retrying: %s", exc)
-                time.sleep(1.0)
+                await asyncio.sleep(1.0)
                 continue
             raise
 
@@ -145,7 +146,7 @@ def latex_to_svg(formula: str) -> bytes:
     raise RuntimeError("math.vercel.app rate limited")
 
 
-def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
+async def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
     cleaned = latex.strip()
     if cleaned.startswith(r"\(") and cleaned.endswith(r"\)"):
         cleaned = cleaned[2:-2]
@@ -157,17 +158,17 @@ def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
         return cached, True
 
     if not cairosvg:
-        return f"```\n{latex}\n``` (cairosvg missing)", True
+        return f"```\n{latex}\n``` (cairosvg missing)", False
 
     try:
-        svg_bytes = latex_to_svg(cleaned)
+        svg_bytes = await latex_to_svg(cleaned)
         png_bytes = cairosvg.svg2png(bytestring=svg_bytes, scale=2)
         if png_bytes is None:
-            return f"```\n{latex}\n``` (conversion failed)", True
+            return f"```\n{latex}\n``` (conversion failed)", False
         return _store(cleaned, io.BytesIO(png_bytes)), True
     except Exception as exc:
         logger.error("LaTeX conversion failed: %s", exc)
-        return f"```\n{latex}\n```", True
+        return f"```\n{latex}\n```", False
 
 
 def detect_latex(text: str) -> list[str]:

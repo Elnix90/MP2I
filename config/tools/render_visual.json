@@ -1,25 +1,25 @@
 {
   "name": "render_visual",
-  "description": "Crée un graphique, diagramme ou tableau visuel en image. Types : bar, line, pie, scatter, heatmap, table, diagram (Mermaid).",
+  "description": "Create a chart, diagram, or visual table rendered as an image. Use THIS TOOL when the user wants to visualize data, create a chart (bar, line, pie, scatter), a diagram (Mermaid flowchart), or a formatted table. Available types: bar, line, pie, scatter, table, diagram (Mermaid).",
   "inputSchema": {
     "type": "object",
     "properties": {
       "type": {
         "type": "string",
         "enum": ["bar", "line", "pie", "scatter", "table", "diagram"],
-        "description": "Type de visualisation"
+        "description": "Visualization type: 'bar' for bar chart, 'line' for line chart, 'pie' for pie chart, 'scatter' for scatter plot, 'table' for formatted table, 'diagram' for Mermaid diagram"
       },
       "title": {
         "type": "string",
-        "description": "Titre du graphique"
+        "description": "Title of the chart or diagram"
       },
       "data": {
         "type": "object",
-        "description": "Données : {labels, datasets} pour graphiques, {headers, rows} pour tableaux, string Mermaid pour diagram"
+        "description": "Data to visualize. For charts: {labels: [...], datasets: [{name: '...', values: [...]}]}. For tables: {headers: [...], rows: [[...], ...]}. For diagrams: Mermaid string (e.g. 'graph TD; A-->B;')"
       },
       "options": {
         "type": "object",
-        "description": "Options : x_label, y_label, caption, sort, stacked"
+        "description": "Optional settings: x_label, y_label, caption, sort, stacked"
       }
     },
     "required": ["type", "title", "data"]

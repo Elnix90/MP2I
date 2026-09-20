@@ -392,6 +392,8 @@ def _is_separator_line(line: str) -> bool:
 
 
 def _parse_table_lines(lines: list[str]) -> tuple[list[str], list[list[str]], list[str]] | None:
+    if not lines:
+        return None
     headers = [p.strip() for p in lines[0].strip()[1:-1].split("|")]
     if not headers:
         return None

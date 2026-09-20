@@ -1,19 +1,12 @@
 {
   "name": "safe_eval_math",
-  "description": "Safely evaluate math expressions and unit conversions",
-  "triggers": [
-    "\\b(calc|calcule|calculer|math|equation|formule)\\b",
-    "\\b(combien font)\\b",
-    "\\b(evaluer|evaluate)\\b",
-    "\\b(resultat|result)\\b",
-    "\\b(conversion|convertir|convert)\\b"
-  ],
+  "description": "Evaluate mathematical expressions and convert units. Use THIS TOOL when the user asks a math question, needs a calculation, unit conversion, or any numeric evaluation. Examples: 'calculate 2+2', 'convert 5 miles to km', 'solve x^2=4'.",
   "inputSchema": {
     "type": "object",
     "properties": {
       "expression": {
         "type": "string",
-        "description": "Math expression, e.g. '2*sin(pi/4)' or '10 km to m'"
+        "description": "Math expression to evaluate. Examples: '2+2', 'sin(pi/4)', '10 km to miles', 'sqrt(144)', '2^10'"
       },
       "precision": {
         "type": "integer",
