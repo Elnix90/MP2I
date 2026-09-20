@@ -222,6 +222,13 @@ class MemoryManager:
     def _embedding_to_bytes(self, vec: list[float]) -> bytes:
         return struct.pack(f"{len(vec)}f", *vec)
 
+    def _upsert_vector(self, conn: sqlite3.Connection, rowid: int, embedding: list[float]) -> None:
+        conn.execute("DELETE FROM vec_turns WHERE rowid = ?", (rowid,))
+        conn.execute(
+            "INSERT INTO vec_turns(rowid, embedding) VALUES (?, ?)",
+            (rowid, self._embedding_to_bytes(embedding)),
+        )
+
     def _bytes_to_embedding(self, data: bytes) -> list[float]:
         return list(struct.unpack(f"{len(data) // 4}f", data))
 
@@ -280,10 +287,7 @@ class MemoryManager:
             ).fetchone()
             if rowid is not None:
                 try:
-                    conn.execute(
-                        "INSERT OR REPLACE INTO vec_turns(rowid, embedding) VALUES (?, ?)",
-                        (rowid[0], self._embedding_to_bytes(embedding)),
-                    )
+                    self._upsert_vector(conn, rowid[0], embedding)
                 except Exception as exc:
                     logger.debug("Failed to store embedding for turn %s: %s", turn.turn_id[:8], exc)
 
@@ -602,10 +606,7 @@ class MemoryManager:
             embedding = self._embed(combined)
             if embedding is not None:
                 try:
-                    conn.execute(
-                        "INSERT OR REPLACE INTO vec_turns(rowid, embedding) VALUES (?, ?)",
-                        (row["rowid"], self._embedding_to_bytes(embedding)),
-                    )
+                    self._upsert_vector(conn, row["rowid"], embedding)
                 except Exception as exc:
                     logger.debug("Backfill failed for %s: %s", row["turn_id"][:8], exc)
         conn.commit()
