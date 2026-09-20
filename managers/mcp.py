@@ -126,7 +126,7 @@ class MCPManager:
             async with client:
                 try:
                     result = await client.call_tool(tool_name, arguments, timeout=60)
-                    logger.info(
+                    logger.debug(
                         "MCP tool %s.%s returned: %s...",
                         server_name,
                         tool_name,

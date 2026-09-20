@@ -229,6 +229,7 @@ def setup_logging(level: int, config: LoggingConfig):
         try:
             dh = DiscordWebhookHandler(webhook)
             dh.setFormatter(DiscordAnsiFormatter(discord_format))
+            dh.addFilter(BotFilter())
             handlers.append(dh)
         except Exception:
             pass
@@ -246,6 +247,12 @@ def setup_logging(level: int, config: LoggingConfig):
         for handler in handlers:
             if handler not in lib_logger.handlers:
                 lib_logger.addHandler(handler)
+
+    # Silence noisy third-party loggers created lazily after startup
+    for name in ("httpx", "httpcore", "openai", "fastmcp", "streamable_http"):
+        lib_logger = logging.getLogger(name)
+        lib_logger.setLevel(logging.WARNING)
+        lib_logger.propagate = False
 
 
 def get_logger() -> logging.Logger:

@@ -87,7 +87,7 @@ timestamp: {ts}
 """
         out = self.debug_dir / "message.md"
         out.write_text(md, encoding="utf-8")
-        logger.info("Debug: saved %s (%d bytes, %d images)", out, len(md), self._image_counter)
+        logger.debug("Debug: saved %s (%d bytes, %d images)", out, len(md), self._image_counter)
 
 
 def new_turn_id() -> str:
