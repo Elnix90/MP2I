@@ -36,5 +36,5 @@ run = "source scripts/confirm.sh && confirm 'Supprimer logs/ et debug/ ?' && rm 
 description = "Clean up debug messages and logs"
 
 [tasks.reset]
-run = "source scripts/confirm.sh && confirm 'Supprimer .venv/, logs/, debug/, data/ ? Irréversible !' && rm -rf .venv logs debug data && echo 'Réinitialisé.' || echo 'Annulé.'"
+run = "source scripts/confirm.sh && confirm 'Supprimer .venv/, logs/, debug/, data/, __pycache__? Irréversible !' && rm -rf .venv logs debug data && find . -type d -name __pycache__ -not -path './.venv/*' -exec rm -rf {} + 2>/dev/null; echo 'Réinitialisé.' || echo 'Annulé.'"
 description = "Reset project"

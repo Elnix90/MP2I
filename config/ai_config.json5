@@ -4,9 +4,11 @@
     needle_tool_calling: true,
     allowed_channels: [],
     models: [
+      "community/YoannDev90/poolside-laguna-s-2.1:free",
       "community/vendouple/muse-glimmer-30b:free",
       "community/chigwell/llm7-fast",
-      "community/YoannDev90/muse-glimmer-30b:free"
+      "community/YoannDev90/muse-glimmer-30b:free",
+      "community/iotserver24/deepseek-v4f"
     ],
     api_url: "https://gen.pollinations.ai/v1",
     system_prompt_path: "config/prompts/system.md",

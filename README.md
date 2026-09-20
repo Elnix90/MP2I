@@ -108,10 +108,14 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 .
 ├── assets
 │   ├── fonts
+│   │   ├── IBMPlexMono-Bold.ttf
+│   │   ├── IBMPlexMono-Regular.ttf
 │   │   ├── NotoSans-BoldItalic.ttf
 │   │   ├── NotoSans-Bold.ttf
 │   │   ├── NotoSans-Italic.ttf
-│   │   └── NotoSans-Regular.ttf
+│   │   ├── NotoSans-Italic-VF.ttf
+│   │   ├── NotoSans-Regular.ttf
+│   │   └── NotoSans-VF.ttf
 │   └── images
 │       └── bot_profile_picture.png
 ├── bot.py
@@ -147,7 +151,9 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   └── system.md
 │   ├── statuses.json5
 │   └── tools
+│       ├── discord_search.json
 │       ├── image_ocr.json
+│       ├── render_visual.json
 │       └── safe_eval_math.json
 ├── core
 │   ├── ai
@@ -165,7 +171,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── roles_ids.py
 ├── db
 │   ├── colloscope.db
-│   ├── cvs_parseur.py
+│   ├── csv_parseur.py
 │   ├── generate_colloscope_db.py
 │   ├── init
 │   │   ├── colleurs.py
@@ -198,13 +204,16 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── main.py
 ├── managers
 │   ├── context.py
+│   ├── discord_search.py
 │   ├── __init__.py
 │   ├── mcp.py
 │   ├── memory.py
 │   ├── needle.py
 │   └── tools
+│       ├── discord_search.py
 │       ├── image_ocr.py
 │       ├── __init__.py
+│       ├── render_visual.py
 │       └── safe_eval_math.py
 ├── mise.toml
 ├── .pre-commit-config.yaml
@@ -212,6 +221,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── README.md
 ├── requirements.txt
 ├── scripts
+│   ├── confirm.sh
 │   ├── deps.py
 │   ├── env.py
 │   ├── gen_cmds.py
@@ -225,11 +235,11 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-22 directories, 101 files
+22 directories, 111 files
 ```
 <!-- TREE-END -->
 
-Run `./lint.sh` to format code and regenerate this project tree snapshot. CI runs the same script on every push/PR.
+Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. CI runs the same script on every push/PR.
 
 ## Dependencies
 
@@ -247,7 +257,7 @@ Run `./lint.sh` to format code and regenerate this project tree snapshot. CI run
 - `cairosvg` - A Simple SVG Converter based on Cairo (latest: 2.9.1)
 - `pytesseract` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
 - `fastmcp` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
-- `cocoindex` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.23)
+- `cocoindex` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.24)
 - `pint` - Physical quantities module (latest: 0.26.1)
 - `cactus-needle` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.2)
 ```

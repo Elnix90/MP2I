@@ -22,8 +22,7 @@ dependencies = [
     "pytesseract>=0.3.10",
     "fastmcp>=2.0.0",
     "cocoindex>=1.0.0",
-    "pint>=0.24.0",
-    "cactus-needle>=1.0.0"
+    "pint>=0.24.0"
 ]
 
 [build-system]
@@ -42,6 +41,7 @@ dev = [
     "pre-commit>=4.0.0",
     "isort==9.0.1",
     "removestar==1.5.2",
+    "pyright>=1.1.414",
 ]
 
 [tool.isort]
