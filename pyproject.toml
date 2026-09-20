@@ -22,7 +22,9 @@ dependencies = [
     "pytesseract>=0.3.10",
     "fastmcp>=2.0.0",
     "cocoindex>=1.0.0",
-    "pint>=0.24.0"
+    "pint>=0.24.0",
+    "cactus-needle>=1.0.0",
+    "sqlite-vec>=0.1.0",
 ]
 
 [build-system]

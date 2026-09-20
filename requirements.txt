@@ -13,3 +13,4 @@ fastmcp
 cocoindex
 pint
 cactus-needle
+sqlite-vec
