@@ -48,6 +48,8 @@ class MessageSender:
             self.debug.add_content(text)
         target = self._get_target_channel()
         lines = text.splitlines(keepends=True)
+        print(lines)
+        print(text)
         current_message = ""
         last_message = None
         for line in lines:

@@ -61,7 +61,7 @@ class Config:
     AI_MODELS: list[str] = field(default_factory=list)
     AI_API_URL: str = ""
     AI_SYSTEM_PROMPT: str = ""
-    AI_STREAMING: bool = True
+    AI_STREAMING: bool = False
     AI_MEMORY_MAX_HISTORY: int = 15
     AI_TOOLS: list[str] = field(default_factory=list)
     AI_NEEDLE_TOOL_CALLING: bool = False

@@ -216,6 +216,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │       └── pre-commit.yml
 ├── .gitignore
 ├── LICENSE
+├── logs
 ├── main.py
 ├── managers
 │   ├── context.py
@@ -255,7 +256,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-22 directories, 127 files
+23 directories, 127 files
 ```
 <!-- TREE-END -->
 
