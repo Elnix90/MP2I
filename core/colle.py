@@ -1,23 +1,43 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class Colle:
-    def __init__(
-        self,
-        colleur_name: str,
-        matiere: str,
-        jour: str,
-        creneau: str,
-        salle: str,
-    ) -> None:
-        self.colleur_name = colleur_name
-        self.matiere = matiere
-        self.jour = jour
-        self.creneau = creneau
-        self.salle = salle
+    colleur_name: str
+    matiere: str
+    jour: str
+    creneau: int
+    salle: str
+    is_future: bool
 
     def __str__(self) -> str:
+        prefix = ""
+        suffix = ""
+
+        # Skiletrough the line when the colle is already done
+        if not self.is_future:
+            prefix = "~~"
+            suffix = "~~"
 
         if self.colleur_name == "Gaudillat":
-            end_msg = " (tu es foutu)"
-        else:
-            end_msg = ""
+            suffix = " (tu es foutu)" + suffix
 
-        return f"Colle de **{self.matiere}**, {self.jour} à {self.creneau} avec *{self.colleur_name}* en salle **{self.salle}**{end_msg}"
+        return f"{prefix} **{self.matiere}**, {self.jour} de {self.creneau}h à {self.creneau + 1}h avec ***{self.colleur_name}*** en salle **{self.salle}**. {suffix}"
+
+
+@dataclass
+class ColleResult:
+    colles: list[Colle]
+    fetched_week: int
+    current_week: int
+
+    def week_str(self) -> str:
+        diff = self.fetched_week - self.current_week
+
+        match diff:
+            case 0:
+                return "***__Cette semaine__***"
+            case 1:
+                return "***__La semaine prochaine__***"
+            case _:
+                return f"***__La semaine n°{self.fetched_week}__***"

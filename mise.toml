@@ -38,3 +38,10 @@ description = "Clean up debug messages and logs"
 [tasks.reset]
 run = "source scripts/confirm.sh && confirm 'Supprimer .venv/, logs/, debug/, data/, __pycache__? Irréversible !' && rm -rf .venv logs debug data && find . -type d -name __pycache__ -not -path './.venv/*' -exec rm -rf {} + 2>/dev/null; echo 'Réinitialisé.' || echo 'Annulé.'"
 description = "Reset project"
+
+[tasks.reset-colloscope]
+run = "python3 -m db.generate_colloscope_db"
+description = "Regenerate the colloscope database from the data we have"
+
+[hooks]
+postinstall = "python3 -m db.generate_colloscope_db && mise setup-hooks"

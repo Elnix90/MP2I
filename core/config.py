@@ -7,7 +7,12 @@ from enum import Enum
 from pathlib import Path
 
 from config.ai_conf import load_ai_config
-from config.logging_conf import LoggingConfig, _normalize_webhook_url, load_logging_config
+from config.groups_conf import GroupsConfig, load_groups_config
+from config.logging_conf import (
+    LoggingConfig,
+    _normalize_webhook_url,
+    load_logging_config,
+)
 from config.perms_conf import load_perms_config
 
 _ENV_FILE = Path(".env")
@@ -49,26 +54,30 @@ ENV = Env.PROD if os.getenv("ENV", "LOCAL").upper() == "PROD" else Env.LOCAL
 class Config:
     BOT_TOKEN: str
     GUILD_ID: int
+    GROUPS_CONFIG: GroupsConfig
     WEBHOOK_POSTURL: str | None
     WEBHOOK_URL: str | None
-    DEBUG_MODE: bool = False
-    CUR: sqlite3.Cursor | None = None
-    CONN: sqlite3.Connection | None = None
-    AI_API_KEY: str | None = None
-    AI_ENABLED: bool = True
-    AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
-    AI_MODEL: str = ""
-    AI_MODELS: list[str] = field(default_factory=list)
-    AI_API_URL: str = ""
-    AI_SYSTEM_PROMPT: str = ""
+
+    AI_API_KEY: str | None
+    AI_ENABLED: bool
+    AI_MODEL: str
+    AI_API_URL: str
+    AI_SYSTEM_PROMPT: str
     AI_STREAMING: bool = False
     AI_MEMORY_MAX_HISTORY: int = 15
-    AI_TOOLS: list[str] = field(default_factory=list)
     AI_NEEDLE_TOOL_CALLING: bool = False
+
+    DEBUG_MODE: bool = False
+    AI_MODELS: list[str] = field(default_factory=list)
+    AI_TOOLS: list[str] = field(default_factory=list)
+    AI_ALLOWED_CHANNELS: list[int] = field(default_factory=list)
+    CUR: sqlite3.Cursor | None = field(init=False)
+    CONN: sqlite3.Connection | None = field(init=False)
 
 
 def load_config() -> tuple[Config, LoggingConfig]:
     logging_conf = load_logging_config()
+    groups_config = load_groups_config()
     ai_conf = load_ai_config()
 
     bot_token = os.getenv("BOT_TOKEN")
@@ -94,6 +103,7 @@ def load_config() -> tuple[Config, LoggingConfig]:
     return Config(
         BOT_TOKEN=bot_token,
         GUILD_ID=guild_id,
+        GROUPS_CONFIG=groups_config,
         AI_API_KEY=os.getenv("AI_API_KEY"),
         WEBHOOK_POSTURL=webhook_post_url,
         WEBHOOK_URL=webhook_url,
