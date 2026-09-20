@@ -67,7 +67,6 @@ mcp==2.2.0
 mcp-types==2.2.0
 mdurl==0.1.2
 more-itertools==11.1.0
--e file:///home/yoann/Documents/GitHub/MP2I
 msgspec==0.21.1
 multidict==6.9.0
 mypy-extensions==1.1.0
