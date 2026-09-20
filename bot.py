@@ -238,8 +238,13 @@ class MP2IBot(discord.Client):
             include_tools=True,
         )
 
-        history = self.memory.get_history(scope)
         user_text = self._strip_mention(message.content, self.user)  # pyright: ignore[reportArgumentType]
+
+        history = self.memory.get_context(
+            scope,
+            user_id=user.id,
+            current_query=user_text or message.content,
+        )
 
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(history)
