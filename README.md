@@ -80,11 +80,11 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 
 <!--ENV-START-->
 ```env
+AI_API_KEY=
 BOT_TOKEN=
 GUILD_ID=
-WEBHOOK_URL=
-AI_API_KEY=
 PARALLEL_API_KEY=
+WEBHOOK_URL=
 ```
 <!--ENV-END-->
 

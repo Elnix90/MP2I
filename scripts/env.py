@@ -14,6 +14,7 @@ for line in ENV_FILE.read_text().splitlines():
     line = line.strip()
     if line and not line.startswith("#") and "=" in line:
         var_names.append(line.split("=", 1)[0].strip())
+var_names.sort()
 
 if not var_names:
     sys.exit(0)
