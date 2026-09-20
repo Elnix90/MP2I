@@ -84,7 +84,7 @@ async def setup(tree: app_commands.CommandTree, bot: discord.Client):
                 "display_name_colors": colors,
             }
 
-            route = discord.http.Route("PATCH", f"/guilds/{interaction.guild_id}/members/@me")
+            route = discord.http.Route("PATCH", f"/guilds/{interaction.guild_id}/members/@me")  # type: ignore[attr-defined]
             await bot.http.request(route, json=payload)
 
             await interaction.response.send_message(

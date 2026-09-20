@@ -48,12 +48,12 @@ def get_all_commands() -> list[CommandInfo]:
                                         keyword.value,
                                         ast.Constant,
                                     ):
-                                        name = keyword.value.value
+                                        name = str(keyword.value.value)
                                     elif keyword.arg == "description" and isinstance(
                                         keyword.value,
                                         ast.Constant,
                                     ):
-                                        description = keyword.value.value
+                                        description = str(keyword.value.value)
 
                                 if name == "unknown":
                                     name = node.name

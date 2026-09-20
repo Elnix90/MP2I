@@ -44,10 +44,10 @@ async def _render_table(title: str, data: dict) -> str:
 
 async def _render_chart(chart_type: str, title: str, data: dict, options: dict) -> str:
     try:
-        import matplotlib
+        import matplotlib  # type: ignore[import-untyped]
 
         matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # type: ignore[import-untyped]
 
         plt.rcParams.update(
             {
@@ -135,10 +135,10 @@ async def _render_mermaid(title: str, data: dict, options: dict) -> str:
         return json.dumps({"error": "Mermaid source is required"}, ensure_ascii=False)
 
     try:
-        import matplotlib
+        import matplotlib  # type: ignore[import-untyped]
 
         matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # type: ignore[import-untyped]
 
         fig, ax = plt.subplots(figsize=(12, 8))
         ax.text(0.5, 0.5, f"Mermaid:\n{source}", ha="center", va="center", fontsize=10, family="monospace", color="#ebebe8", transform=ax.transAxes, wrap=True)
