@@ -25,7 +25,7 @@ async def setup(tree: app_commands.CommandTree, bot):
         log_command_start(logger, "get-emojis", interaction)
 
         try:
-            await defer_interaction(interaction, ephemeral=True)
+            await defer_interaction(interaction)
 
             guild = interaction.guild
             if guild is None:
@@ -33,11 +33,7 @@ async def setup(tree: app_commands.CommandTree, bot):
 
             msg = "".join([str(emoji) for emoji in guild.emojis])
 
-            await send_interaction(
-                interaction,
-                content=msg,
-                # content=f"```bash\n{msg}```"
-            )
+            await send_interaction(interaction, content=msg)
 
             log_command_end(logger, "get-emojis", start_time)
         except Exception as exc:
