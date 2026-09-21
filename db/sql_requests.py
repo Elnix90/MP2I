@@ -86,7 +86,7 @@ def get_colles(groupe_id: int, week_id_requested: int | None) -> ColleResult | N
     for row in rows:
         colleur_name = row["colleur_name"]
         matiere = row["matiere"]
-        jour: int = int(row["jour_id"])  # pyright: ignore[reportAssignmentType]
+        jour: int = int(row["jour_id"]) + 1  # pyright: ignore[reportAssignmentType]
         crenau_start = int(row["creneau_start"])
         salle = row["salle"]
 
@@ -94,7 +94,7 @@ def get_colles(groupe_id: int, week_id_requested: int | None) -> ColleResult | N
         # or the requested week is the current one, we are in the present week
         # or this colle's day is higher that the current one, the colle's happening in the future
         # or this colle is today and starts later
-        is_future = (week_id_requested is not None and current_week < week_id_requested) or jour > day_number or (jour == day_number and crenau_start > hour)
+        is_future = (week_id_requested is not None and current_week < week_id_requested) or (jour > day_number) or (jour == day_number and crenau_start > hour)
 
         colles.append(
             Colle(colleur_name=colleur_name, matiere=matiere, jour=JOURS[jour], creneau=crenau_start, salle=salle, is_future=is_future),
