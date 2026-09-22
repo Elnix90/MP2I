@@ -29,6 +29,12 @@ echo "Updating project tree in README..."
 uv run python3 scripts/tree.py
 
 # ---------------------------------------------------------------------------
+# 2b. requirements.txt → derived from pyproject.toml
+# ---------------------------------------------------------------------------
+echo "Generating requirements.txt from pyproject.toml..."
+uv run python3 scripts/gen_requirements.py
+
+# ---------------------------------------------------------------------------
 # 3. PyPI dependencies → README
 # ---------------------------------------------------------------------------
 echo "Updating dependencies in README..."
@@ -41,7 +47,7 @@ echo "Updating env vars in README..."
 uv run python3 scripts/env.py
 
 # ---------------------------------------------------------------------------
-# 5. Command documentation → README
+# 6. Command documentation → README
 # ---------------------------------------------------------------------------
 echo "Updating commands in README..."
 uv run python3 scripts/gen_cmds.py
