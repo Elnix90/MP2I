@@ -7,6 +7,7 @@ on:
   pull_request:
     branches: ["**"]
     paths: ["renderer/**"]
+  workflow_dispatch:
 
 jobs:
   build-release:
