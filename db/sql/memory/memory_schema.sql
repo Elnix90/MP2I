@@ -45,5 +45,3 @@ CREATE TABLE IF NOT EXISTS channel_facts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_channel_facts_channel ON channel_facts(channel_id);
-
-
