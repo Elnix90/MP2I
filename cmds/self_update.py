@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 
@@ -17,6 +18,26 @@ from core.perms import is_bot_admin
 from utils.logger import get_logger
 
 logger = get_logger()
+
+RESTART_DELAY = 10.0
+
+
+async def _restart_in(delay: float, restart_cmd: str) -> None:
+    await asyncio.sleep(delay)
+    if restart_cmd:
+        logger.info("Redémarrage planifié du bot : %s", restart_cmd)
+        try:
+            result = await exec_shell_command(restart_cmd, timeout=30.0)
+            if "exit code" in result:
+                logger.warning("Redémarrage en échec : %s", result[:500])
+            else:
+                logger.info("Redémarrage : %s", result[:500])
+        except Exception as exc:
+            logger.error("Redémarrage échoué : %s", exc)
+        return
+
+    logger.warning("Aucune commande de redémarrage configurée : arrêt forcé du processus - Wings/AzurBOX doit redémarrer le serveur via son auto-restart.")
+    os._exit(1)
 
 
 async def setup(tree: app_commands.CommandTree, bot):
@@ -49,6 +70,7 @@ async def setup(tree: app_commands.CommandTree, bot):
             output = ""
             failed = False
             failed_step = None
+            restart_cmd = os.getenv("BOT_RESTART_CMD", "")
 
             for step_name, step_cmd in steps:
                 output += f"🔧 {step_name}...\n"
@@ -66,39 +88,36 @@ async def setup(tree: app_commands.CommandTree, bot):
                     output += "   ⏰ Cette étape a dépassé le délai autorisé.\n\n"
                     break
 
-            if restart and not failed:
-                output += "🔄 Redémarrage du bot...\n"
-                restart_cmd = os.getenv("BOT_RESTART_CMD", "")
-                if restart_cmd:
-                    result = await exec_shell_command(restart_cmd, timeout=30.0)
-                    output += f"   {result[:500]}\n"
-                else:
-                    output += "   ⚠️ Aucune commande de redémarrage configurée (BOT_RESTART_CMD).\n"
-                    output += "   Le bot ne sera pas redémarré automatiquement.\n"
+            will_restart = restart and not failed
 
             if failed and failed_step:
                 output += f"\n❌ **Échec à l'étape :** `{failed_step}`\n"
                 output += f"Résultat :\n```\n{output[-MAX_OUTPUT_LEN:]}\n```"
-                await send_interaction(
-                    interaction,
-                    content=output[-MAX_OUTPUT_LEN:],
-                    ephemeral=True,
-                )
-                log_command_end(logger, "self_update", start_time, status="failed")
-                return
-
-            output += f"\n✅ **Mise à jour terminée** (branche `{target_branch}`)"
-            if restart:
-                output += " + redémarrage initié."
             else:
-                output += "."
+                output += f"\n✅ **Mise à jour terminée** (branche `{target_branch}`)"
+                if will_restart:
+                    output += f" — redémarrage planifié dans {RESTART_DELAY:.0f}s"
+                    if not restart_cmd:
+                        output += " via l'auto-restart Wings (arrêt forcé, aucun BOT_RESTART_CMD)"
+                    output += "."
+                else:
+                    output += "."
 
             await send_interaction(
                 interaction,
                 content=f"```\n{output[-MAX_OUTPUT_LEN:]}\n```",
-                ephemeral=True,
+                ephemeral=not will_restart,
             )
-            log_command_end(logger, "self_update", start_time)
+            if will_restart:
+                asyncio.create_task(_restart_in(RESTART_DELAY, restart_cmd))
+
+            log_command_end(
+                logger,
+                "self_update",
+                start_time,
+                status="failed" if failed else "ok",
+            )
+            return
 
         except Exception as exc:
             log_command_error(logger, "self_update", exc)
