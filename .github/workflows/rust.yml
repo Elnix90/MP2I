@@ -45,8 +45,8 @@ jobs:
           path: dist/mp2i-render-linux-x86_64.tar.gz
           if-no-files-found: error
 
-      - name: Publish rolling release (default branch & prod)
-        if: github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || github.ref_name == 'prod')
+      - name: Publish rolling release (default branch, prod, manual)
+        if: (github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || github.ref_name == 'prod')) || github.event_name == 'workflow_dispatch'
         run: |
           set -e
           gh release create prebuilt dist/*.tar.gz --title "mp2i-render (prebuilt)" \
