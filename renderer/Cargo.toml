@@ -1,0 +1,17 @@
+[package]
+name = "mp2i-render"
+version = "0.1.0"
+edition = "2024"
+description = "Renders a LaTeX math formula to PNG (stdin -> stdout) using the RaTeX engine."
+license = "MIT"
+
+[dependencies]
+ratex-layout = "0.1.14"
+ratex-parser = "0.1.14"
+ratex-render = { version = "0.1.14", features = ["embed-fonts"] }
+ratex-types = "0.1.14"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

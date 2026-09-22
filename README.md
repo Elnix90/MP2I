@@ -42,7 +42,7 @@
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
 | `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
-| `/send` | Envoie un message custom dans le salon actuel (ou un autre passé en argument), avec mention optionnelle d'un utilisateur. | Admins |
+| `/send` | No description provided | Admins |
 
 <!-- COMMANDS-END -->
 
@@ -84,7 +84,8 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 AI_API_KEY=
 BOT_TOKEN=
 GUILD_ID=
-PARALLEL_API_KEY=
+LATEX_RENDERER_BIN=
+LATEX_RENDERER_SCALE=
 WEBHOOK_URL=
 ```
 <!--ENV-END-->
@@ -200,7 +201,8 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── settings_store.md
 ├── .github
 │   └── workflows
-│       └── pre-commit.yml
+│       ├── pre-commit.yml
+│       └── rust.yml
 ├── .gitignore
 ├── LICENSE
 ├── logs
@@ -222,6 +224,11 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── .pre-commit-config.yaml
 ├── pyproject.toml
 ├── README.md
+├── renderer
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   └── src
+│       └── main.rs
 ├── requirements.txt
 ├── scripts
 │   ├── confirm.sh
@@ -231,8 +238,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── lint.sh
 │   ├── strip_metadata.sh
 │   └── tree.py
-├── tests
-│   └── test_handlers_pipeline.py
 ├── utils
 │   ├── console.py
 │   ├── debug.py
@@ -244,7 +249,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-23 directories, 114 files
+24 directories, 117 files
 ```
 <!-- TREE-END -->
 
@@ -254,21 +259,127 @@ Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. 
 
 <!--DEPS-START-->
 ```markdown
-- `discord.py` - A Python wrapper for the Discord API (latest: 2.7.1)
-- `python-dotenv` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
-- `colorama` - Cross-platform colored terminal text. (latest: 0.4.6)
-- `requests` - Python HTTP for Humans. (latest: 2.34.2)
-- `openai` - The official Python library for the openai API (latest: 3.16.2)
-- `json5` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
-- `aiohttp` - Async http client/server framework (asyncio) (latest: 3.14.3)
-- `Pillow` - Python Imaging Library (fork) (latest: 12.3.0)
-- `pilmoji` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
-- `cairosvg` - A Simple SVG Converter based on Cairo (latest: 2.9.1)
-- `pytesseract` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
-- `fastmcp` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
-- `cocoindex` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.24)
-- `pint` - Physical quantities module (latest: 0.26.1)
-- `cactus-needle` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.2)
+- `aiofile==3.12.3`
+- `aiohappyeyeballs==2.7.1`
+- `aiohttp==3.14.3`
+- `aiosignal==1.4.0`
+- `annotated-types==0.8.0`
+- `anyio==4.15.1`
+- `asyncio==4.0.0`
+- `attrs==26.1.0`
+- `audioop-lts==0.2.2`
+- `authlib==1.8.0`
+- `beartype==0.22.9`
+- `cachetools==7.2.0`
+- `cactus-needle==3.0.2`
+- `caio==0.12.4`
+- `certifi==2026.7.22`
+- `cffi==2.1.1`
+- `cfgv==3.5.0`
+- `charset-normalizer==3.5.1`
+- `click==8.5.0`
+- `cocoindex==1.0.23`
+- `colorama==0.4.6`
+- `cryptography==50.0.1`
+- `cyclopts==4.25.3`
+- `discord-py==2.7.1`
+- `distlib==0.4.3`
+- `dnspython==2.8.0`
+- `docstring-parser==0.18.0`
+- `email-validator==2.3.0`
+- `emoji==2.16.0`
+- `exceptiongroup==1.3.1`
+- `fastmcp==4.0.5`
+- `fastmcp-slim==4.0.5`
+- `filelock==3.32.7`
+- `flexcache==0.3`
+- `flexparser==0.4`
+- `frozenlist==1.8.0`
+- `fsspec==2026.9.0`
+- `griffelib==2.3.0`
+- `h11==0.16.0`
+- `hf-xet==1.6.0`
+- `httpcore==1.0.9`
+- `httpcore2==2.13.0`
+- `httpx==0.28.1`
+- `httpx2==2.13.0`
+- `huggingface-hub==1.32.0`
+- `identify==2.6.19`
+- `idna==3.20`
+- `isort==9.0.1`
+- `jaraco-classes==3.4.0`
+- `jaraco-context==6.1.2`
+- `jaraco-functools==4.6.0`
+- `jeepney==0.9.0`
+- `jiter==0.17.0`
+- `joserfc==1.7.5`
+- `json5==0.15.0`
+- `jsonref==1.1.0`
+- `jsonschema==4.26.0`
+- `jsonschema-path==0.5.0`
+- `jsonschema-specifications==2025.9.1`
+- `keyring==25.7.0`
+- `markdown-it-py==4.2.0`
+- `mcp==2.2.0`
+- `mcp-types==2.2.0`
+- `mdurl==0.1.2`
+- `more-itertools==11.1.0`
+- `msgspec==0.21.1`
+- `multidict==6.9.0`
+- `mypy-extensions==1.1.0`
+- `nodeenv==1.10.0`
+- `numpy==2.5.3`
+- `openai==3.16.2`
+- `openapi-pydantic==0.5.1`
+- `opentelemetry-api==1.44.0`
+- `packaging==26.3`
+- `pathable==0.6.0`
+- `pillow==12.3.0`
+- `pilmoji==2.0.5`
+- `pint==0.26.1`
+- `platformdirs==4.11.11`
+- `pre-commit==4.6.2`
+- `propcache==0.5.4`
+- `psutil==7.2.2`
+- `py-key-value-aio==0.4.6`
+- `pycparser==3.0`
+- `pydantic==2.13.5`
+- `pydantic-core==2.46.5`
+- `pydantic-settings==2.15.0`
+- `pyflakes==3.4.0`
+- `pygments==2.21.0`
+- `pyjwt==2.14.0`
+- `pyperclip==1.11.0`
+- `pyright==1.1.414`
+- `pytesseract==0.3.13`
+- `python-discovery==1.6.1`
+- `python-dotenv==1.2.3`
+- `python-multipart==0.0.32`
+- `pyyaml==6.0.3`
+- `referencing==0.37.0`
+- `removestar==1.5.2`
+- `requests==2.34.2`
+- `rich==15.0.0`
+- `rich-rst==2.1.0`
+- `rpds-py==2026.6.3`
+- `ruff==0.16.8`
+- `secretstorage==3.5.0`
+- `sniffio==1.3.1`
+- `sqlite-vec==0.1.9`
+- `sse-starlette==3.4.11`
+- `starlette==1.6.0`
+- `tqdm==4.70.1`
+- `truststore==0.10.4`
+- `typing-extensions==4.16.0`
+- `typing-inspection==0.4.4`
+- `uncalled-for==0.4.0`
+- `urllib3==2.8.0`
+- `uvicorn==0.53.0`
+- `virtualenv==21.7.16`
+- `watchdog==6.0.0`
+- `watchfiles==1.2.0`
+- `websockets==17.1`
+- `yarl==1.25.1`
 ```
 <!--DEPS-END-->
 

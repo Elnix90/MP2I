@@ -11,6 +11,17 @@ PYTHON_VERSION = "3.13"
 run = "uv run python3 -m main"
 description = "Run bot from main.py"
 
+[tasks.renderer]
+run = "cargo build --release --manifest-path renderer/Cargo.toml"
+description = "Build the mp2i-render LaTeX->PNG binary (release)"
+
+[tasks.renderer-install]
+run = """mkdir -p renderer/target/release \
+&& curl -fsSL -o /tmp/mp2i-render.tar.gz https://github.com/Elnix90/MP2I/releases/latest/download/mp2i-render-linux-x86_64.tar.gz \
+&& tar -xzf /tmp/mp2i-render.tar.gz -C renderer/target/release \
+&& chmod +x renderer/target/release/mp2i-render"""
+description = "Download the prebuilt mp2i-render binary from GitHub releases (no Rust needed)"
+
 [tasks.venv]
 run = "uv venv"
 description = "Create virtual environment"
@@ -44,4 +55,4 @@ run = "uv run python3 -m db.generate_colloscope_db"
 description = "Regenerate the colloscope database from the data we have"
 
 [hooks]
-postinstall = "mise reset-colloscope && mise setup-hooks"
+postinstall = "mise reset-colloscope && mise setup-hooks && mise renderer-install"

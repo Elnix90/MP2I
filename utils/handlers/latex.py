@@ -1,36 +1,28 @@
 """Helpers for detecting and rendering LaTeX content.
 
-Rendering uses ``math.vercel.app`` (SVG) converted to PNG with cairosvg.
-Requests carry browser-like headers and retry once on rate limits to dodge
-aggressive throttling; a small cache avoids re-rendering the same formula.
+Rendering is done locally by the ``mp2i-render`` binary (a Rust wrapper around
+the RaTeX engine, ``renderer/`` in this repo). The formula is piped on stdin
+and a PNG is read back on stdout. A small cache avoids re-rendering the same
+formula.
 """
 
 import asyncio
 import io
+import os
 import re
-import time
-import urllib.parse
-
-import aiohttp
-from aiohttp.client import ClientTimeout
+from pathlib import Path
 
 from utils.logger import get_logger
 
-try:
-    import cairosvg
-except ImportError:
-    cairosvg = None
-
 logger = get_logger()
 
-BROWSER_HEADERS = {
-    "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"),
-    "Accept": "image/svg+xml,image/*;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-}
+RENDERER_BIN_DEFAULT = Path(__file__).resolve().parent.parent.parent / "renderer" / "target" / "release" / "mp2i-render"
 
-RATE_LIMIT_STATUS = 429
-REMOTE_MIN_INTERVAL = 0.4  # seconds between remote render requests
+# binary used to render LaTeX -> PNG (override via LATEX_RENDERER_BIN)
+RENDERER_BIN = os.getenv("LATEX_RENDERER_BIN", "").strip() or str(RENDERER_BIN_DEFAULT)
+# resolution multiplier kept in sync with the old cairosvg `scale=2`
+RENDERER_SCALE = float(os.getenv("LATEX_RENDERER_SCALE", "2"))
+RENDER_TIMEOUT = 10  # seconds
 
 LATEX_TO_EMOJI = {
     r"\alpha": "α",
@@ -90,7 +82,8 @@ LATEX_PATTERN = re.compile(
 # simple render cache keyed by cleaned latex -> BytesIO
 _LATEX_CACHE: dict[str, io.BytesIO] = {}
 _LATEX_CACHE_MAX = 128
-_last_remote_request = 0.0
+
+_PNG_MAGIC = b"\x89PNG"
 
 
 def _cache_key(latex: str) -> str:
@@ -109,42 +102,32 @@ def _store(latex: str, buffer: io.BytesIO) -> io.BytesIO:
     return buffer
 
 
-async def latex_to_svg(formula: str) -> bytes:
-    global _last_remote_request
-    encoded = urllib.parse.quote(formula, safe="")
-    url = f"https://math.vercel.app?color=white&from={encoded}.svg"
+def renderer_available() -> bool:
+    path = Path(RENDERER_BIN)
+    return path.is_file() and os.access(path, os.X_OK)
 
-    for attempt in range(2):
-        # throttle: keep a minimum gap between remote requests
-        elapsed = time.monotonic() - _last_remote_request
-        if elapsed < REMOTE_MIN_INTERVAL:
-            await asyncio.sleep(REMOTE_MIN_INTERVAL - elapsed)
-        _last_remote_request = time.monotonic()
 
-        try:
-            async with aiohttp.ClientSession() as session:
-                response = await session.get(
-                    url,
-                    headers=BROWSER_HEADERS,
-                    timeout=ClientTimeout(10),
-                )
-            if response.status == RATE_LIMIT_STATUS:
-                logger.warning(
-                    "math.vercel.app rate-limited (attempt %d), backing off",
-                    attempt + 1,
-                )
-                await asyncio.sleep(1.0 + attempt)
-                continue
-            return await response.read()
-        except aiohttp.ClientError as exc:
-            if attempt == 0:
-                logger.warning("math.vercel.app request failed, retrying: %s", exc)
-                await asyncio.sleep(1.0)
-                continue
-            raise
+async def render_latex_to_png(latex: str) -> tuple[io.BytesIO | None, str | None]:
+    """Render a formula with the local Rust renderer.
 
-    # both attempts rate-limited
-    raise RuntimeError("math.vercel.app rate limited")
+    Returns ``(png_bytes, None)`` on success or ``(None, error_message)``.
+    """
+    proc = await asyncio.create_subprocess_exec(
+        RENDERER_BIN,
+        "--scale",
+        f"{RENDERER_SCALE:g}",
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await asyncio.wait_for(
+        proc.communicate(latex.encode("utf-8")),
+        timeout=RENDER_TIMEOUT,
+    )
+    if proc.returncode != 0 or not stdout.startswith(_PNG_MAGIC):
+        err = stderr.decode("utf-8", errors="replace").strip() or f"exit status {proc.returncode}"
+        return None, err
+    return io.BytesIO(stdout), None
 
 
 async def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
@@ -158,15 +141,11 @@ async def convert_latex_to_png(latex: str) -> tuple[io.BytesIO | str, bool]:
         cached.seek(0)
         return cached, True
 
-    if not cairosvg:
-        return f"```\n{latex}\n``` (cairosvg missing)", False
-
     try:
-        svg_bytes = await latex_to_svg(cleaned)
-        png_bytes = cairosvg.svg2png(bytestring=svg_bytes, scale=2)
-        if png_bytes is None:
-            return f"```\n{latex}\n``` (conversion failed)", False
-        return _store(cleaned, io.BytesIO(png_bytes)), True
+        png, error = await render_latex_to_png(cleaned)
+        if png is None:
+            return f"```\n{latex}\n``` ({error})", False
+        return _store(cleaned, png), True
     except Exception as exc:
         logger.error("LaTeX conversion failed: %s", exc)
         return f"```\n{latex}\n```", False
