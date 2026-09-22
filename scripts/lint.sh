@@ -32,7 +32,7 @@ uv run python3 scripts/tree.py
 # 2b. requirements.txt → derived from pyproject.toml
 # ---------------------------------------------------------------------------
 echo "Generating requirements.txt from pyproject.toml..."
-uv run python3 scripts/gen_requirements.py
+uv run python3 scripts/gen_reqs.py
 
 # ---------------------------------------------------------------------------
 # 3. PyPI dependencies → README

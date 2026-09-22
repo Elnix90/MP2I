@@ -235,7 +235,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── deps.py
 │   ├── env.py
 │   ├── gen_cmds.py
-│   ├── gen_requirements.py
+│   ├── gen_reqs.py
 │   ├── lint.sh
 │   ├── strip_metadata.sh
 │   ├── tree.py
