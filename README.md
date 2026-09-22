@@ -188,10 +188,15 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── sql
 │   │   ├── colloscope.sql
 │   │   ├── __init__.py
-│   │   ├── memory_facts.sql
-│   │   ├── memory_schema.sql
-│   │   ├── memory_turns.sql
-│   │   ├── memory_vec.sql
+│   │   ├── memory
+│   │   │   ├── memory_facts.sql
+│   │   │   ├── memory_schema.sql
+│   │   │   ├── memory_turns.sql
+│   │   │   └── memory_vec.sql
+│   │   ├── notes
+│   │   │   ├── ds.sql
+│   │   │   ├── notes_shema.sql
+│   │   │   └── notes.sql
 │   │   └── settings.sql
 │   └── sql_requests.py
 ├── docs
@@ -212,6 +217,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── mcp.py
 │   ├── memory.py
 │   ├── needle.py
+│   ├── notes.py
 │   └── tools
 │       ├── discord_search.py
 │       ├── image_ocr.py
@@ -244,7 +250,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-23 directories, 114 files
+25 directories, 118 files
 ```
 <!-- TREE-END -->
 
