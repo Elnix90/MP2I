@@ -84,8 +84,7 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 AI_API_KEY=
 BOT_TOKEN=
 GUILD_ID=
-LATEX_RENDERER_BIN=
-LATEX_RENDERER_SCALE=
+PARALLEL_API_KEY=
 WEBHOOK_URL=
 ```
 <!--ENV-END-->
@@ -189,10 +188,11 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── sql
 │   │   ├── colloscope.sql
 │   │   ├── __init__.py
-│   │   ├── memory_facts.sql
+│   │   ├── memory
+│   │   │   ├── memory_facts.sql
+│   │   │   ├── memory_turns.sql
+│   │   │   └── memory_vec.sql
 │   │   ├── memory_schema.sql
-│   │   ├── memory_turns.sql
-│   │   ├── memory_vec.sql
 │   │   └── settings.sql
 │   └── sql_requests.py
 ├── docs
@@ -201,7 +201,6 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── settings_store.md
 ├── .github
 │   └── workflows
-│       ├── pre-commit.yml
 │       └── rust.yml
 ├── .gitignore
 ├── LICENSE
@@ -251,7 +250,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-24 directories, 119 files
+25 directories, 118 files
 ```
 <!-- TREE-END -->
 
@@ -270,12 +269,13 @@ Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. 
 - `discord.py>=2.3.0` - A Python wrapper for the Discord API (latest: 2.7.1)
 - `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
 - `json5>=0.9.0` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
-- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.17.0)
+- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.18.0)
 - `pilmoji>=2.0.0` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
 - `pint>=0.24.0` - Physical quantities module (latest: 0.26.1)
 - `pytesseract>=0.3.10` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
 - `python-dotenv>=1.0.0` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
 - `requests>=2.31.0` - Python HTTP for Humans. (latest: 2.34.2)
+- `sqlfluff>=4.3.0` - The SQL Linter for Humans (latest: 4.3.0)
 - `sqlite-vec>=0.1.0` - latest: 0.1.9
 ```
 <!--DEPS-END-->

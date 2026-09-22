@@ -17,10 +17,14 @@ CREATE TABLE IF NOT EXISTS memory_turns (
 );
 
 -- Indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_memory_turns_scope ON memory_turns(scope_key);
-CREATE INDEX IF NOT EXISTS idx_memory_turns_user ON memory_turns(user_id);
-CREATE INDEX IF NOT EXISTS idx_memory_turns_channel ON memory_turns(channel_id);
-CREATE INDEX IF NOT EXISTS idx_memory_turns_created ON memory_turns(created_at);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_scope ON memory_turns (scope_key);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_user ON memory_turns (user_id);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_channel ON memory_turns (
+    channel_id
+);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_created ON memory_turns (
+    created_at
+);
 
 -- User facts (cross-session persistent memory)
 CREATE TABLE IF NOT EXISTS user_facts (
@@ -32,7 +36,7 @@ CREATE TABLE IF NOT EXISTS user_facts (
     updated_at REAL NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_facts_user ON user_facts(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_facts_user ON user_facts (user_id);
 
 -- Channel facts (per-channel context)
 CREATE TABLE IF NOT EXISTS channel_facts (
@@ -44,4 +48,6 @@ CREATE TABLE IF NOT EXISTS channel_facts (
     updated_at REAL NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_channel_facts_channel ON channel_facts(channel_id);
+CREATE INDEX IF NOT EXISTS idx_channel_facts_channel ON channel_facts (
+    channel_id
+);
