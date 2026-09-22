@@ -1,7 +1,7 @@
 -- Connection / setup
 -- memory_pragma_busy
 PRAGMA busy_timeout = 5000
-pm
+
 -- memory_pragma_wal
 PRAGMA journal_mode = WAL
 
