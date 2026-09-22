@@ -25,6 +25,7 @@ dependencies = [
     "cactus-needle>=1.0.0",
     "sqlite-vec>=0.1.0",
     "asyncio>=3.13.0",
+    "sqlfluff>=4.3.0",
 ]
 
 [build-system]

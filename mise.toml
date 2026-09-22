@@ -27,6 +27,11 @@ description = "Create virtual environment"
 run = "uv sync"
 description = "Install project dependencies"
 
+[tasks.sync-req]
+run = "uv run pip freeze > requirements.txt"
+description = "Regenerate the colloscope database from the data we have"
+
+
 [tasks.format]
 run = "uv run ruff format && uv run ruff check --fix . && ./scripts/lint.sh"
 description = "Format and fix imports using ruff"
