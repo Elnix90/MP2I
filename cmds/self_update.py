@@ -135,7 +135,14 @@ def _build_steps(remote: str, branch: str, do_clean: bool = False) -> list[tuple
         )
     )
     if do_clean:
-        steps.append(("Nettoyage des fichiers non suivés", f"git -C {os.getcwd()} clean -fd"))
+        steps.append(("Nettoyage des fichiers non suivis", f"git -C {os.getcwd()} clean -fd"))
     steps.append(("Vérification de la version", f"git -C {os.getcwd()} rev-parse --short HEAD"))
+
+    steps.append(
+        (
+            "Mise à jour du binaire renderer (prebuilt)",
+            "bash scripts/update_renderer.sh",
+        )
+    )
 
     return steps

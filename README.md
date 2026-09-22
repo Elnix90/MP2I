@@ -237,7 +237,8 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── gen_cmds.py
 │   ├── lint.sh
 │   ├── strip_metadata.sh
-│   └── tree.py
+│   ├── tree.py
+│   └── update_renderer.sh
 ├── utils
 │   ├── console.py
 │   ├── debug.py
@@ -249,7 +250,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-24 directories, 117 files
+24 directories, 118 files
 ```
 <!-- TREE-END -->
 
