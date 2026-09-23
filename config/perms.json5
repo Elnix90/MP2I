@@ -1,7 +1,7 @@
 {
   "bot_admins": [
       1416319211495755898, // Elnix
-      1123534156626939945,  // Yerminator
+      // 1123534156626939945,  // Yerminator
   ],
   "blacklist": [],
   "command_permissions": {

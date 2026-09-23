@@ -29,6 +29,9 @@
 | :--- | :--- | :--- |
 | `/ai` | Configure le comportement du bot IA dans ce salon | Admins |
 | `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
+| `/ds-add` | Ajoute un devoir surveillé (admin) | — |
+| `/ds-delete` | Supprime un DS et toutes ses notes (admin) | — |
+| `/ds-list` | Affiche les devoirs surveillés enregistrés | — |
 | `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
 | `/get-emojis` | Prints all the server's emojis | — |
 | `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | Admins, Tous les membres |
@@ -39,6 +42,10 @@
 | `/memory-list` | Affiche les derniers échanges en mémoire | — |
 | `/model` | Change le modèle d'IA que le bot utilise | Admins |
 | `/namestyle` | Change le style d'affichage du bot dans ce serveur | Admins |
+| `/note` | Ajoute ta note sur un DS | — |
+| `/note-add-admin` | Ajoute une note à un élève sur un DS (admin) | — |
+| `/note-list` | Affiche les notes des élèves, triées par DS | — |
+| `/note-remove` | Supprime une note par son identifiant (admin) | — |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
 | `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
@@ -123,6 +130,9 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── cmds
 │   ├── ai_channel.py
 │   ├── colle.py
+│   ├── ds_add.py
+│   ├── ds_delete.py
+│   ├── ds_list.py
 │   ├── exec.py
 │   ├── get_emojis.py
 │   ├── get_to_work.py
@@ -136,6 +146,11 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   ├── _memory.py
 │   ├── model.py
 │   ├── namestyle.py
+│   ├── note_add_admin.py
+│   ├── note_add.py
+│   ├── note_list.py
+│   ├── note_remove.py
+│   ├── _notes.py
 │   ├── ping.py
 │   ├── _registry.py
 │   ├── restart.py
@@ -255,7 +270,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-26 directories, 122 files
+26 directories, 130 files
 ```
 <!-- TREE-END -->
 
@@ -268,13 +283,13 @@ Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. 
 - `Pillow>=10.0.0` - Python Imaging Library (fork) (latest: 12.3.0)
 - `aiohttp>=3.9.0` - Async http client/server framework (asyncio) (latest: 3.14.3)
 - `asyncio>=3.13.0` - Deprecated backport of asyncio; use the stdlib package instead (latest: 4.0.0)
-- `cactus-needle>=1.0.0` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.4)
+- `cactus-needle>=1.0.0` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.5)
 - `cocoindex>=1.0.0` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.24)
 - `colorama>=0.4.6` - Cross-platform colored terminal text. (latest: 0.4.6)
 - `discord.py>=2.3.0` - A Python wrapper for the Discord API (latest: 2.7.1)
-- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
+- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.6)
 - `json5>=0.9.0` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
-- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.19.0)
+- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.19.1)
 - `pilmoji>=2.0.0` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
 - `pint>=0.24.0` - Physical quantities module (latest: 0.26.1)
 - `pytesseract>=0.3.10` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)

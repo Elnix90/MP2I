@@ -1,9 +1,8 @@
 -- add_note
-INSERT INTO NOTES VALUES (?, ?, ?);
+INSERT INTO NOTES (user_id, note, ds) VALUES (?, ?, ?) RETURNING id;
 
 -- remove_note
-DELETE FROM NOTES
-WHERE id = ?;
+DELETE FROM NOTES WHERE id = ?;
 
 -- list_notes
-SELECT * FROM NOTES;
+SELECT id, user_id, note, ds FROM NOTES ORDER BY ds, user_id;
