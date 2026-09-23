@@ -17,22 +17,26 @@ CREATE TABLE IF NOT EXISTS memory_turns (
 );
 
 -- Indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_memory_turns_scope ON memory_turns(scope_key);
-CREATE INDEX IF NOT EXISTS idx_memory_turns_user ON memory_turns(user_id);
-CREATE INDEX IF NOT EXISTS idx_memory_turns_channel ON memory_turns(channel_id);
-CREATE INDEX IF NOT EXISTS idx_memory_turns_created ON memory_turns(created_at);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_scope ON memory_turns (scope_key);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_user ON memory_turns (user_id);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_channel ON memory_turns (
+    channel_id
+);
+CREATE INDEX IF NOT EXISTS idx_memory_turns_created ON memory_turns (
+    created_at
+);
 
 -- User facts (cross-session persistent memory)
 CREATE TABLE IF NOT EXISTS user_facts (
     fact_id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    fact TEXT NOT NULL,
+    fact TEXT NOT NULL,git add
     source_turn_ids TEXT,  -- JSON array of turn_ids
     created_at REAL NOT NULL,
     updated_at REAL NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_facts_user ON user_facts(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_facts_user ON user_facts (user_id);
 
 -- Channel facts (per-channel context)
 CREATE TABLE IF NOT EXISTS channel_facts (

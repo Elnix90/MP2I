@@ -81,6 +81,7 @@ class MessageSender:
                 result.seek(0)
                 rel_path = self.debug.save_image(result, f"latex_{self.debug._image_counter}.png")
                 self.debug.add_content(f"![latex]({rel_path})")
+            result.seek(0)
             file = discord.File(result, filename="formula.png")
             return await target.send(file=file)
         latex_display = latex[:100] + "..." if len(latex) > 100 else latex

@@ -79,9 +79,8 @@ instance/
 # Sphinx documentation
 docs/_build/
 
-# PyBuilder
-.pybuilder/
-target/
+# Rust renderer
+renderer/target/
 
 # Jupyter Notebook
 .ipynb_checkpoints

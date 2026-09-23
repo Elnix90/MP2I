@@ -42,7 +42,7 @@
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
 | `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
-| `/send` | Envoie un message custom dans le salon actuel (ou un autre passé en argument), avec mention optionnelle d'un utilisateur. | Admins |
+| `/send` | No description provided | Admins |
 
 <!-- COMMANDS-END -->
 
@@ -205,7 +205,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── settings_store.md
 ├── .github
 │   └── workflows
-│       └── pre-commit.yml
+│       └── rust.yml
 ├── .gitignore
 ├── LICENSE
 ├── logs
@@ -228,17 +228,22 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── .pre-commit-config.yaml
 ├── pyproject.toml
 ├── README.md
+├── renderer
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   └── src
+│       └── main.rs
 ├── requirements.txt
 ├── scripts
 │   ├── confirm.sh
 │   ├── deps.py
 │   ├── env.py
 │   ├── gen_cmds.py
+│   ├── gen_reqs.py
 │   ├── lint.sh
 │   ├── strip_metadata.sh
-│   └── tree.py
-├── tests
-│   └── test_handlers_pipeline.py
+│   ├── tree.py
+│   └── update_renderer.sh
 ├── utils
 │   ├── console.py
 │   ├── debug.py
@@ -250,7 +255,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-25 directories, 118 files
+26 directories, 122 files
 ```
 <!-- TREE-END -->
 
@@ -260,21 +265,23 @@ Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. 
 
 <!--DEPS-START-->
 ```markdown
-- `discord.py` - A Python wrapper for the Discord API (latest: 2.7.1)
-- `python-dotenv` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
-- `colorama` - Cross-platform colored terminal text. (latest: 0.4.6)
-- `requests` - Python HTTP for Humans. (latest: 2.34.2)
-- `openai` - The official Python library for the openai API (latest: 3.16.2)
-- `json5` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
-- `aiohttp` - Async http client/server framework (asyncio) (latest: 3.14.3)
-- `Pillow` - Python Imaging Library (fork) (latest: 12.3.0)
-- `pilmoji` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
-- `cairosvg` - A Simple SVG Converter based on Cairo (latest: 2.9.1)
-- `pytesseract` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
-- `fastmcp` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
-- `cocoindex` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.24)
-- `pint` - Physical quantities module (latest: 0.26.1)
-- `cactus-needle` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.2)
+- `Pillow>=10.0.0` - Python Imaging Library (fork) (latest: 12.3.0)
+- `aiohttp>=3.9.0` - Async http client/server framework (asyncio) (latest: 3.14.3)
+- `asyncio>=3.13.0` - Deprecated backport of asyncio; use the stdlib package instead (latest: 4.0.0)
+- `cactus-needle>=1.0.0` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.4)
+- `cocoindex>=1.0.0` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.24)
+- `colorama>=0.4.6` - Cross-platform colored terminal text. (latest: 0.4.6)
+- `discord.py>=2.3.0` - A Python wrapper for the Discord API (latest: 2.7.1)
+- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.5)
+- `json5>=0.9.0` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
+- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.19.0)
+- `pilmoji>=2.0.0` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
+- `pint>=0.24.0` - Physical quantities module (latest: 0.26.1)
+- `pytesseract>=0.3.10` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
+- `python-dotenv>=1.0.0` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
+- `requests>=2.31.0` - Python HTTP for Humans. (latest: 2.34.2)
+- `sqlfluff>=4.3.0` - The SQL Linter for Humans (latest: 4.3.0)
+- `sqlite-vec>=0.1.0` - latest: 0.1.9
 ```
 <!--DEPS-END-->
 

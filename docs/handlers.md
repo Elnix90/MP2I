@@ -16,9 +16,8 @@ flowchart TD
     G --> H{Dans LATEX_TO_EMOJI ?}
     H -->|Oui| I["Substitution directe"]
     H -->|Non| J["convert_latex_to_png()"]
-    J --> K[math.vercel.app — SVG]
-    K --> L[cairosvg — PNG]
-    L --> M[discord.File formula.png]
+    J --> K["mp2i-render (Rust/RaTeX, local) — PNG"]
+    K --> M[discord.File formula.png]
 ```
 
 ---
@@ -29,7 +28,7 @@ flowchart TD
 | :------ | :--- |
 | `messages.py` | `MessageSender` — orchestrateur, découpe la réponse et dispatche chaque morceau |
 | `table.py` | Détection + rendu image des tables markdown (PIL/Pilmoji) |
-| `latex.py` | Détection + rendu PNG des formules LaTeX (math.vercel.app + cairosvg) |
+| `latex.py` | Détection + rendu PNG des formules LaTeX (binaire local `mp2i-render`, moteur Rust RaTeX) |
 | `codeblock.py` | Envoi des blocs de code avec split à 2000 caractères (limite Discord) |
 
 ---
@@ -166,27 +165,39 @@ Capture 5 formats (par ordre de priorité) :
 
 ```mermaid
 flowchart TD
-    A[LaTeX brut] --> B[_clean_latex — strip délimiteurs]
+    A[LaTeX brut] --> B[strip délimiteurs + $]
     B --> C{Cache hit ?}
     C -->|Oui| D["return (BytesIO, True)"]
-    C -->|Non| E{cairosvg dispo ?}
-    E -->|Non| F["return (erreur, False)"]
-    E -->|Oui| G["latex_to_svg()"]
-    G --> H[Throttle 0.4s]
-    H --> I["requests.get(math.vercel.app)"]
-    I --> J{Status ?}
-    J -->|"200 OK"| K[cairosvg.svg2png — PNG]
-    K --> L[_store en cache]
-    L --> D
-    J -->|"429 Rate limit"| M["sleep(1 + attempt)"]
-    M --> I
-    J -->|Erreur| N{2e tentative ?}
-    N -->|Oui| F
-    N -->|Non| I
+    C -->|Non| E[render_latex_to_png — subprocess]
+    E --> F[create_subprocess_exec mp2i-render]
+    F --> G[formule via stdin]
+    G --> H{exit 0 et magic PNG ?}
+    H -->|Oui| I[_store en cache]
+    I --> D
+    H -->|Non| J["return (message erreur, False)"]
 ```
 
 Retourne `(BytesIO, True)` en cas de succès, `(str, False)` en cas d'erreur
 (message d'erreur formaté pour Discord).
+
+### Renderer local (Rust / RaTeX)
+
+```python
+RENDERER_BIN = os.getenv("LATEX_RENDERER_BIN", "<repo>/renderer/target/release/mp2i-render")
+RENDERER_SCALE = float(os.getenv("LATEX_RENDERER_SCALE", "2"))
+```
+
+- `render_latex_to_png()` : sous-processus `mp2i-render --scale N`, formule sur
+  stdin, PNG sur stdout (fond transparent, texte blanc, style display).
+- Aucun appel réseau : plus de serveur distant ni de cairosvg.
+- Binaire : compilation locale avec `mise run renderer` (`cargo build
+  --release`), ou téléchargement du prébuilt via `mise run renderer-install` /
+  `scripts/update_renderer.sh` (`.github/workflows/rust.yml` build, package et
+  publie le binaire : une release « roulante » `prebuilt` à chaque push sur la
+  branche par défaut ou `prod`, et des releases versionnées sur tag `v*`).
+- La commande `/self-update` appelle `scripts/update_renderer.sh` après le
+  `git reset --hard`, donc le binaire suit toujours le code déployé.
+- Timeout 10s ; sortie non-zéro ou mauvais magic PNG → `(None, erreur)`.
 
 ### `LATEX_TO_EMOJI` — substitution directe
 
@@ -205,15 +216,13 @@ _LATEX_CACHE_MAX = 128
 - Éviction : supprime la plus ancienne entrée quand max atteint
 - Thread-safe en pratique (CPython GIL), mais pas de verrou explicite
 
-### Throttle réseau
+### Renderer local vs réseau
 
-```python
-REMOTE_MIN_INTERVAL = 0.4  # secondes entre requêtes
-```
-
-- `asyncio.sleep()` pour ne pas bloquer l'event loop
-- Header User-Agent Chrome-like pour éviter le blocage
-- Timeout 10s par requête
+L'ancienne implémentation appelait `math.vercel.app` (SVG) puis convertissait
+via cairosvg, avec throttle 0.4s et headers browser-like pour éviter le rate
+limit. Tout cela a été supprimé : le rendu est désormais 100% local via le
+binaire Rust `mp2i-render` (stdin → PNG stdout), donc plus de latence réseau,
+plus de throttle, plus de dépendance à cairosvg.
 
 ---
 
@@ -262,6 +271,6 @@ Message 2: ```python\nline_N\n...```
 - **Word-wrap inline markdown** : `_wrap_segments` coupe sur les espaces, pas
   sur les balises markdown. Un `**mot longmot**` pourrait être coupé en plein
   milieu du gras.
-- **`requests.get` synchrone** dans `latex_to_svg` : appelé depuis du async,
-  bloque l'event loop pendant la requête réseau (~0.4-10s). Non critique en
-  usage normal (requêtes espacées de 0.4s).
+- **`subprocess` async** dans `render_latex_to_png` : `create_subprocess_exec`
+  non bloquant, sous-processus court (quelques ms) → pas de blocage de l'event
+  loop.

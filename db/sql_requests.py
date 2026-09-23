@@ -96,8 +96,9 @@ def get_colles(groupe_id: int, week_id_requested: int | None) -> ColleResult | N
         # or this colle is today and starts later
         is_future = (week_id_requested is not None and current_week < week_id_requested) or (jour > day_number) or (jour == day_number and crenau_start > hour)
 
+        # Jours starts from 0 in the Enum
         colles.append(
-            Colle(colleur_name=colleur_name, matiere=matiere, jour=JOURS[jour], creneau=crenau_start, salle=salle, is_future=is_future),
+            Colle(colleur_name=colleur_name, matiere=matiere, jour=JOURS[jour - 1], creneau=crenau_start, salle=salle, is_future=is_future),
         )
 
     return ColleResult(

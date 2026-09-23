@@ -30,7 +30,7 @@ def load(name: str) -> str:
     if name in _cache:
         return _cache[name]
 
-    for path in sorted(_SQL_DIR.glob("*.sql")):
+    for path in sorted(_SQL_DIR.rglob("*.sql")):
         sql = _section(path, name)
         if sql is not None:
             _cache[name] = sql

@@ -1,0 +1,65 @@
+name: Renderer (Rust)
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["renderer/**"]
+  pull_request:
+    branches: ["**"]
+    paths: ["renderer/**"]
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    name: Build & package mp2i-render
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87
+
+      - name: Format check
+        run: cargo fmt --manifest-path renderer/Cargo.toml -- --check
+
+      - name: Build (release)
+        run: cargo build --release --manifest-path renderer/Cargo.toml
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          tar -czf dist/mp2i-render-linux-x86_64.tar.gz -C renderer/target/release mp2i-render
+          sha256sum dist/mp2i-render-linux-x86_64.tar.gz
+
+      - name: Upload artifact (default branch & tags)
+        if: github.ref_name == github.event.repository.default_branch || startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mp2i-render-linux-x86_64
+          path: dist/mp2i-render-linux-x86_64.tar.gz
+          if-no-files-found: error
+
+      - name: Publish rolling release (default branch, prod, manual)
+        if: (github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || github.ref_name == 'prod')) || github.event_name == 'workflow_dispatch'
+        run: |
+          set -e
+          gh release create prebuilt dist/*.tar.gz --title "mp2i-render (prebuilt)" \
+              --notes "Binaires précompilés, mis à jour à chaque push sur la branche par défaut." 2>/dev/null \
+            || gh release upload prebuilt dist/*.tar.gz --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Publish versioned release (tags only)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -e
+          gh release create "$GITHUB_REF_NAME" dist/*.tar.gz --title "$GITHUB_REF_NAME" --generate-notes 2>/dev/null \
+            || gh release upload "$GITHUB_REF_NAME" dist/*.tar.gz --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
