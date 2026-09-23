@@ -1,3 +1,4 @@
+-- memory_schema
 -- Memory system schema for MP2I Bot
 -- Uses sqlite-vec for vector search, FTS5 for keyword search
 
@@ -30,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_memory_turns_created ON memory_turns (
 CREATE TABLE IF NOT EXISTS user_facts (
     fact_id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    fact TEXT NOT NULL,git add
+    fact TEXT NOT NULL,
     source_turn_ids TEXT,  -- JSON array of turn_ids
     created_at REAL NOT NULL,
     updated_at REAL NOT NULL
