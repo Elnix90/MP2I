@@ -40,9 +40,13 @@ async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
                 log_command_end(logger, "note_add", start_time, status="ds_not_found")
                 return
 
-            note_id = bot.notes.add_note(user, note, found.id)
+            note_changed = bot.notes.add_note(user, note, found.id)
 
-            await interaction.followup.send(f"Ta note de {'(merde)' if note < 5 else ''} **{note:g}** a étée ajoutée sur le DS {found} (id `{note_id}`)")
+            if not note_changed:
+                msg = f"Ta note {'(de merde)' if note < 5 else ''} **{note:g}** a été ajoutée sur le DS {found}"
+            else:
+                msg = f"Ta note {'(de merde)' if note < 5 else ''} a étée changée en **{note:g}** car elle était déjà présente sur le DS {found}"
+            await interaction.followup.send(msg)
             log_command_end(logger, "note_add", start_time)
         except Exception as exc:
             log_command_error(logger, "note_add", exc)

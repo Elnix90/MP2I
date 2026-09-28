@@ -20,27 +20,21 @@ async def setup(tree: discord.app_commands.CommandTree, bot: MP2IBot):
         start_time = time.perf_counter()
         log_command_start(logger, "ds_list", interaction)
 
-        await defer_interaction(interaction)
+        await defer_interaction(interaction, ephemeral=True)
 
         try:
             dss = bot.notes.list_ds()
             if not dss:
-                await interaction.followup.send(
-                    "Aucun DS enregistré.",
-                    ephemeral=True,
-                )
+                await interaction.followup.send("Aucun DS enregistré.")
                 log_command_end(logger, "ds_list", start_time, status="empty")
                 return
 
             notes = bot.notes.list_notes()
             counts = {ds.id: sum(1 for n in notes if n.ds_id == ds.id) for ds in dss}
 
-            content = "\n".join(f"{ds.id}. {ds} - {counts[ds.id]} note{'s' if counts[ds.id] > 1 else ''}" for ds in dss)
+            content = "\n".join(f"{idx}. {ds} - {counts[ds.id]} note{'s' if counts[ds.id] > 1 else ''}" for idx, ds in enumerate(dss))
             await interaction.followup.send(content)
             log_command_end(logger, "ds_list", start_time)
         except Exception as exc:
             log_command_error(logger, "ds_list", exc)
-            await interaction.followup.send(
-                "Erreur pendant la lecture des DS.",
-                ephemeral=True,
-            )
+            await interaction.followup.send("Erreur pendant la lecture des DS.")

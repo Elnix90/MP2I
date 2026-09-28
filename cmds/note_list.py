@@ -5,6 +5,7 @@ import time
 import discord
 from discord import app_commands
 
+from bot import MP2IBot
 from cmds._notes import autocomplete_ds
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
@@ -13,7 +14,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-async def setup(tree: app_commands.CommandTree, bot):
+async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
     @tree.command(
         name="note-list",
         description="Affiche les notes des élèves, triées par DS",
@@ -57,8 +58,8 @@ async def setup(tree: app_commands.CommandTree, bot):
             for note in notes:
                 if note.ds_id != current_ds:
                     current_ds = note.ds_id
-                    lines.append(f"\n**{ds_names.get(current_ds, current_ds)}**")
-                lines.append(f"- <@{note.user_id}> : **{note.note:g} / 20** `(#{note.id})`")
+                    lines.append(f"\n{ds_names[current_ds]}")
+                lines.append(f"- <@{note.user_id}> : **{note.note:g} / 20** -  id: `{note.id}`")
 
             content = "\n".join(lines).strip()
             await interaction.followup.send(content)

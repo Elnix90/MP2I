@@ -5,6 +5,7 @@ import time
 import discord
 from discord import app_commands
 
+from bot import MP2IBot
 from cmds._notes import autocomplete_ds
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
@@ -13,7 +14,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-async def setup(tree: app_commands.CommandTree, bot):
+async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
     @tree.command(
         name="note-add-admin",
         description="Ajoute une note à un élève sur un DS (admin)",
@@ -42,8 +43,17 @@ async def setup(tree: app_commands.CommandTree, bot):
                 log_command_end(logger, "note_add", start_time, status="ds_not_found")
                 return
 
-            note_id = bot.notes.add_note(user, note, found.id)
-            await interaction.followup.send(f"Note **{note:g}** ajoutée pour {user.mention} sur le DS {found} (id `{note_id}`)")
+            bot.notes.add_note(user, note, found.id)
+
+            note_changed = bot.notes.add_note(user, note, found.id)
+
+            if note_changed:
+                msg = f"Note **{note:g}** ajoutée pour {user.mention} sur le DS {found}"
+            else:
+                msg = f"Note: **{note:g}** editée pour {user.mention} sur le DS {found}"
+            await interaction.followup.send(msg)
+
+            await interaction.followup.send(msg)
             log_command_end(logger, "note_add", start_time)
         except Exception as exc:
             log_command_error(logger, "note_add", exc)
