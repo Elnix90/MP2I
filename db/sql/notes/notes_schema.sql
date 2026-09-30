@@ -1,4 +1,4 @@
--- notes_shema
+-- notes_schema
 CREATE TABLE IF NOT EXISTS DS (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL
