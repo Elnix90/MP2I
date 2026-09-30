@@ -24,6 +24,7 @@ from managers.discord_search import init_discord_search
 from managers.mcp import mcp_manager
 from managers.memory import MemoryManager, make_scope_key
 from managers.needle import needle_router
+from managers.notes import NoteManager
 from utils.console import get_console
 from utils.debug import DebugWriter, new_turn_id
 from utils.handlers.messages import MessageSender
@@ -68,6 +69,7 @@ class MP2IBot(discord.Client):
         self._processing = set()
         self.bot_owners = set(perms_cfg.bot_admins)
         self.memory = MemoryManager(max_history=cfg.AI_MEMORY_MAX_HISTORY)
+        self.notes = NoteManager()
         with open(Path("config/statuses.json5")) as f:
             self.statuses = json5.load(f).get("statuses")
 

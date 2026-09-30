@@ -1,3 +1,4 @@
+-- memory_schema
 -- Memory system schema for MP2I Bot
 -- Uses sqlite-vec for vector search, FTS5 for keyword search
 
@@ -48,6 +49,4 @@ CREATE TABLE IF NOT EXISTS channel_facts (
     updated_at REAL NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_channel_facts_channel ON channel_facts (
-    channel_id
-);
+CREATE INDEX IF NOT EXISTS idx_channel_facts_channel ON channel_facts(channel_id);
