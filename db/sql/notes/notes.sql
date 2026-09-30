@@ -15,4 +15,4 @@ SELECT NOTES.id, NOTES.user_id, NOTES.note, NOTES.ds
 FROM NOTES
 JOIN DS ON NOTES.ds == DS.id
 WHERE ds.id == ?
-ORDER BY note;
+ORDER BY note DESC;
