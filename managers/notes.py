@@ -12,7 +12,7 @@ NOTES_DB_PATH = BASE_DIR / "data" / "notes.sqlite"
 
 MAX_NOTE = 100
 
-_SCHEMA = load("notes_shema")
+_SCHEMA = load("notes_schema")
 
 _ADD_NOTE = load("add_note")
 _GET_NOTE = load("get_note")
