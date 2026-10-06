@@ -173,4 +173,6 @@ sqlite3 data/bot_state.db "DELETE FROM settings WHERE key = 'ai.model';"
   deux refresh reste dans la rotation jusqu'au prochain
 - l'endpoint est parfois indisponible (requêtes répétées observées en échec) :
   on garde alors le dernier catalogue connu, sinon `no_models`
-- `/ai model` n'a pas d'autocomplétion — l'id doit être copié depuis le catalogue
+- `/ai model` propose une autocomplétion : modèle actif en premier, puis
+  catalogue free+healthy (hors breaker) et fallbacks configurés, filtré sur
+  la saisie (25 propositions max) — plus besoin de copier l'id du catalogue

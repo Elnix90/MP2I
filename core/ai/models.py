@@ -159,8 +159,8 @@ def select(models: list[dict]) -> list[str]:
 
 
 def candidates() -> list[str]:
-    """Current catalogue (empty until the first successful refresh)."""
-    return list(_catalog)
+    """Current catalogue minus models excluded by the circuit breaker (empty until the first successful refresh)."""
+    return [model for model in _catalog if not _circuit_open(model)]
 
 
 def default_model() -> str:
