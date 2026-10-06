@@ -1,8 +1,8 @@
 """LLM client with manual model fallback and native tool calling.
 
 Uses the ``openai`` AsyncOpenAI client against the configured OpenAI-compatible
-endpoint. Models listed in ``cfg.AI_MODELS`` are tried in order: on timeout,
-HTTP error or empty answer the next model takes over. No LiteLLM.
+endpoint. Models from ``model_catalog.priority()`` are tried in order: on
+timeout, HTTP error or empty answer the next model takes over. No LiteLLM.
 
 When ``tools`` are provided the client runs a native tool-calling loop: the
 model emits function calls, they are executed in parallel, results are fed
@@ -18,9 +18,9 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
+from core.ai import models as model_catalog
 from core.ai.tools import handle_tool_call, parse_tool_arguments
 from core.config import cfg
-from db.settings_store import get_setting
 from utils.logger import get_logger
 
 logger = get_logger()
@@ -41,16 +41,8 @@ class Answer:
 
 
 def _model_priority() -> list[str]:
-    models = list(cfg.AI_MODELS)
-    if not models:
-        return []
-    # runtime override (persisted by /model) wins as primary
-    override = get_setting("ai.model")
-    if isinstance(override, str) and override:
-        models = [override] + [m for m in models if m != override]
-    elif cfg.AI_MODEL and cfg.AI_MODEL not in models:
-        models.insert(0, cfg.AI_MODEL)
-    return models
+    # manual /model override, then the free+healthy catalogue (see core.ai.models)
+    return model_catalog.priority()
 
 
 def _build_client() -> AsyncOpenAI:
