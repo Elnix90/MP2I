@@ -240,6 +240,8 @@ class MemoryManager:
             return None
 
     async def _extract_facts(self, user_name: str, user_content: str, assistant_content: str) -> list[str]:
+        from core.ai import models as model_catalog
+
         prompt = f"User ({user_name}): {user_content}\nAssistant: {assistant_content}\n"
         for model in _models_priority():
             try:
@@ -257,6 +259,7 @@ class MemoryManager:
                 if facts:
                     return facts
             except Exception as exc:
+                model_catalog.note_failure(model, exc)
                 logger.debug("Fact extraction failed on %s: %s", model, exc)
         return []
 

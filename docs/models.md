@@ -134,6 +134,16 @@ graph LR
 - `cfg.AI_MODEL` est mis à jour sur chaque refresh réussi, sauf si un override
   `/ai model` existe
 
+## Circuit breaker
+
+Une réponse `400 BAD_REQUEST` d'un modèle ouvre un breaker en mémoire
+(`models.note_failure`) : le modèle est retiré de `priority()` / `select()`
+pendant `CIRCUIT_TTL` (15 min), puis réintégré automatiquement. Seul le
+status 400 déclenche l'exclusion (429, timeouts et 5xx suivent la rotation
+classique). Si tous les modèles sont sous breaker, `priority()` retombe sur
+la liste complète plutôt que de répondre `no_models`. État en mémoire :
+reset à chaque redémarrage.
+
 ## `/ai model` : le choix manuel
 
 ```

@@ -152,6 +152,7 @@ async def _run_round(
         message = resp.choices[0].message
         return message, list(getattr(message, "tool_calls", None) or []), None
     except Exception as exc:
+        model_catalog.note_failure(model, exc)
         logger.warning("Round failed for model %s", model, exc_info=True)
         return None, [], str(exc)
 
@@ -263,7 +264,8 @@ async def _stream_final(client: AsyncOpenAI, model: str, messages: list) -> Asyn
             messages=_sanitize_messages(messages),
             stream=True,
         )
-    except Exception:
+    except Exception as exc:
+        model_catalog.note_failure(model, exc)
         logger.warning("Stream failed for model %s", model, exc_info=True)
         return None
 
@@ -296,7 +298,8 @@ async def _synthesize(
                         content=strip_tool_artifacts(content),
                         model=model,
                     )
-        except Exception:
+        except Exception as exc:
+            model_catalog.note_failure(model, exc)
             logger.warning("Synthesis failed for model %s", model, exc_info=True)
 
     if stream_result is not None:

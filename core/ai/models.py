@@ -37,6 +37,30 @@ _catalog: list[str] = []
 _refreshed_at = 0.0
 _lock = asyncio.Lock()
 
+# Circuit breaker: a model answering 400 BAD_REQUEST (payload it cannot
+# accept) is excluded from the rotation for CIRCUIT_TTL seconds.
+CIRCUIT_TTL = 15 * 60.0
+_circuit: dict[str, float] = {}  # model id -> monotonic deadline
+
+
+def note_failure(model: str, exc: BaseException) -> None:
+    """Open the circuit for `model` when the endpoint rejects our payload (400)."""
+    if getattr(exc, "status_code", None) != 400:
+        return
+    _circuit[model] = time.monotonic() + CIRCUIT_TTL
+    logger.warning("Circuit breaker open for %s (400 BAD_REQUEST), excluded for %.0fs", model, CIRCUIT_TTL)
+
+
+def _circuit_open(model: str) -> bool:
+    deadline = _circuit.get(model)
+    if deadline is None:
+        return False
+    if time.monotonic() >= deadline:
+        del _circuit[model]
+        logger.info("Circuit breaker closed for %s", model)
+        return False
+    return True
+
 
 _PROMPT_KEYS = (
     "promptTextTokens",
@@ -122,7 +146,7 @@ def is_chat(model: dict) -> bool:
 
 def select(models: list[dict]) -> list[str]:
     """Free + healthy chat models, most trustworthy first."""
-    selected = [model for model in models if is_free(model) and is_healthy(model) and is_chat(model)]
+    selected = [model for model in models if is_free(model) and is_healthy(model) and is_chat(model) and not _circuit_open(str(model["id"]))]
     selected.sort(
         key=lambda model: (
             not bool(model.get("tools")),  # tool calling first: the bot runs tools
@@ -168,7 +192,9 @@ def priority(fallback: list[str] | None = None) -> list[str]:
     for model in cfg.AI_MODELS if fallback is None else fallback:
         add(model)
 
-    return ordered[:MAX_MODELS]
+    available = [model for model in ordered if not _circuit_open(model)]
+    # Everything under breaker: fall back to the full list rather than no_models.
+    return (available or ordered)[:MAX_MODELS]
 
 
 async def refresh(*, force: bool = False) -> list[str]:
@@ -181,6 +207,11 @@ async def refresh(*, force: bool = False) -> list[str]:
     async with _lock:
         if not force and _catalog and time.monotonic() - _refreshed_at < REFRESH_INTERVAL:
             return list(_catalog)
+
+        # Hygiene: drop breaker entries whose TTL elapsed on models never re-checked.
+        now = time.monotonic()
+        for expired in [model for model, deadline in _circuit.items() if now >= deadline]:
+            del _circuit[expired]
 
         url = f"{cfg.AI_API_URL.rstrip('/')}/models"
         try:
