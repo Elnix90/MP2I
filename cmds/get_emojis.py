@@ -1,7 +1,6 @@
-"""Shell command handler.
+"""List all server emojis.
 
-Provides a `setup` function to register the `/get-emojis_sh` command which runs
-a shell command on the bot's host and returns its output.
+Provides a `setup` function to register the `/ai emojis` subcommand.
 """
 
 import time
@@ -9,6 +8,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start, send_interaction
 from utils.logger import get_logger
 
@@ -16,8 +16,10 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    @tree.command(
-        name="get-emojis",
+    ai = get_group(tree, "ai", description="Configuration de l'IA du bot")
+
+    @ai.command(
+        name="emojis",
         description="Prints all the server's emojis",
     )
     async def get_emojis(interaction: discord.Interaction):

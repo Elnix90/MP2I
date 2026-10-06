@@ -140,7 +140,7 @@ def candidates() -> list[str]:
 
 
 def default_model() -> str:
-    """The model the bot uses unless a manual ``/model`` override exists."""
+    """The model the bot uses unless a manual ``/ai model`` override exists."""
     override = get_setting("ai.model")
     if isinstance(override, str) and override:
         return override

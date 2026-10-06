@@ -31,7 +31,7 @@ async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
             if notes_number == 0:
                 msg = "Il n'y a pas de notes sur ce ds"
             elif rank == -1:
-                msg = "Tu n'as pas validé ta note sur ce DS, utilise `/note` pour le faire"
+                msg = "Tu n'as pas validé ta note sur ce DS, utilise `/note add` pour le faire"
             elif rank == 0 and notes_number == 1:
                 msg = "Tu es premier parmi 1, bravo champion!"
             else:

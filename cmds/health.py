@@ -1,6 +1,6 @@
 """Health command handlers.
 
-Registers the ``/health`` command which performs runtime checks for the AI
+Registers the ``/bot health`` command which performs runtime checks for the AI
 subsystems (Discord, memory, tools, MCP) and reports status.
 """
 
@@ -8,6 +8,7 @@ import time
 
 import discord
 
+from cmds._groups import get_group
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.ai.tools import get_combined_tools, tools_loader
 from managers.mcp import mcp_manager
@@ -21,7 +22,9 @@ def _status_label(ok: bool) -> str:
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    @tree.command(name="health", description="Statut de santé des sous-systèmes du bot")
+    bot_group = get_group(tree, "bot", description="Administration et utilitaires du bot")
+
+    @bot_group.command(name="health", description="Statut de santé des sous-systèmes du bot")
     async def health(interaction: discord.Interaction):
         start_time = time.perf_counter()
         log_command_start(logger, "health", interaction)

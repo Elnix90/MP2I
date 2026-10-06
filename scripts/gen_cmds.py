@@ -38,8 +38,8 @@ def update_readme(commands):
 
     commands_table = "| Command | Description | Permissions |\n| :--- | :--- | :--- |\n"
     for cmd in commands:
-        perms = permissions.get(cmd.name, "—")
-        commands_table += f"| `/{cmd.name}` | {cmd.description} | {perms} |\n"
+        perms = permissions.get(cmd.qualified_name, "—")
+        commands_table += f"| `/{cmd.qualified_name}` | {cmd.description} | {perms} |\n"
 
     new_content = re.sub(
         r"<!-- COMMANDS-START -->.*?<!-- COMMANDS-END -->",

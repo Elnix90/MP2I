@@ -1,6 +1,6 @@
 """Restart command handler.
 
-Provides a `setup` function to register the `/restart` command. The bot
+Provides a `setup` function to register the `/bot restart` command. The bot
 process is supervised and auto-restarts when it exits, so restarting
 reuses the console's proven `shutdown` path: close the client, let the
 process exit, and let the service manager bring it back up.
@@ -11,6 +11,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
 from utils.console import _cmd_shutdown, get_console
@@ -31,7 +32,9 @@ async def setup(tree: app_commands.CommandTree, bot):
 
     """
 
-    @tree.command(name="restart", description="Redémarre le bot")
+    bot_group = get_group(tree, "bot", description="Administration et utilitaires du bot")
+
+    @bot_group.command(name="restart", description="Redémarre le bot")
     @app_commands.check(is_bot_admin)
     async def restart(interaction: discord.Interaction):
         start_time = time.perf_counter()

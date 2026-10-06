@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Télécharge le binaire précompilé mp2i-render (release roulante "prebuilt")
 # et le pose dans renderer/target/release/.
-# Utilisé par `mise run renderer-install` et par la commande /self-update.
+# Utilisé par `mise run renderer-install` et par la commande /bot update.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

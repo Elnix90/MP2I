@@ -1,13 +1,13 @@
 # Sélection des modèles
 
-Fichier : `core/ai/models.py` · Config : `config/ai_config.json5` · Commande : `/model`
+Fichier : `core/ai/models.py` · Config : `config/ai_config.json5` · Commande : `/ai model`
 
 Le modèle par défaut n'est plus écrit en dur : il est choisi dans le catalogue que
 publie l'endpoint (`GET https://gen.pollinations.ai/v1/models`) — **accès libre
 (règle officielle `access:free`) et santé `healthy` ou `reliable` (> 80 % de
 succès)**. Il n'y a **plus aucune liste de modèles statique** : `ai_config.json5`
 ne porte plus que `api_url`, `tools`, `streaming`, `memory_max_history`… et
-`/model` gagne sur tout le reste.
+`/ai model` gagne sur tout le reste.
 
 ## Pourquoi
 
@@ -108,7 +108,7 @@ Côté données, le dashboard fetch `{genBaseUrl}/models?reliability=all`
 
 ```mermaid
 graph LR
-    A["1. override <code>/model</code><br/><i>setting <code>ai.model</code></i>"] --> B["2. catalogue complet<br/><i>free + healthy</i>"]
+    A["1. override <code>/ai model</code><br/><i>setting <code>ai.model</code></i>"] --> B["2. catalogue complet<br/><i>free + healthy</i>"]
 ```
 
 - doublons retirés, liste tronquée à `MAX_MODELS = 6`
@@ -132,12 +132,12 @@ graph LR
 - **réponse sans modèle éligible** : on garde aussi le catalogue précédent, avec un
   avertissement en log
 - `cfg.AI_MODEL` est mis à jour sur chaque refresh réussi, sauf si un override
-  `/model` existe
+  `/ai model` existe
 
-## `/model` : le choix manuel
+## `/ai model` : le choix manuel
 
 ```
-/model <id>        →  cfg.AI_MODEL = <id>  +  set_setting("ai.model", <id>)
+/ai model <id>    →  cfg.AI_MODEL = <id>  +  set_setting("ai.model", <id>)
 ```
 
 - persisté dans **`data/bot_state.db`** (table `settings`, clé `ai.model`),
@@ -163,4 +163,4 @@ sqlite3 data/bot_state.db "DELETE FROM settings WHERE key = 'ai.model';"
   deux refresh reste dans la rotation jusqu'au prochain
 - l'endpoint est parfois indisponible (requêtes répétées observées en échec) :
   on garde alors le dernier catalogue connu, sinon `no_models`
-- `/model` n'a pas d'autocomplétion — l'id doit être copié depuis le catalogue
+- `/ai model` n'a pas d'autocomplétion — l'id doit être copié depuis le catalogue

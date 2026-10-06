@@ -6,6 +6,7 @@ import discord
 from discord import app_commands
 
 from bot import MP2IBot
+from cmds._groups import get_group
 from cmds._notes import autocomplete_ds
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
@@ -15,8 +16,10 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
-    @tree.command(
-        name="ds-delete",
+    ds = get_group(tree, "ds", description="Gestion des devoirs surveillés")
+
+    @ds.command(
+        name="delete",
         description="Supprime un DS et toutes ses notes (admin)",
     )
     @discord.app_commands.describe(ds="Devoir surveillé à supprimer")

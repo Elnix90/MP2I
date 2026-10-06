@@ -41,7 +41,7 @@ class Answer:
 
 
 def _model_priority() -> list[str]:
-    # manual /model override, then the free+healthy catalogue (see core.ai.models)
+    # manual /ai model override, then the free+healthy catalogue (see core.ai.models)
     return model_catalog.priority()
 
 

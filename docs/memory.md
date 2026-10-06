@@ -279,9 +279,9 @@ flowchart TD
 
 | Commande | Description | Fichier |
 |----------|-------------|---------|
-| `/memory-list [limit] [user]` | Affiche les échanges récents | `cmds/memory_list.py` |
-| `/memory-delete <turn_id>` | Supprime un échange | `cmds/memory_delete.py` |
-| `/memory-clear` | Efface tout le scope (admin) | `cmds/memory_clear.py` |
+| `/memory list [limit] [user]` | Affiche les échanges récents | `cmds/memory_list.py` |
+| `/memory delete <turn_id>` | Supprime un échange | `cmds/memory_delete.py` |
+| `/memory clear` | Efface tout le scope (admin) | `cmds/memory_clear.py` |
 
 ## Fichiers
 

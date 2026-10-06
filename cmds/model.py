@@ -1,6 +1,6 @@
 """Model command handlers.
 
-Registers the ``/model`` command to change the AI model at runtime. The choice
+Registers the ``/ai model`` command to change the AI model at runtime. The choice
 is persisted so it survives a bot restart.
 """
 
@@ -9,6 +9,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.config import cfg
 from core.perms import is_bot_admin
@@ -19,7 +20,9 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    @tree.command(name="model", description="Change le modèle d'IA que le bot utilise")
+    ai = get_group(tree, "ai", description="Configuration de l'IA du bot")
+
+    @ai.command(name="model", description="Change le modèle d'IA que le bot utilise")
     @app_commands.check(is_bot_admin)
     async def model(interaction: discord.Interaction, model: str):
         start_time = time.perf_counter()

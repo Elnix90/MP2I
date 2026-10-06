@@ -4,6 +4,7 @@ import time
 
 import discord
 
+from cmds._groups import get_group
 from cmds._memory import interaction_scope
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from utils.logger import get_logger
@@ -12,7 +13,9 @@ logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    @tree.command(name="memory-list", description="Affiche les derniers échanges en mémoire")
+    memory = get_group(tree, "memory", description="Gestion de la mémoire de conversation")
+
+    @memory.command(name="list", description="Affiche les derniers échanges en mémoire")
     @discord.app_commands.describe(limit="Nombre d'échanges à afficher", user="Filtrer par utilisateur (optionnel)")
     async def memory_list(
         interaction: discord.Interaction,

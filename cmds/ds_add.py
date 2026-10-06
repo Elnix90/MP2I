@@ -7,6 +7,7 @@ import discord
 from discord import app_commands
 
 from bot import MP2IBot
+from cmds._groups import get_group
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
 from managers.notes import Ds
@@ -16,8 +17,10 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
-    @tree.command(
-        name="ds-add",
+    ds = get_group(tree, "ds", description="Gestion des devoirs surveillés")
+
+    @ds.command(
+        name="add",
         description="Ajoute un devoir surveillé (admin)",
     )
     @discord.app_commands.describe(name="Nom du DS")

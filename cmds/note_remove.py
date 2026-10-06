@@ -4,6 +4,7 @@ import time
 
 import discord
 
+from cmds._groups import get_group
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
 from utils.logger import get_logger
@@ -12,8 +13,10 @@ logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    @tree.command(
-        name="note-remove",
+    note = get_group(tree, "note", description="Gestion des notes")
+
+    @note.command(
+        name="remove",
         description="Supprime une note par son identifiant (admin)",
     )
     @discord.app_commands.describe(

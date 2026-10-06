@@ -1,6 +1,6 @@
 """Send command handler.
 
-Provides a `setup` function to register the `/send` command which creates a
+Provides a `setup` function to register the `/bot send` command which creates a
 temporary webhook impersonating a member (name + avatar) to post a custom
 message in the current channel (or another one), then deletes the webhook.
 Restricted to bot admins (see config/perms.json5).
@@ -11,6 +11,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import (
     defer_interaction,
     log_command_end,
@@ -25,7 +26,9 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    @tree.command(name="send")
+    bot_group = get_group(tree, "bot", description="Administration et utilitaires du bot")
+
+    @bot_group.command(name="send", description="Envoie un message à un utilisateur ou dans un salon (admin)")
     @app_commands.check(is_bot_admin)
     async def send(
         interaction: discord.Interaction,

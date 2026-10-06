@@ -1,6 +1,6 @@
 """Shell command handler.
 
-Provides a `setup` function to register the `/exec_sh` command which runs
+Provides a `setup` function to register the `/bot exec` command which runs
 a shell command on the bot's host and returns its output.
 """
 
@@ -9,6 +9,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import (
     defer_interaction,
     log_command_end,
@@ -26,7 +27,9 @@ MAX_OUTPUT_LEN = 1900
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    @tree.command(
+    bot_group = get_group(tree, "bot", description="Administration et utilitaires du bot")
+
+    @bot_group.command(
         name="exec",
         description="Execute la commande SH donnée en argument sur le server ou le bot est host.",
     )

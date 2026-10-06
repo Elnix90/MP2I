@@ -27,31 +27,31 @@
 <!-- COMMANDS-START -->
 | Command | Description | Permissions |
 | :--- | :--- | :--- |
-| `/ai` | Configure le comportement du bot IA dans ce salon | Admins |
-| `/colle` | Renvoie les colles de la semaine pour l'utilisateur | — |
-| `/colle-edit` | Modifie une colle : salle, jour, horaire, colleur, matière, semaine ou groupe | Admins, Membres du groupe de colles |
-| `/ds-add` | Ajoute un devoir surveillé (admin) | — |
-| `/ds-delete` | Supprime un DS et toutes ses notes (admin) | — |
-| `/ds-list` | Affiche les devoirs surveillés enregistrés | — |
-| `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
-| `/get-emojis` | Prints all the server's emojis | — |
+| `/ai channel` | Configure le comportement du bot IA dans ce salon | Admins |
+| `/ai emojis` | Prints all the server's emojis | — |
+| `/ai model` | Change le modèle d'IA que le bot utilise | Admins |
+| `/ai tools` | Liste les outils disponibles pour l'IA | — |
+| `/bot exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
+| `/bot health` | Statut de santé des sous-systèmes du bot | — |
+| `/bot namestyle` | Change le style d'affichage du bot dans ce serveur | Admins |
+| `/bot restart` | Redémarre le bot | Admins |
+| `/bot send` | Envoie un message à un utilisateur ou dans un salon (admin) | Admins |
+| `/bot update` | Met à jour le bot depuis le dépôt distant | Admins |
+| `/colle edit` | Modifie une colle : salle, jour, horaire, colleur, matière, semaine ou groupe | Admins, Membres du groupe de colles |
+| `/colle show` | Renvoie les colles de la semaine pour l'utilisateur | — |
+| `/ds add` | Ajoute un devoir surveillé (admin) | — |
+| `/ds delete` | Supprime un DS et toutes ses notes (admin) | — |
+| `/ds list` | Affiche les devoirs surveillés enregistrés | — |
 | `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | — |
-| `/health` | Statut de santé des sous-systèmes du bot | — |
-| `/list-tools` | Liste les outils disponibles pour l'IA | — |
-| `/memory-clear` | Efface la mémoire de la conversation actuelle (admin) | — |
-| `/memory-delete` | Supprime un échange précis (son auteur ou un admin) | — |
-| `/memory-list` | Affiche les derniers échanges en mémoire | — |
-| `/model` | Change le modèle d'IA que le bot utilise | Admins |
-| `/namestyle` | Change le style d'affichage du bot dans ce serveur | Admins |
-| `/note` | Ajoute ta note sur un DS | — |
-| `/note-add-admin` | Ajoute une note à un élève sur un DS (admin) | — |
-| `/note-list` | Affiche les notes des élèves, triées par DS | — |
-| `/note-remove` | Supprime une note par son identifiant (admin) | — |
+| `/memory clear` | Efface la mémoire de la conversation actuelle (admin) | — |
+| `/memory delete` | Supprime un échange précis (son auteur ou un admin) | — |
+| `/memory list` | Affiche les derniers échanges en mémoire | — |
+| `/note add` | Ajoute ta note sur un DS | — |
+| `/note admin` | Ajoute une note à un élève sur un DS (admin) | — |
+| `/note list` | Affiche les notes des élèves, triées par DS | — |
+| `/note remove` | Supprime une note par son identifiant (admin) | — |
 | `/ping` | Check bot latency and responsiveness | — |
 | `/rank` | Donne ton rang dans ce DS | — |
-| `/restart` | Redémarre le bot | Admins |
-| `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
-| `/send` | No description provided | Admins |
 
 <!-- COMMANDS-END -->
 

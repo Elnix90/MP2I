@@ -1,6 +1,6 @@
 """Namestyle command handler.
 
-Registers the ``/namestyle`` command to change the bot's display name style
+Registers the ``/bot namestyle`` command to change the bot's display name style
 (font, effect, colors) in the current guild using Discord's nameplate API.
 """
 
@@ -9,6 +9,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
 from utils.logger import get_logger
@@ -42,7 +43,9 @@ def _hex_to_decimal(hex_str: str) -> int:
 
 
 async def setup(tree: app_commands.CommandTree, bot: discord.Client):
-    @tree.command(name="namestyle", description="Change le style d'affichage du bot dans ce serveur")
+    bot_group = get_group(tree, "bot", description="Administration et utilitaires du bot")
+
+    @bot_group.command(name="namestyle", description="Change le style d'affichage du bot dans ce serveur")
     @app_commands.describe(
         font="Police du nom (ex: Sakura, Medieval, 8bit...)",
         effect="Effet visuel (Solid, Gradient, Neon...)",

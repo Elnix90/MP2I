@@ -195,7 +195,7 @@ RENDERER_SCALE = float(os.getenv("LATEX_RENDERER_SCALE", "2"))
   `scripts/update_renderer.sh` (`.github/workflows/rust.yml` build, package et
   publie le binaire : une release « roulante » `prebuilt` à chaque push sur la
   branche par défaut ou `prod`, et des releases versionnées sur tag `v*`).
-- La commande `/self-update` appelle `scripts/update_renderer.sh` après le
+- La commande `/bot update` appelle `scripts/update_renderer.sh` après le
   `git reset --hard`, donc le binaire suit toujours le code déployé.
 - Timeout 10s ; sortie non-zéro ou mauvais magic PNG → `(None, erreur)`.
 

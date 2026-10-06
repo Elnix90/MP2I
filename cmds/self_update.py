@@ -5,6 +5,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import (
     defer_interaction,
     log_command_end,
@@ -41,8 +42,10 @@ async def _restart_in(delay: float, restart_cmd: str) -> None:
 
 
 async def setup(tree: app_commands.CommandTree, bot):
-    @tree.command(
-        name="self-update",
+    bot_group = get_group(tree, "bot", description="Administration et utilitaires du bot")
+
+    @bot_group.command(
+        name="update",
         description="Met à jour le bot depuis le dépôt distant",
     )
     @app_commands.describe(

@@ -5,6 +5,7 @@ import time
 import discord
 
 from bot import MP2IBot
+from cmds._groups import get_group
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from utils.logger import get_logger
 
@@ -12,8 +13,10 @@ logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot: MP2IBot):
-    @tree.command(
-        name="ds-list",
+    ds = get_group(tree, "ds", description="Gestion des devoirs surveillés")
+
+    @ds.command(
+        name="list",
         description="Affiche les devoirs surveillés enregistrés",
     )
     async def ds_list(interaction: discord.Interaction):

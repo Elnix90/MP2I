@@ -10,6 +10,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.ai.channels import remove_channel, set_channel_mode
 from core.perms import is_bot_admin
@@ -121,9 +122,11 @@ async def _list_channels(interaction: discord.Interaction):
 
 
 async def setup(tree: app_commands.CommandTree, bot):
+    ai = get_group(tree, "ai", description="Configuration de l'IA du bot")
+
     @app_commands.check(is_bot_admin)
-    @tree.command(
-        name="ai",
+    @ai.command(
+        name="channel",
         description="Configure le comportement du bot IA dans ce salon",
     )
     @app_commands.default_permissions(administrator=True)

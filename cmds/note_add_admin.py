@@ -6,6 +6,7 @@ import discord
 from discord import app_commands
 
 from bot import MP2IBot
+from cmds._groups import get_group
 from cmds._notes import autocomplete_ds
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start
 from core.perms import is_bot_admin
@@ -15,8 +16,10 @@ logger = get_logger()
 
 
 async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
-    @tree.command(
-        name="note-add-admin",
+    note = get_group(tree, "note", description="Gestion des notes")
+
+    @note.command(
+        name="admin",
         description="Ajoute une note à un élève sur un DS (admin)",
     )
     @app_commands.check(is_bot_admin)
@@ -39,7 +42,7 @@ async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
         try:
             found = bot.notes.get_ds_by_name(ds)
             if found is None:
-                await interaction.followup.send(f"DS {ds} introuvable. Utilise `/ds-list` pour voir les DS existants")
+                await interaction.followup.send(f"DS {ds} introuvable. Utilise `/ds list` pour voir les DS existants")
                 log_command_end(logger, "note_add", start_time, status="ds_not_found")
                 return
 

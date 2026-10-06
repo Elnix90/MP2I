@@ -1,6 +1,6 @@
 """Edit a single planning row.
 
-Provides a `setup` function to register the `/colle-edit` command, which
+Provides a `setup` function to register the `/colle edit` subcommand, which
 modifies the room, day, slot, colleur, subject, week or group of one colle.
 Admins may edit every colle, other members are limited to their own group.
 """
@@ -12,6 +12,7 @@ from typing import Any
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.colle import Colle
 from core.config import cfg
@@ -86,16 +87,18 @@ def _load_lookups() -> tuple[dict[int, str], dict[int, str]]:
     try:
         return ({row["id"]: row["nom"] for row in list_colleurs()}, {row["id"]: row["nom"] for row in list_matieres()})
     except Exception:
-        logger.exception("Failed to load colleurs/matieres for /colle-edit")
+        logger.exception("Failed to load colleurs/matieres for /colle edit")
         return ({}, {})
 
 
 async def setup(tree: app_commands.CommandTree, bot: Any):
-    """Registers the `/colle-edit` command."""
+    """Registers the `/colle edit` subcommand."""
     colleurs, matieres = _load_lookups()
 
-    @tree.command(
-        name="colle-edit",
+    colle_group = get_group(tree, "colle", description="Gestion des colles")
+
+    @colle_group.command(
+        name="edit",
         description="Modifie une colle : salle, jour, horaire, colleur, matière, semaine ou groupe",
     )
     @app_commands.describe(
@@ -222,5 +225,5 @@ async def setup(tree: app_commands.CommandTree, bot: Any):
         try:
             return _colle_choices(current)
         except Exception as exc:
-            logger.error("Failed to build the /colle-edit autocomplete: %s", exc)
+            logger.error("Failed to build the /colle edit autocomplete: %s", exc)
             return []

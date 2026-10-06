@@ -4,6 +4,7 @@ import time
 
 import discord
 
+from cmds._groups import get_group
 from cmds._shared import defer_interaction, log_command_end, log_command_error, log_command_start, send_interaction
 from core.ai.tools import get_combined_tools
 from utils.logger import get_logger
@@ -12,7 +13,9 @@ logger = get_logger()
 
 
 async def setup(tree: discord.app_commands.CommandTree, bot):
-    @tree.command(name="list-tools", description="Liste les outils disponibles pour l'IA")
+    ai = get_group(tree, "ai", description="Configuration de l'IA du bot")
+
+    @ai.command(name="tools", description="Liste les outils disponibles pour l'IA")
     async def list_tools(interaction: discord.Interaction):
         start_time = time.perf_counter()
         log_command_start(logger, "list-tools", interaction)

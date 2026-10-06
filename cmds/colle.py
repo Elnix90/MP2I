@@ -9,6 +9,7 @@ import time
 import discord
 from discord import app_commands
 
+from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.config import cfg
 from core.get_first_group_role import get_first_group_role
@@ -21,8 +22,10 @@ logger = get_logger()
 async def setup(tree: app_commands.CommandTree, bot):
     """Returns the colles of the week for the user issuing the command"""
 
-    @tree.command(
-        name="colle",
+    colle_group = get_group(tree, "colle", description="Gestion des colles")
+
+    @colle_group.command(
+        name="show",
         description="Renvoie les colles de la semaine pour l'utilisateur",
     )
     async def colle(interaction: discord.Interaction, user: discord.User | None = None, semaine_id: int | None = None):
