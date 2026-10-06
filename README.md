@@ -28,13 +28,14 @@
 | Command | Description | Permissions |
 | :--- | :--- | :--- |
 | `/ai` | Configure le comportement du bot IA dans ce salon | Admins |
-| `/colle` | Renvoie les colles de la semaine pour l'utilisateur | Admins, Tous les membres |
+| `/colle` | Renvoie les colles de la semaine pour l'utilisateur | — |
+| `/colle-edit` | Modifie une colle : salle, jour, horaire, colleur, matière, semaine ou groupe | Admins, Membres du groupe de colles |
 | `/ds-add` | Ajoute un devoir surveillé (admin) | — |
 | `/ds-delete` | Supprime un DS et toutes ses notes (admin) | — |
 | `/ds-list` | Affiche les devoirs surveillés enregistrés | — |
 | `/exec` | Execute la commande SH donnée en argument sur le server ou le bot est host. | Admins |
 | `/get-emojis` | Prints all the server's emojis | — |
-| `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | Admins, Tous les membres |
+| `/get-to-work` | Mp tes mate de groupe pour qu'ils se bougent le cul | — |
 | `/health` | Statut de santé des sous-systèmes du bot | — |
 | `/list-tools` | Liste les outils disponibles pour l'IA | — |
 | `/memory-clear` | Efface la mémoire de la conversation actuelle (admin) | — |
@@ -46,7 +47,7 @@
 | `/note-add-admin` | Ajoute une note à un élève sur un DS (admin) | — |
 | `/note-list` | Affiche les notes des élèves, triées par DS | — |
 | `/note-remove` | Supprime une note par son identifiant (admin) | — |
-| `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
+| `/ping` | Check bot latency and responsiveness | — |
 | `/rank` | Donne ton rang dans ce DS | — |
 | `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
@@ -129,6 +130,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── bot.py
 ├── cmds
 │   ├── ai_channel.py
+│   ├── colle_edit.py
 │   ├── colle.py
 │   ├── ds_add.py
 │   ├── ds_delete.py
@@ -274,7 +276,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-26 directories, 134 files
+26 directories, 135 files
 ```
 <!-- TREE-END -->
 

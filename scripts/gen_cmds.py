@@ -12,6 +12,7 @@ from cmds._registry import get_all_commands
 PERM_LABELS = {
     "bot_admins": "Admins",
     "bot_users": "Tous les membres",
+    "group_members": "Membres du groupe de colles",
 }
 
 
