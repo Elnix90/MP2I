@@ -47,6 +47,7 @@
 | `/note-list` | Affiche les notes des élèves, triées par DS | — |
 | `/note-remove` | Supprime une note par son identifiant (admin) | — |
 | `/ping` | Check bot latency and responsiveness | Admins, Tous les membres |
+| `/rank` | Donne ton rang dans ce DS | — |
 | `/restart` | Redémarre le bot | Admins |
 | `/self-update` | Met à jour le bot depuis le dépôt distant | Admins |
 | `/send` | No description provided | Admins |
@@ -91,7 +92,6 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 AI_API_KEY=
 BOT_TOKEN=
 GUILD_ID=
-PARALLEL_API_KEY=
 WEBHOOK_URL=
 ```
 <!--ENV-END-->
@@ -181,6 +181,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   ├── channels.py
 │   │   ├── client.py
 │   │   ├── __init__.py
+│   │   ├── models.py
 │   │   ├── prompts.py
 │   │   └── tools.py
 │   ├── colle.py
@@ -211,13 +212,14 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   │   │   └── memory_vec.sql
 │   │   ├── notes
 │   │   │   ├── ds.sql
-│   │   │   ├── notes_shema.sql
+│   │   │   ├── notes_schema.sql
 │   │   │   └── notes.sql
 │   │   └── settings.sql
 │   └── sql_requests.py
 ├── docs
 │   ├── handlers.md
 │   ├── memory.md
+│   ├── models.md
 │   └── settings_store.md
 ├── .github
 │   └── workflows
@@ -227,12 +229,12 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── logs
 ├── main.py
 ├── managers
+│   ├── ai_processor.py
 │   ├── context.py
 │   ├── discord_search.py
 │   ├── __init__.py
 │   ├── mcp.py
 │   ├── memory.py
-│   ├── needle.py
 │   ├── notes.py
 │   └── tools
 │       ├── discord_search.py
@@ -263,6 +265,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── utils
 │   ├── console.py
 │   ├── debug.py
+│   ├── embedder.py
 │   ├── handlers
 │   │   ├── codeblock.py
 │   │   ├── latex.py
@@ -271,7 +274,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-26 directories, 131 files
+26 directories, 134 files
 ```
 <!-- TREE-END -->
 
@@ -282,21 +285,21 @@ Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. 
 <!--DEPS-START-->
 ```markdown
 - `Pillow>=10.0.0` - Python Imaging Library (fork) (latest: 12.3.0)
-- `aiohttp>=3.9.0` - Async http client/server framework (asyncio) (latest: 3.14.3)
+- `aiohttp>=3.9.0` - Async http client/server framework (asyncio) (latest: 3.14.4)
 - `asyncio>=3.13.0` - Deprecated backport of asyncio; use the stdlib package instead (latest: 4.0.0)
-- `cactus-needle>=1.0.0` - A 14MB foundation tool-calling model for tiny devices: inference, LoRA finetuning, and build. (latest: 3.0.5)
-- `cocoindex>=1.0.0` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.24)
+- `cocoindex>=1.0.0` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.25)
 - `colorama>=0.4.6` - Cross-platform colored terminal text. (latest: 0.4.6)
 - `discord.py>=2.3.0` - A Python wrapper for the Discord API (latest: 2.7.1)
-- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.6)
+- `fastembed>=0.8.1` - Fast, light, accurate library built for retrieval embedding generation (latest: 0.8.1)
+- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.11)
 - `json5>=0.9.0` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
-- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.19.1)
+- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.25.0)
 - `pilmoji>=2.0.0` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
 - `pint>=0.24.0` - Physical quantities module (latest: 0.26.1)
 - `pytesseract>=0.3.10` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)
-- `python-dotenv>=1.0.0` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.3)
+- `python-dotenv>=1.0.0` - Read key-value pairs from a .env file and set them as environment variables (latest: 1.2.4)
 - `requests>=2.31.0` - Python HTTP for Humans. (latest: 2.34.2)
-- `sqlfluff>=4.3.0` - The SQL Linter for Humans (latest: 4.3.0)
+- `sqlfluff>=4.3.0` - The SQL Linter for Humans (latest: 4.4.0)
 - `sqlite-vec>=0.1.0` - latest: 0.1.9
 ```
 <!--DEPS-END-->
