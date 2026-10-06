@@ -22,10 +22,10 @@ dependencies = [
     "fastmcp>=2.0.0",
     "cocoindex>=1.0.0",
     "pint>=0.24.0",
-    "cactus-needle>=1.0.0",
     "sqlite-vec>=0.1.0",
     "asyncio>=3.13.0",
     "sqlfluff>=4.3.0",
+    "fastembed>=0.8.1",
 ]
 
 [build-system]

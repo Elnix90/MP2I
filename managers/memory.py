@@ -1,14 +1,16 @@
 """Memory management for conversation turns.
 
-SQLite-backed memory with semantic search via sqlite-vec and needle embeddings.
-Provides both legacy get_history() (last N turns) and intelligent get_context()
-that selects relevant past turns based on the current query.
+SQLite-backed memory with semantic search via sqlite-vec and local embeddings
+(``utils/embedder``). Provides both legacy get_history() (last N turns) and
+intelligent get_context() that selects relevant past turns based on the
+current query.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import re
 import sqlite3
 import struct
 import time
@@ -18,15 +20,62 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import sqlite_vec
+from openai import AsyncOpenAI
 
-from core.config import BASE_DIR
+from core.config import BASE_DIR, cfg
 from db.sql import load
+from utils import embedder
 from utils.logger import get_logger
 
 logger = get_logger()
 
 MEMORY_DB_PATH = BASE_DIR / "data" / "memory.sqlite"
-EMBEDDING_DIM = 3072  # needle v3 embedding dimension
+EMBEDDING_DIM = embedder.DIM
+
+_AI_CLIENT: AsyncOpenAI | None = None
+
+
+def _ai_client() -> AsyncOpenAI:
+    global _AI_CLIENT
+    if _AI_CLIENT is None:
+        _AI_CLIENT = AsyncOpenAI(base_url=cfg.AI_API_URL, api_key=cfg.AI_API_KEY, timeout=30.0)
+    return _AI_CLIENT
+
+
+def _models_priority() -> list[str]:
+    """Model rotation for fact extraction: same order as the chat client."""
+    from core.ai import models as model_catalog
+
+    return model_catalog.priority()
+
+
+_FACTS_SYSTEM = (
+    "Tu extrais des faits factuels sur un utilisateur à partir d'une conversation. "
+    'Réponds uniquement en JSON : {"facts": [string, ...]}. '
+    "N'extrais que des phrases complètes et durables (au moins 10 caractères, contenant un espace). "
+    "Ignore les expressions mathématiques, les mots isolés et les pensées incomplètes. "
+    '0 à 2 faits maximum. Rien d\'exploitable ? renvoie {"facts": []}.'
+)
+
+
+def _parse_facts_json(content: str) -> list[str]:
+    text = content.strip()
+    fence = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+    if fence:
+        text = fence.group(1)
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return []
+    try:
+        data = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return []
+    if isinstance(data, dict) and isinstance(data.get("facts"), list):
+        return [str(f).strip() for f in data["facts"]]
+    if isinstance(data, list):
+        return [str(f).strip() for f in data]
+    return []
+
 
 # SQL queries
 _SCHEMA = load("memory_schema")
@@ -129,7 +178,6 @@ class MemoryManager:
         self.max_history = max_history
         self.db_path = Path(db_path)
         self._sync_lock = asyncio.Lock()
-        self._needle_agent = None
         self._conn: sqlite3.Connection | None = None
 
         _ensure_parent_dir(self.db_path)
@@ -170,66 +218,47 @@ class MemoryManager:
             conn.enable_load_extension(True)
             sqlite_vec.load(conn)
             conn.enable_load_extension(False)
+            # Recreate the virtual table if its embedding dimension is stale.
+            row = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='vec_turns'").fetchone()
+            if row is not None and f"float[{EMBEDDING_DIM}]" not in (row[0] or ""):
+                logger.warning("vec_turns dimension mismatch, recreating table (embedding dim %d)", EMBEDDING_DIM)
+                conn.execute("DROP TABLE vec_turns")
             conn.execute(_CREATE_VEC_TABLE.format(dim=EMBEDDING_DIM))
             logger.info("sqlite-vec loaded, vec_turns table ready")
         except Exception as exc:
             logger.warning("Failed to load sqlite-vec, semantic search disabled: %s", exc)
 
-    def _get_needle(self):
-        if self._needle_agent is None:
-            try:
-                import needle
-
-                self._needle_agent = needle.Needle(tools=[], generation=3)
-            except Exception as exc:
-                logger.warning("Failed to load needle for embeddings: %s", exc)
-                return None
-        return self._needle_agent
-
-    def _embed(self, text: str) -> list[float] | None:
-        agent = self._get_needle()
-        if agent is None:
-            return None
+    async def _embed(self, text: str) -> list[float] | None:
         try:
-            return agent.embed(text)
+            embedding = await embedder.aembed(text)
+            if len(embedding) != EMBEDDING_DIM:
+                logger.warning("Embedding dim mismatch: got %d, expected %d", len(embedding), EMBEDDING_DIM)
+                return None
+            return embedding
         except Exception as exc:
             logger.warning("Embedding failed: %s", exc)
             return None
 
-    def _extract_facts(self, user_name: str, user_content: str, assistant_content: str) -> list[str]:
-        agent = self._get_needle()
-        if agent is None:
-            return []
-        try:
-            from pydantic import BaseModel
-
-            class ExtractedFacts(BaseModel):
-                facts: list[str]
-
-            prompt = (
-                f"Extract factual information about the user from this conversation. "
-                f"Only extract complete, meaningful sentences. Ignore math expressions, "
-                f"single words, or incomplete thoughts.\n\n"
-                f"User ({user_name}): {user_content}\n"
-                f"Assistant: {assistant_content}\n\n"
-                "Return 0-2 facts. Examples of good facts:\n"
-                "- Alice is a student in MP2I prep class\n"
-                "- Bob prefers using Python for programming\n"
-                "- Charlie asked about derivatives of polynomials\n\n"
-                "If nothing meaningful can be extracted, return an empty list."
-            )
-            result = agent.extract(prompt, ExtractedFacts)
-            if isinstance(result, ExtractedFacts):
-                facts = result.facts
-            elif isinstance(result, dict) and "facts" in result:
-                facts = result["facts"]
-            else:
-                return []
-            # Filter: keep only facts that are complete sentences (min 10 chars, contain spaces)
-            return [f for f in facts if len(f) >= 10 and " " in f]
-        except Exception as exc:
-            logger.debug("Fact extraction failed: %s", exc)
-            return []
+    async def _extract_facts(self, user_name: str, user_content: str, assistant_content: str) -> list[str]:
+        prompt = f"User ({user_name}): {user_content}\nAssistant: {assistant_content}\n"
+        for model in _models_priority():
+            try:
+                resp = await _ai_client().chat.completions.create(
+                    model=model,
+                    max_tokens=128,
+                    temperature=0,
+                    messages=[
+                        {"role": "system", "content": _FACTS_SYSTEM},
+                        {"role": "user", "content": prompt},
+                    ],
+                )
+                content = resp.choices[0].message.content or ""
+                facts = [f for f in _parse_facts_json(content) if len(f) >= 10 and " " in f][:3]
+                if facts:
+                    return facts
+            except Exception as exc:
+                logger.debug("Fact extraction failed on %s: %s", model, exc)
+        return []
 
     def _embedding_to_bytes(self, vec: list[float]) -> bytes:
         return struct.pack(f"{len(vec)}f", *vec)
@@ -283,32 +312,35 @@ class MemoryManager:
                 now,
             ),
         )
-        # Store embedding for the combined text
-        combined = f"{user_name}: {user_content}"
-        if turn.assistant_content:
-            combined += f"\n{turn.assistant_content}"
-        embedding = self._embed(combined)
-        if embedding is not None:
-            # Get the auto-assigned rowid from the INSERT above
-            rowid = conn.execute(
-                _GET_ROWID,
-                (turn.turn_id,),
-            ).fetchone()
-            if rowid is not None:
-                try:
-                    self._upsert_vector(conn, rowid[0], embedding)
-                except Exception as exc:
-                    logger.debug("Failed to store embedding for turn %s: %s", turn.turn_id[:8], exc)
-
-        # Extract and store user facts asynchronously (fire-and-forget)
-        try:
-            facts = self._extract_facts(user_name, user_content, assistant_content or "")
-            for fact in facts[:3]:  # limit to 3 facts per exchange
-                self.add_user_fact(user_id, fact, source_turn_ids=[turn.turn_id])
-        except Exception as exc:
-            logger.debug("Fact extraction skipped: %s", exc)
-
+        conn.commit()
         return turn.turn_id
+
+    async def _enrich_turn(
+        self,
+        *,
+        turn_id: str,
+        rowid: int | None,
+        combined: str,
+        user_id: int,
+        user_name: str,
+        user_content: str,
+        assistant_content: str,
+    ) -> None:
+        """Embed the turn and extract user facts, both over the network, off the hot path."""
+        embedding = await self._embed(combined)
+        if embedding is not None and rowid is not None:
+            async with self._sync_lock:
+                try:
+                    self._upsert_vector(self._get_conn(), rowid, embedding)
+                    self._get_conn().commit()
+                except Exception as exc:
+                    logger.debug("Failed to store embedding for turn %s: %s", turn_id[:8], exc)
+
+        facts = await self._extract_facts(user_name, user_content, assistant_content)
+        if facts:
+            async with self._sync_lock:
+                for fact in facts[:3]:
+                    self.add_user_fact(user_id, fact, source_turn_ids=[turn_id])
 
     def get_turn(self, turn_id: str) -> MemoryTurn:
         conn = self._get_conn()
@@ -425,7 +457,7 @@ class MemoryManager:
             logger.warning("FTS search failed: %s", exc)
             return []
 
-    def get_context(
+    async def get_context(
         self,
         scope_key: str,
         user_id: int | None = None,
@@ -456,7 +488,7 @@ class MemoryManager:
 
         # 2. Semantic search for relevant past turns
         if current_query.strip():
-            embedding = self._embed(current_query)
+            embedding = await self._embed(current_query)
             if embedding is not None:
                 semantic_hits = self._search_vec(embedding, scope_key=scope_key, top_k=10)
                 for turn_id, distance in semantic_hits[:5]:
@@ -571,6 +603,10 @@ class MemoryManager:
 
     async def bootstrap(self) -> None:
         self._get_conn()
+        try:
+            await asyncio.to_thread(embedder.warmup)
+        except Exception as exc:
+            logger.warning("Embedding model warmup failed: %s", exc)
         await self._backfill_embeddings()
 
     async def _backfill_embeddings(self) -> None:
@@ -584,7 +620,7 @@ class MemoryManager:
             combined = f"{row['user_name']}: {row['user_content']}"
             if row["assistant_content"]:
                 combined += f"\n{row['assistant_content']}"
-            embedding = self._embed(combined)
+            embedding = await self._embed(combined)
             if embedding is not None:
                 try:
                     self._upsert_vector(conn, row["rowid"], embedding)
@@ -606,7 +642,7 @@ class MemoryManager:
         turn_id: str | None = None,
     ) -> str:
         async with self._sync_lock:
-            return self.record_exchange(
+            turn_id = self.record_exchange(
                 user_id=user_id,
                 user_name=user_name,
                 user_content=user_content,
@@ -616,6 +652,23 @@ class MemoryManager:
                 thread_id=thread_id,
                 turn_id=turn_id,
             )
+            row = self._get_conn().execute(_GET_ROWID, (turn_id,)).fetchone()
+            rowid = row[0] if row is not None else None
+        combined = f"{user_name}: {user_content}"
+        if assistant_content:
+            combined += f"\n{assistant_content}"
+        asyncio.create_task(
+            self._enrich_turn(
+                turn_id=turn_id,
+                rowid=rowid,
+                combined=combined,
+                user_id=user_id,
+                user_name=user_name,
+                user_content=user_content,
+                assistant_content=assistant_content,
+            )
+        )
+        return turn_id
 
     async def delete_turn_and_sync(self, turn_id: str) -> MemoryTurn:
         async with self._sync_lock:

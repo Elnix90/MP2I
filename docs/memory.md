@@ -4,7 +4,8 @@ Fichier : `managers/memory.py` · Schéma : `db/sql/memory_schema.sql`
 
 DB : **`data/memory.sqlite`** (gitignorée, création auto). Mémoire conversationnelle
 du bot, persistée en SQLite avec recherche sémantique via **sqlite-vec** et
-embeddings **needle** (cactus-needle v3, 3072 dimensions).
+embeddings locaux **fastembed** (`utils/embedder`,
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, 384 dimensions).
 
 ## Architecture
 
@@ -12,7 +13,7 @@ embeddings **needle** (cactus-needle v3, 3072 dimensions).
 graph TB
     subgraph "get_context()"
         direction TB
-        A[User message] --> B[needle.embed]
+        A[User message] --> B[utils/embedder]
         B --> C[vec0 HNSW search]
         C --> D[Top-K turns]
     end
@@ -35,7 +36,7 @@ Quatre couches de mémoire, de plus en plus persistantes :
 | Couche | Scope | Stockage | Contenu |
 |--------|-------|----------|---------|
 | **L1 Session** | channel/thread | SQLite (last N) | Derniers 15 échanges |
-| **L2 User Facts** | user_id | SQLite `user_facts` | Faits extraits par needle |
+| **L2 User Facts** | user_id | SQLite `user_facts` | Faits extraits par le LLM cloud |
 | **L3 Channel Facts** | channel_id | SQLite `channel_facts` | Résumé du canal |
 | **L4 Full History** | tous | SQLite + vec0 | Tous les échanges, embeddings inclus |
 
@@ -112,11 +113,12 @@ CREATE TABLE memory_turns (
 
 ```sql
 CREATE VIRTUAL TABLE vec_turns USING vec0(
-    embedding float[3072]
+    embedding float[384]
 );
 ```
 
-Index HNSW pour la recherche par similarité cosinus. Le `rowid` correspond
+Index HNSW pour la recherche par distance L2 (les vecteurs sont
+L2-normalisés, donc équivalent cosinus). Le `rowid` correspond
 au `rowid` de la ligne `memory_turns` correspondante.
 
 ### `user_facts`
@@ -132,7 +134,8 @@ CREATE TABLE user_facts (
 );
 ```
 
-Faits persistants extraits automatiquement par needle lors de chaque échange.
+Faits persistants extraits automatiquement par le LLM cloud (1 petit appel
+`chat.completions` par échange) lors de chaque échange.
 Permettent au bot de se souvenir de l'utilisateur **entre les sessions**.
 
 ### `channel_facts`
@@ -197,7 +200,7 @@ Sélectionne le contexte pertinent pour le LLM en 3 étapes :
 
 1. **User facts** : récupère les faits persistants pour `user_id` (max 10)
    et les injecte comme message system
-2. **Recherche sémantique** : `needle.embed(current_query)` → `vec0 MATCH`
+2. **Recherche sémantique** : `utils/embedder` → `vec0 MATCH`
    → top-5 turns les plus similaires (fallback keyword LIKE si < 3 résultats)
 3. **Session turns** : les `max_history` derniers tours du scope, en excluant
    ceux déjà trouvés par les étapes 1-2
@@ -225,24 +228,26 @@ sequenceDiagram
     participant U as User
     participant B as Bot
     participant M as MemoryManager
-    participant N as needle (local)
+    participant E as utils/embedder (local)
+    participant P as LLM API (Pollinations)
     participant DB as SQLite + vec0
 
     U->>B: message
-    B->>M: record_exchange()
+    B->>M: record_and_sync()
     M->>DB: INSERT INTO memory_turns
-    M->>N: embed(combined_text)
-    N-->>M: float[3072]
+    M->>E: embed(combined_text)
+    E-->>M: float[384]
     M->>DB: INSERT INTO vec_turns (rowid, embedding)
-    M->>N: extract_facts()
-    N-->>M: ["fact1", "fact2"]
+    M->>P: extract_facts()
+    P-->>M: ["fact1", "fact2"]
     M->>DB: INSERT INTO user_facts
 ```
 
-- **Modèle** : needle v3 (`cactus-needle`, ~14MB, local)
-- **Dimension** : 3072 floats
+- **Modèle** : `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (ONNX, fastembed, chargé une fois au boot via `embedder.warmup()`)
+- **Dimension** : 384 floats, L2-normalisés (vec0 classe en distance L2 ≈ cosinus)
+- **Troncature** : 512 tokens — fastembed tronquerait à 128 sinon, `utils/embedder` remonte la limite explicitement
 - **Stockage** : `struct.pack()` en BLOB dans `vec_turns`
-- **Génération** : à chaque `record_exchange()` sur le texte combiné
+- **Génération** : à chaque `record_and_sync()` en tâche de fond sur le texte combiné
   `"{user_name}: {user_content}\n{assistant_content}"`
 - **Backfill** : `bootstrap()` génère les embeddings pour les turns existants
   qui n'en ont pas
@@ -293,4 +298,4 @@ flowchart TD
 | Package | Rôle |
 |---------|------|
 | `sqlite-vec` | Extension SQLite pour la recherche vectorielle HNSW |
-| `cactus-needle` | Embeddings 3072-dim + extraction de faits |
+| `fastembed` + `onnxruntime` | Embeddings 384-dim locaux (`utils/embedder`) + extraction de faits via API |
