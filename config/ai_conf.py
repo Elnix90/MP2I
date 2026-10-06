@@ -14,7 +14,6 @@ class AIConfig:
     streaming: bool = True
     memory_max_history: int = 15
     tools: list[str] = field(default_factory=list)
-    needle_tool_calling: bool = False
 
     @property
     def is_enabled(self) -> bool:
@@ -41,7 +40,6 @@ def load_ai_config(file: Path | None = None) -> AIConfig:
 
     return AIConfig(
         enabled=ai_raw.get("enabled", True),
-        needle_tool_calling=ai_raw.get("needle_tool_calling", False),
         allowed_channels=ai_raw.get("allowed_channels", []),
         models=models,
         api_url=ai_raw.get("api_url", ""),
