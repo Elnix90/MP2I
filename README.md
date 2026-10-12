@@ -93,6 +93,7 @@ See [mise](https://mise.jdx.dev/) and [uv](https://docs.astral.sh/uv/) for insta
 AI_API_KEY=
 BOT_TOKEN=
 GUILD_ID=
+PARALLEL_API_KEY=
 WEBHOOK_URL=
 ```
 <!--ENV-END-->
@@ -131,13 +132,14 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 ├── cmds
 │   ├── ai_channel.py
 │   ├── colle_edit.py
-│   ├── colle.py
+│   ├── colle_show.py
 │   ├── ds_add.py
 │   ├── ds_delete.py
 │   ├── ds_list.py
 │   ├── exec.py
 │   ├── get_emojis.py
 │   ├── get_to_work.py
+│   ├── _groups.py
 │   ├── health.py
 │   ├── __init__.py
 │   ├── list_tools.py
@@ -276,7 +278,7 @@ Below is current snapshot of repository. This section is auto-updated by `./lint
 │   └── logger.py
 └── uv.lock
 
-26 directories, 135 files
+26 directories, 136 files
 ```
 <!-- TREE-END -->
 
@@ -287,15 +289,15 @@ Run `scripts/lint.sh` to format code and regenerate this project tree snapshot. 
 <!--DEPS-START-->
 ```markdown
 - `Pillow>=10.0.0` - Python Imaging Library (fork) (latest: 12.3.0)
-- `aiohttp>=3.9.0` - Async http client/server framework (asyncio) (latest: 3.14.4)
+- `aiohttp>=3.9.0` - Async http client/server framework (asyncio) (latest: 3.14.5)
 - `asyncio>=3.13.0` - Deprecated backport of asyncio; use the stdlib package instead (latest: 4.0.0)
 - `cocoindex>=1.0.0` - With CocoIndex, users declare the transformation, CocoIndex creates & maintains an index, and keeps the derived index up to date based on source update, with minimal computation and changes. (latest: 1.0.25)
 - `colorama>=0.4.6` - Cross-platform colored terminal text. (latest: 0.4.6)
 - `discord.py>=2.3.0` - A Python wrapper for the Discord API (latest: 2.7.1)
-- `fastembed>=0.8.1` - Fast, light, accurate library built for retrieval embedding generation (latest: 0.8.1)
-- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.0.11)
-- `json5>=0.9.0` - A Python implementation of the JSON5 data format. (latest: 0.15.0)
-- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.25.0)
+- `fastembed>=0.8.1` - Fast, light, accurate library built for retrieval embedding generation (latest: 0.9.0)
+- `fastmcp>=2.0.0` - The fast, Pythonic way to build MCP servers and clients. (latest: 4.1.0)
+- `json5>=0.9.0` - A Python implementation of the JSON5 data format. (latest: 0.17.3)
+- `openai>=1.30.0` - The official Python library for the openai API (latest: 3.29.0)
 - `pilmoji>=2.0.0` - Pilmoji is an emoji renderer for Pillow, Python's imaging library. (latest: 2.0.5)
 - `pint>=0.24.0` - Physical quantities module (latest: 0.26.1)
 - `pytesseract>=0.3.10` - Python-tesseract is a python wrapper for Google's Tesseract-OCR (latest: 0.3.13)

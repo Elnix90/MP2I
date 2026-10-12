@@ -9,6 +9,7 @@ import time
 import discord
 from discord import app_commands
 
+from bot import MP2IBot
 from cmds._groups import get_group
 from cmds._shared import log_command_end, log_command_error, log_command_start
 from core.config import cfg
@@ -19,7 +20,7 @@ from utils.logger import get_logger
 logger = get_logger()
 
 
-async def setup(tree: app_commands.CommandTree, bot):
+async def setup(tree: app_commands.CommandTree, bot: MP2IBot):
     """Returns the colles of the week for the user issuing the command"""
 
     colle_group = get_group(tree, "colle", description="Gestion des colles")
@@ -50,7 +51,8 @@ async def setup(tree: app_commands.CommandTree, bot):
                     if colle_result:
                         colles_str = "\n".join(f"- {colle}" for colle in colle_result.colles)
 
-                        if user is not None:
+                        # If no user was provided, or that the user provided is not the one that asked the command
+                        if user is not None and user.id != interaction.user.id:
                             user_str = f"{user_requested.mention} du **{group_role.name}** aura"
                             user_suffix = "\n-# est ce qu'il était bien consentant à ce que tu vérifie ses colles?"
                         else:
